@@ -21,6 +21,8 @@ import { useSession } from '../../../hooks/useSession';
 import { useTheme } from '../../../context/ThemeContext';
 import { Sun, Moon } from 'lucide-react';
 
+import logo from '../../../assets/square.png';
+
 export const Topbar: React.FC = () => {
     const { user, logout } = useSession();
     const { theme, toggleTheme } = useTheme();
@@ -52,9 +54,9 @@ export const Topbar: React.FC = () => {
     React.useEffect(() => {
         const controlNavbar = () => {
             if (typeof window !== 'undefined') {
-                if (window.scrollY > lastScrollY && window.scrollY > 100) { 
+                if (window.scrollY > lastScrollY && window.scrollY > 100) {
                     setIsVisible(false);
-                } else { 
+                } else {
                     setIsVisible(true);
                 }
                 setLastScrollY(window.scrollY);
@@ -70,22 +72,22 @@ export const Topbar: React.FC = () => {
 
     return (
         <nav className={`bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
-                    {}
                     <div className="flex items-center">
                         <Link to="/dashboard" className="flex-shrink-0 flex items-center gap-2 group">
-                            <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-primary-500/30 group-hover:scale-105 transition-transform duration-200">
-                                ET
-                            </div>
+                            <img
+                                src={logo}
+                                alt="Square Logo"
+                                className="w-9 h-9 rounded-xl group-hover:scale-105 transition-transform duration-200"
+                            />
                             <span className="hidden md:block text-xl font-bold text-slate-800 dark:text-white tracking-tight">
-                                ExpenseTracker
+                                Square
                             </span>
                         </Link>
                     </div>
 
-                    {}
-                    <div className="hidden md:flex items-center space-x-1">
+                    <div className="hidden xl:flex items-center space-x-1">
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const active = isActive(item.path);
@@ -105,7 +107,6 @@ export const Topbar: React.FC = () => {
                         })}
                     </div>
 
-                    {}
                     <div className="hidden md:flex items-center ml-4 gap-2">
                         <button
                             onClick={toggleTheme}
@@ -156,8 +157,7 @@ export const Topbar: React.FC = () => {
                         </div>
                     </div>
 
-                    {}
-                    <div className="flex items-center md:hidden">
+                    <div className="flex items-center xl:hidden">
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             className="inline-flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-500 hover:bg-slate-50 focus:outline-none"
@@ -168,7 +168,7 @@ export const Topbar: React.FC = () => {
                 </div>
             </div>
 
-            {}
+            { }
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <motion.div
