@@ -30,7 +30,7 @@ export const Layout: React.FC = () => {
 
             <div className="relative z-10">
                 <Topbar />
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-24 lg:pb-8">
+                <main className="max-w-7xl mx-auto px-2 sm:px-2 lg:px-8 py-2 pb-24 lg:pb-8">
                     <Outlet />
                 </main>
                 <MobileBottomNav />

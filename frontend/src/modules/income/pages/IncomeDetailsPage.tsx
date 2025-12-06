@@ -120,7 +120,7 @@ const IncomeDetailsPage: React.FC = () => {
     if (!income) return <div className="p-8 text-center">Income record not found</div>;
 
     return (
-        <div className="max-w-5xl mx-auto p-4 md:p-8 pb-24">
+        <div className="max-w-5xl mx-auto p-2 md:p-8 pb-24">
             <div className="flex items-center justify-between mb-6">
                 <button
                     onClick={() => navigate(-1)}
@@ -302,9 +302,9 @@ const IncomeDetailsPage: React.FC = () => {
                     </div>
 
 
-                    <div className="min-h-[400px] mt-6">
+                    <div className="mt-6">
                         {activeTab === 'comments' ? (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 animate-fade-in">
+                            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-8 animate-fade-in">
                                 <div className="space-y-4 mb-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                     {income.comments && income.comments.length > 0 ? (
                                         income.comments.map(comment => (
@@ -349,7 +349,7 @@ const IncomeDetailsPage: React.FC = () => {
                                 </form>
                             </div>
                         ) : (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 animate-fade-in">
+                            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-8 animate-fade-in">
                                 <div className="flow-root">
                                     <ul className="-mb-8">
                                         {income.logs && income.logs.map((log, logIdx) => (

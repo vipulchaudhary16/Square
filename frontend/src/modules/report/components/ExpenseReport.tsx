@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Expense } from '../../../api/expenses';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from 'date-fns';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO, differenceInDays } from 'date-fns';
 import { PieChart as PieIcon, Table as TableIcon, Loader2, Filter, X } from 'lucide-react';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -87,14 +87,80 @@ export const ExpenseReport: React.FC<ExpenseReportProps> = ({ expenses, isLoadin
         return Object.entries(data).map(([name, value]) => ({ name, value }));
     }, [filteredExpenses]);
 
-    const dailyData = useMemo(() => {
+    const { chartData, granularity } = useMemo(() => {
+        if (!startDate || !endDate) return { chartData: [], granularity: 'Daily' };
+
+        const start = parseISO(startDate);
+        const end = parseISO(endDate);
+        const daysDiff = differenceInDays(end, start);
+
+        let granularity: 'Daily' | 'Weekly' | 'Monthly' = 'Daily';
+        let dateFormat = 'MMM dd';
+
+        if (daysDiff > 60) {
+            granularity = 'Monthly';
+            dateFormat = 'MMM yyyy';
+        } else if (daysDiff > 30) {
+            granularity = 'Weekly';
+            dateFormat = 'MMM dd';
+        }
+
         const data: Record<string, number> = {};
+        
+        // Initialize map with 0s if needed, or just let it be sparse. 
+        // For a better chart, sparse is usually fine for bar charts, but 0s are better for continuity.
+        // For now, let's stick to aggregating existing expenses to keep it simple and efficient.
+
         filteredExpenses.forEach(e => {
-            const date = format(parseISO(e.date), 'MMM dd');
-            data[date] = (data[date] || 0) + e.amount;
+            const date = parseISO(e.date);
+            let key = '';
+
+            if (granularity === 'Monthly') {
+                key = format(startOfMonth(date), dateFormat);
+            } else if (granularity === 'Weekly') {
+                key = format(startOfWeek(date), dateFormat);
+            } else {
+                key = format(date, dateFormat);
+            }
+
+            data[key] = (data[key] || 0) + e.amount;
         });
-        return Object.entries(data).map(([name, value]) => ({ name, value }));
-    }, [filteredExpenses]);
+
+
+            
+        // Let's refine the aggregation to use sortable keys
+        const dataMap: Record<string, { label: string, value: number, sortKey: number }> = {};
+
+        filteredExpenses.forEach(e => {
+            const date = parseISO(e.date);
+            let sortKey = 0;
+            let label = '';
+
+            if (granularity === 'Monthly') {
+                const start = startOfMonth(date);
+                sortKey = start.getTime();
+                label = format(start, 'MMM yyyy');
+            } else if (granularity === 'Weekly') {
+                const start = startOfWeek(date);
+                sortKey = start.getTime();
+                label = format(start, 'MMM dd');
+            } else {
+                sortKey = date.getTime();
+                label = format(date, 'MMM dd');
+            }
+
+            if (!dataMap[label]) {
+                dataMap[label] = { label, value: 0, sortKey };
+            }
+            dataMap[label].value += e.amount;
+        });
+
+        const finalData = Object.values(dataMap)
+            .sort((a, b) => a.sortKey - b.sortKey)
+            .map(item => ({ name: item.label, value: item.value }));
+
+        return { chartData: finalData, granularity };
+    }, [filteredExpenses, startDate, endDate]);
 
     const axisColor = theme === 'dark' ? '#94a3b8' : '#64748b';
     const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
@@ -344,10 +410,10 @@ export const ExpenseReport: React.FC<ExpenseReportProps> = ({ expenses, isLoadin
 
                             {}
                             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Daily Spending Trend</h3>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Spending Trend ({granularity})</h3>
                                 <div className="h-80">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={dailyData}>
+                                        <BarChart data={chartData}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
                                             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 12 }} dy={10} />
                                             <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 12 }} />

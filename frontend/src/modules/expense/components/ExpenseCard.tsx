@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -11,6 +12,7 @@ interface Expense {
     payer_id: string;
     group_id?: string;
     group_name?: string;
+    _id?: string;
 }
 
 interface ExpenseCardProps {
@@ -23,11 +25,15 @@ export function cn(...inputs: (string | undefined | null | false)[]) {
 }
 
 export const ExpenseCard: React.FC<ExpenseCardProps> = ({ expense, currentUserId }) => {
+    const navigate = useNavigate();
     const isPayer = expense.payer_id === currentUserId;
     const isPersonal = !expense.group_id;
 
     return (
-        <div className="group bg-white dark:bg-slate-800 rounded-2xl p-4 mb-3 flex justify-between items-center border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 hover:border-primary-100 dark:hover:border-primary-900">
+        <div 
+            onClick={() => navigate(`/expenses/${expense._id}`)}
+            className="group bg-white dark:bg-slate-800 rounded-2xl p-4 mb-3 flex justify-between items-center border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 hover:border-primary-100 dark:hover:border-primary-900 cursor-pointer"
+        >
             <div className="flex items-center gap-4">
                 <div className={cn(
                     "hidden md:flex w-12 h-12 rounded-xl items-center justify-center text-xl font-bold transition-colors",

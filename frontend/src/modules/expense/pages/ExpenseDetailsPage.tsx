@@ -107,7 +107,7 @@ const ExpenseDetailsPage: React.FC = () => {
     if (!expense) return <div className="p-8 text-center">Expense not found</div>;
 
     return (
-        <div className="max-w-5xl mx-auto p-4 md:p-8 pb-24">
+        <div className="max-w-5xl mx-auto p-2 md:p-8 pb-24">
             <div className="flex items-center justify-between mb-6">
                 <button
                     onClick={() => navigate(-1)}
@@ -245,9 +245,9 @@ const ExpenseDetailsPage: React.FC = () => {
                         </div>
 
 
-                        <div className="min-h-[400px] mt-6">
+                        <div className="mt-6">
                             {activeTab === 'split' && (
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 animate-fade-in">
+                                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-8 animate-fade-in">
                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                                         <CreditCard className="w-5 h-5 text-gray-400" />
                                         Split Details
@@ -259,13 +259,13 @@ const ExpenseDetailsPage: React.FC = () => {
                                     <div className="space-y-4">
                                         {expense.splits && Object.entries(expense.splits).map(([userId, amount]) => (
                                             <div key={userId} className="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-transparent hover:border-gray-200 dark:hover:border-slate-600 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-600 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-slate-300 shadow-sm">
+                                                <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
+                                                    <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-600 flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-slate-300 shadow-sm">
                                                         {getUserName(userId).charAt(0).toUpperCase()}
                                                     </div>
-                                                    <span className="font-medium text-gray-700 dark:text-slate-200">{getUserName(userId)}</span>
+                                                    <span className="font-medium text-gray-700 dark:text-slate-200 truncate">{getUserName(userId)}</span>
                                                 </div>
-                                                <span className="font-bold text-gray-900 dark:text-white">₹{amount.toFixed(2)}</span>
+                                                <span className="font-bold text-gray-900 dark:text-white whitespace-nowrap">₹{amount.toFixed(2)}</span>
                                             </div>
                                         ))}
                                         {!expense.splits && (
