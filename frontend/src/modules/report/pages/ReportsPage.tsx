@@ -66,11 +66,27 @@ const ReportsPage: React.FC = () => {
     ];
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Financial Reports</h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+            <div className="flex flex-row items-center justify-between mb-6 md:mb-8">
+                <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">Financial Reports</h1>
 
-            {}
-            <div className="flex space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-8 overflow-x-auto">
+                <div className="md:hidden">
+                    <select
+                        value={activeTab}
+                        onChange={(e) => setActiveTab(e.target.value as any)}
+                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                    >
+                        {tabs.map((tab) => (
+                            <option key={tab.id} value={tab.id}>
+                                {tab.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+
+            <div className="hidden md:flex space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-8 overflow-x-auto">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -90,7 +106,7 @@ const ReportsPage: React.FC = () => {
                 })}
             </div>
 
-            {}
+
             <div className="animate-fade-in">
                 {activeTab === 'expenses' && (
                     <ExpenseReport

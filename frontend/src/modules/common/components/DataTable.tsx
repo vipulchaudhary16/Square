@@ -6,6 +6,7 @@ interface Column<T> {
     accessor: keyof T | ((row: T) => React.ReactNode);
     render?: (row: T) => React.ReactNode;
     className?: string;
+    tdClassName?: string;
 }
 
 interface DataTableProps<T> {
@@ -20,6 +21,8 @@ interface DataTableProps<T> {
     onSort?: (key: string) => void;
     onRowClick?: (row: T) => void;
     actions?: React.ReactNode;
+    totalRecords?: number;
+    isLoading?: boolean;
 }
 
 export function DataTable<T extends { id: string | number }>({
@@ -33,6 +36,8 @@ export function DataTable<T extends { id: string | number }>({
     onSort,
     onRowClick,
     actions,
+    totalRecords,
+    isLoading = false,
 }: DataTableProps<T>) {
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -75,12 +80,17 @@ export function DataTable<T extends { id: string | number }>({
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                     <Filter className="w-4 h-4" />
-                    <span>{sortedData.length} records found</span>
+                    <span>{totalRecords !== undefined ? totalRecords : sortedData.length} records found</span>
                 </div>
             </div>
 
             {}
             <div className="relative z-10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                {isLoading && (
+                    <div className="absolute inset-0 z-50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    </div>
+                )}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -120,7 +130,7 @@ export function DataTable<T extends { id: string | number }>({
                                     className={`transition-colors group ${onRowClick ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/50' : ''}`}
                                 >
                                     {columns.map((col, colIdx) => (
-                                        <td key={colIdx} className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                        <td key={colIdx} className={`px-6 py-4 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap ${col.tdClassName || ''}`}>
                                             {col.render ? col.render(row) : (
                                                 typeof col.accessor === 'function'
                                                     ? col.accessor(row)
@@ -146,7 +156,7 @@ export function DataTable<T extends { id: string | number }>({
                     <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/30 dark:bg-slate-800/30">
                         <button
                             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                            disabled={currentPage === 1}
+                            disabled={currentPage === 1 || isLoading}
                             className="px-3 py-1 text-sm font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                         >
                             Previous
@@ -156,7 +166,7 @@ export function DataTable<T extends { id: string | number }>({
                         </span>
                         <button
                             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                            disabled={currentPage === totalPages}
+                            disabled={currentPage === totalPages || isLoading}
                             className="px-3 py-1 text-sm font-medium text-slate-600 dark:text-slate-400 disabled:opacity-50 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                         >
                             Next

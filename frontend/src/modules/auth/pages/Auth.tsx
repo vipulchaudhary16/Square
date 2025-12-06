@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, ArrowRight, Lock, Loader2, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import useApiCall from '../../../hooks/useApiCall';
 import { signup, login as apiLogin } from '../../../api/auth';
 import { useSession } from '../../../hooks/useSession';
@@ -133,6 +133,11 @@ export default function Auth() {
                                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3.5 pl-12 pr-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium"
                                     required
                                 />
+                            </div>
+                            <div className="flex justify-end mt-1">
+                                <Link to="/auth/forgot-password" className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 transition-colors">
+                                    Forgot Password?
+                                </Link>
                             </div>
                         </div>
 

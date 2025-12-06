@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../components/DataTable';
 import { getExpenses, Expense } from '../../../api/expenses';
 import { getIncomes, getInvestments, getLoans, Income, Investment, Loan } from '../../../api/finance';
-import { LayoutDashboard, DollarSign, TrendingUp, ArrowLeftRight, Loader2, Filter } from 'lucide-react';
+import { LayoutDashboard, DollarSign, TrendingUp, ArrowLeftRight, Filter, ChevronRight } from 'lucide-react';
 
 export const TransactionsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'expenses' | 'income' | 'investments' | 'loans'>('expenses');
@@ -48,40 +48,42 @@ export const TransactionsPage: React.FC = () => {
             const sortBy = sortConfig?.key;
             const sortOrder = sortConfig?.direction;
 
+            const ensureId = (item: any) => ({ ...item, id: item.id || item._id || item.ID });
+
             if (activeTab === 'expenses') {
                 const response = await getExpenses(startDate, endDate, undefined, undefined, page, limit, sortBy, sortOrder);
                 if (Array.isArray(response)) {
-                    setExpenses(response);
+                    setExpenses(response.map(ensureId));
                     setTotal(response.length);
                 } else {
-                    setExpenses(response.data);
+                    setExpenses(response.data.map(ensureId));
                     setTotal(response.total);
                 }
             } else if (activeTab === 'income') {
                 const response = await getIncomes(page, limit, sortBy, sortOrder, startDate, endDate);
                 if (Array.isArray(response)) {
-                    setIncomes(response);
+                    setIncomes(response.map(ensureId));
                     setTotal(response.length);
                 } else {
-                    setIncomes(response.data);
+                    setIncomes(response.data.map(ensureId));
                     setTotal(response.total);
                 }
             } else if (activeTab === 'investments') {
                 const response = await getInvestments(page, limit, sortBy, sortOrder, startDate, endDate);
                 if (Array.isArray(response)) {
-                    setInvestments(response);
+                    setInvestments(response.map(ensureId));
                     setTotal(response.length);
                 } else {
-                    setInvestments(response.data);
+                    setInvestments(response.data.map(ensureId));
                     setTotal(response.total);
                 }
             } else if (activeTab === 'loans') {
                 const response = await getLoans(page, limit, sortBy, sortOrder, startDate, endDate);
                 if (Array.isArray(response)) {
-                    setLoans(response);
+                    setLoans(response.map(ensureId));
                     setTotal(response.length);
                 } else {
-                    setLoans(response.data);
+                    setLoans(response.data.map(ensureId));
                     setTotal(response.total);
                 }
             }
@@ -115,6 +117,15 @@ export const TransactionsPage: React.FC = () => {
                 <span className="font-bold text-red-600 dark:text-red-400">-₹{row.amount.toFixed(2)}</span>
             )
         },
+        {
+            header: '',
+            accessor: 'actions',
+            className: 'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            tdClassName: 'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            render: () => (
+                <ChevronRight className="w-5 h-5 text-slate-400" />
+            )
+        },
     ];
 
     const incomeColumns: any[] = [
@@ -124,6 +135,15 @@ export const TransactionsPage: React.FC = () => {
         {
             header: 'Amount', accessor: 'amount', render: (row: Income) => (
                 <span className="font-bold text-green-600 dark:text-green-400">+₹{row.amount.toFixed(2)}</span>
+            )
+        },
+        {
+            header: '',
+            accessor: 'actions',
+            className: 'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            tdClassName: 'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            render: () => (
+                <ChevronRight className="w-5 h-5 text-slate-400" />
             )
         },
     ];
@@ -142,6 +162,15 @@ export const TransactionsPage: React.FC = () => {
                 <span className={`font-bold ${row.current_value >= row.amount_invested ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     ₹{row.current_value.toFixed(2)}
                 </span>
+            )
+        },
+        {
+            header: '',
+            accessor: 'actions',
+            className: 'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            tdClassName: 'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            render: () => (
+                <ChevronRight className="w-5 h-5 text-slate-400" />
             )
         },
     ];
@@ -172,6 +201,15 @@ export const TransactionsPage: React.FC = () => {
                     }`}>
                     {row.status}
                 </span>
+            )
+        },
+        {
+            header: '',
+            accessor: 'actions',
+            className: 'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            tdClassName: 'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            render: () => (
+                <ChevronRight className="w-5 h-5 text-slate-400" />
             )
         },
     ];
@@ -290,10 +328,25 @@ export const TransactionsPage: React.FC = () => {
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Transactions</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">View and manage all your financial records in one place.</p>
                 </div>
+
+
+                <div className="md:hidden">
+                    <select
+                        value={activeTab}
+                        onChange={(e) => setActiveTab(e.target.value as any)}
+                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5"
+                    >
+                        {tabs.map((tab) => (
+                            <option key={tab.id} value={tab.id}>
+                                {tab.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
-            {}
-            <div className="flex space-x-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-full md:w-fit overflow-x-auto">
+
+            <div className="hidden md:flex space-x-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-full md:w-fit overflow-x-auto">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -313,66 +366,66 @@ export const TransactionsPage: React.FC = () => {
                 })}
             </div>
 
-            {}
-            {loading ? (
-                <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-                </div>
-            ) : (
-                <>
-                    {activeTab === 'expenses' && (
-                        <DataTable
-                            data={expenses}
-                            columns={expenseColumns}
-                            currentPage={page}
-                            totalPages={totalPages}
-                            onPageChange={setPage}
-                            sortConfig={sortConfig}
-                            onSort={handleSort}
-                            onRowClick={handleRowClick}
-                            actions={FilterPopover}
-                        />
-                    )}
-                    {activeTab === 'income' && (
-                        <DataTable
-                            data={incomes}
-                            columns={incomeColumns}
-                            currentPage={page}
-                            totalPages={totalPages}
-                            onPageChange={setPage}
-                            sortConfig={sortConfig}
-                            onSort={handleSort}
-                            onRowClick={handleRowClick}
-                            actions={FilterPopover}
-                        />
-                    )}
-                    {activeTab === 'investments' && (
-                        <DataTable
-                            data={investments}
-                            columns={investmentColumns}
-                            currentPage={page}
-                            totalPages={totalPages}
-                            onPageChange={setPage}
-                            sortConfig={sortConfig}
-                            onSort={handleSort}
-                            onRowClick={handleRowClick}
-                            actions={FilterPopover}
-                        />
-                    )}
-                    {activeTab === 'loans' && (
-                        <DataTable
-                            data={loans}
-                            columns={loanColumns}
-                            currentPage={page}
-                            totalPages={totalPages}
-                            onPageChange={setPage}
-                            sortConfig={sortConfig}
-                            onSort={handleSort}
-                            onRowClick={handleRowClick}
-                            actions={FilterPopover}
-                        />
-                    )}
-                </>
+
+            {activeTab === 'expenses' && (
+                <DataTable
+                    data={expenses}
+                    columns={expenseColumns}
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    onRowClick={handleRowClick}
+                    actions={FilterPopover}
+                    totalRecords={total}
+                    isLoading={loading}
+                />
+            )}
+            {activeTab === 'income' && (
+                <DataTable
+                    data={incomes}
+                    columns={incomeColumns}
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    onRowClick={handleRowClick}
+                    actions={FilterPopover}
+                    totalRecords={total}
+                    isLoading={loading}
+                />
+            )}
+            {activeTab === 'investments' && (
+                <DataTable
+                    data={investments}
+                    columns={investmentColumns}
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    onRowClick={handleRowClick}
+                    actions={FilterPopover}
+                    totalRecords={total}
+                    isLoading={loading}
+                />
+            )}
+            {activeTab === 'loans' && (
+                <DataTable
+                    data={loans}
+                    columns={loanColumns}
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    onRowClick={handleRowClick}
+                    actions={FilterPopover}
+                    totalRecords={total}
+                    isLoading={loading}
+                />
             )}
         </div>
     );

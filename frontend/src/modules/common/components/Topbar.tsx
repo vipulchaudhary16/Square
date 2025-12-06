@@ -6,8 +6,6 @@ import {
     Users,
     BarChart3,
     LogOut,
-    Menu,
-    X,
     ChevronDown,
     User as UserIcon,
     DollarSign,
@@ -28,7 +26,6 @@ export const Topbar: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
@@ -157,82 +154,8 @@ export const Topbar: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center xl:hidden">
-                        <button
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="inline-flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-500 hover:bg-slate-50 focus:outline-none"
-                        >
-                            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                        </button>
-                    </div>
                 </div>
             </div>
-
-            { }
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="md:hidden border-t border-slate-100 dark:border-slate-800 overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl"
-                    >
-                        <div className="px-4 pt-4 pb-6 space-y-2">
-                            {navItems.map((item) => {
-                                const Icon = item.icon;
-                                const active = isActive(item.path);
-                                return (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all ${active
-                                            ? 'bg-primary-50 text-primary-700 shadow-sm'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                            }`}
-                                    >
-                                        <Icon className={`w-5 h-5 ${active ? 'text-primary-600' : 'text-slate-400'}`} />
-                                        {item.name}
-                                    </Link>
-                                );
-                            })}
-                            <div className="border-t border-slate-100 pt-4 mt-4">
-                                <div className="flex items-center px-4 mb-4">
-                                    <div className="flex-shrink-0">
-                                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 font-bold border-2 border-white shadow-sm">
-                                            {user?.username?.charAt(0).toUpperCase()}
-                                        </div>
-                                    </div>
-                                    <div className="ml-3">
-                                        <div className="text-base font-bold text-slate-800">{user?.username}</div>
-                                        <div className="text-sm font-medium text-slate-500">{user?.email}</div>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={toggleTheme}
-                                    className="w-full flex items-center justify-between px-4 py-3 text-base font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                                        <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-                                    </div>
-                                    <div className={`w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-primary-600 dark:bg-primary-600' : ''}`}>
-                                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${theme === 'dark' ? 'translate-x-5' : ''}`} />
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50 transition-colors"
-                                >
-                                    <LogOut className="w-5 h-5" />
-                                    Sign out
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </nav >
     );
 };

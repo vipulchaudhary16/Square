@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Dashboard } from './modules/dashboard/components/Dashboard'
 import { Layout } from './modules/common/components/Layout'
 import Auth from './modules/auth/pages/Auth'
+import ForgotPassword from './modules/auth/pages/ForgotPassword'
+import ResetPassword from './modules/auth/pages/ResetPassword'
 import Landing from './modules/common/pages/Landing'
 import { AddExpensePage } from './modules/expense/pages/AddExpensePage'
 import { GroupsPage } from './modules/expense/pages/GroupsPage'
@@ -31,6 +33,8 @@ function App() {
                     {}
                     <Route path="/" element={!isAuthenticated ? <Landing /> : <Navigate to="/dashboard" />} />
                     <Route path="/auth" element={!isAuthenticated ? <Auth /> : <Navigate to="/dashboard" />} />
+                    <Route path="/auth/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to="/dashboard" />} />
+                    <Route path="/auth/reset-password" element={!isAuthenticated ? <ResetPassword /> : <Navigate to="/dashboard" />} />
 
                     {}
                     <Route element={<Layout />}>

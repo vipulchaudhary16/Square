@@ -5,12 +5,12 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"net/smtp"
 	"os"
 	"time"
 
 	"github.com/codewithvipul/expense-tracker/backend/pkg/db"
 	"github.com/codewithvipul/expense-tracker/backend/pkg/models"
+	"github.com/codewithvipul/expense-tracker/backend/pkg/services"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -222,17 +222,14 @@ func InviteUser(c *fiber.Ctx) error {
 	}
 
 	
-	link := fmt.Sprintf("http://localhost:5173/join?token=%s", token)
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173"
+	}
+	link := fmt.Sprintf("%s/join?token=%s", frontendURL, token)
 	body := fmt.Sprintf("You have been invited to join a group. Click here to join: %s", link)
 	
-	
-	
-	
-	
-	
-	
-	
-	if err := sendGroupEmail(input.Email, "Group Invitation", body); err != nil {
+	if err := services.SendEmail(input.Email, "Group Invitation", body); err != nil {
 		fmt.Println("Failed to send email:", err)
 	}
 
@@ -275,18 +272,7 @@ func JoinGroup(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Joined group successfully", "group_id": invite.GroupID})
 }
 
-func sendGroupEmail(to, subject, body string) error {
-	from := os.Getenv("SMTP_EMAIL")
-	password := os.Getenv("SMTP_PASSWORD")
-	host := "smtp.gmail.com"
-	port := "587"
 
-	auth := smtp.PlainAuth("", from, password, host)
-
-	msg := []byte(fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\n%s", to, subject, body))
-
-	return smtp.SendMail(host+":"+port, auth, from, []string{to}, msg)
-}
 
 func AddMemberToGroup(c *fiber.Ctx) error {
 	groupId := c.Params("id")

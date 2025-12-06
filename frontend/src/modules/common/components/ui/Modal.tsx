@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { useBodyScrollLock } from '../../../../hooks/useBodyScrollLock';
 
 interface ModalProps {
     isOpen: boolean;
@@ -9,6 +10,8 @@ interface ModalProps {
 }
 
 export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+    useBodyScrollLock(isOpen);
+
     if (!isOpen) return null;
 
     return (

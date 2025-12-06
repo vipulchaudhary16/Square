@@ -212,7 +212,7 @@ export const Dashboard: React.FC = () => {
             {}
             <button
                 onClick={() => setIsAddExpenseModalOpen(true)}
-                className="fixed bottom-6 right-6 lg:hidden z-40 bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg shadow-primary-600/30 transition-transform hover:scale-110 active:scale-95"
+                className="fixed bottom-6 right-6 hidden z-40 bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg shadow-primary-600/30 transition-transform hover:scale-110 active:scale-95"
                 aria-label="Add Expense"
             >
                 <Plus className="w-6 h-6" />

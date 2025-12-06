@@ -15,6 +15,8 @@ type User struct {
 	Password  string             `json:"-" bson:"password,omitempty"`
 	OTP       string             `json:"-" bson:"otp,omitempty"`
 	OTPExpiry time.Time          `json:"-" bson:"otp_expiry,omitempty"`
+	ResetToken       string    `json:"-" bson:"reset_token,omitempty"`
+	ResetTokenExpiry time.Time `json:"-" bson:"reset_token_expiry,omitempty"`
 }
 
 type Group struct {

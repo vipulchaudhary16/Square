@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Income } from '../../../api/finance';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO, isWithinInterval } from 'date-fns';
-import { PieChart as PieIcon, Table as TableIcon } from 'lucide-react';
+import { PieChart as PieIcon, Table as TableIcon, Filter, X } from 'lucide-react';
 import { useTheme } from '../../../context/ThemeContext';
 
 interface IncomeReportProps {
@@ -12,7 +13,7 @@ interface IncomeReportProps {
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
-export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading = false }) => {
+export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }) => {
     const { theme } = useTheme();
     const [startDate, setStartDate] = useState(() => {
         const now = new Date();
@@ -23,6 +24,9 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading =
         return endOfMonth(now).toISOString().slice(0, 10);
     });
     const [viewMode, setViewMode] = useState<'charts' | 'table'>('charts');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+    useBodyScrollLock(isFilterOpen);
 
     const handleQuickFilter = (type: 'week' | 'month' | 'year') => {
         const now = new Date();
@@ -84,9 +88,21 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading =
 
     return (
         <div className="space-y-8">
-            {}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-                <div className="flex flex-col md:flex-row md:items-end gap-4">
+
+            <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+
+                <div className="md:hidden">
+                    <button
+                        onClick={() => setIsFilterOpen(true)}
+                        className="w-full flex items-center justify-center gap-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl font-medium shadow-sm"
+                    >
+                        <Filter className="w-5 h-5" />
+                        <span>Filter Income</span>
+                    </button>
+                </div>
+
+
+                <div className="hidden md:flex flex-col md:flex-row md:items-end gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow">
                         <div>
                             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">Start Date</label>
@@ -119,12 +135,66 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading =
                         </button>
                     </div>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                    <button onClick={() => handleQuickFilter('week')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600">This Week</button>
-                    <button onClick={() => handleQuickFilter('month')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600">This Month</button>
-                    <button onClick={() => handleQuickFilter('year')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600">This Year</button>
+                
+
+                <div className="mt-4 flex flex-wrap gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+                    <button onClick={() => handleQuickFilter('week')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap">This Week</button>
+                    <button onClick={() => handleQuickFilter('month')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap">This Month</button>
+                    <button onClick={() => handleQuickFilter('year')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap">This Year</button>
                 </div>
             </div>
+
+
+            {isFilterOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Filter Income</h3>
+                            <button onClick={() => setIsFilterOpen(false)} className="text-slate-400 hover:text-slate-500">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Start Date</label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full rounded-xl border-slate-200 dark:border-slate-600 shadow-sm focus:border-green-500 focus:ring-green-500 py-2.5 px-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">End Date</label>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="w-full rounded-xl border-slate-200 dark:border-slate-600 shadow-sm focus:border-green-500 focus:ring-green-500 py-2.5 px-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                />
+                            </div>
+                            <div className="pt-2 flex gap-3">
+                                <button
+                                    onClick={() => setIsFilterOpen(false)}
+                                    className="flex-1 bg-green-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-green-500/30 active:scale-95 transition-transform"
+                                >
+                                    Apply Filters
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setStartDate('');
+                                        setEndDate('');
+                                        setIsFilterOpen(false);
+                                    }}
+                                    className="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 py-3 rounded-xl font-semibold active:scale-95 transition-transform"
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {isLoading ? (
                 <div className="flex justify-center items-center h-64">
@@ -132,17 +202,17 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading =
                 </div>
             ) : (
                 <>
-                    {}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-6 text-white shadow-lg shadow-green-500/20">
+
+                    <div className="flex overflow-x-auto pb-4 gap-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:gap-6 md:pb-0 snap-x snap-mandatory hide-scrollbar">
+                        <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-6 text-white shadow-lg shadow-green-500/20 flex-shrink-0">
                             <p className="text-green-100 text-sm font-medium uppercase tracking-wider">Total Income</p>
                             <h3 className="text-3xl font-bold mt-2 tracking-tight">₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0">
                             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Transactions</p>
                             <h3 className="text-3xl font-bold mt-2 text-slate-900 dark:text-white tracking-tight">{filteredIncomes.length}</h3>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0">
                             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Average</p>
                             <h3 className="text-3xl font-bold mt-2 text-slate-900 dark:text-white tracking-tight">
                                 ₹{filteredIncomes.length ? (totalIncome / filteredIncomes.length).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
@@ -150,7 +220,7 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading =
                         </div>
                     </div>
 
-                    {}
+
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white">Detailed Analysis</h2>
                         <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl">
@@ -171,7 +241,7 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading =
 
                     {viewMode === 'charts' ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            {}
+
                             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Income by Source</h3>
                                 <div className="flex flex-col sm:flex-row items-center gap-8">
@@ -234,9 +304,9 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading =
                         </div>
                     ) : (
                         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
-                                    <thead className="bg-slate-50 dark:bg-slate-700">
+                            <div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
+                                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700 relative">
+                                    <thead className="bg-slate-50 dark:bg-slate-700 sticky top-0 z-10">
                                         <tr>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Source</th>

@@ -6,12 +6,12 @@ import { useTheme } from '../../../context/ThemeContext';
 
 interface InvestmentReportProps {
     investments: Investment[];
-    isLoading?: boolean;
+    isLoading: boolean;
 }
 
 const COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#6366F1'];
 
-export const InvestmentReport: React.FC<InvestmentReportProps> = ({ investments, isLoading = false }) => {
+export const InvestmentReport: React.FC<InvestmentReportProps> = ({ investments, isLoading }) => {
     const { theme } = useTheme();
     const [filterType, setFilterType] = useState<string>('All');
     const [viewMode, setViewMode] = useState<'charts' | 'table'>('charts');
@@ -50,7 +50,7 @@ export const InvestmentReport: React.FC<InvestmentReportProps> = ({ investments,
 
     return (
         <div className="space-y-8">
-            {}
+
             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-4">
                     <div className="w-full sm:w-64">
@@ -83,23 +83,23 @@ export const InvestmentReport: React.FC<InvestmentReportProps> = ({ investments,
                 </div>
             ) : (
                 <>
-                    {}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+
+                    <div className="flex overflow-x-auto pb-4 gap-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 md:gap-6 md:pb-0 snap-x snap-mandatory hide-scrollbar">
+                        <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0">
                             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Total Invested</p>
                             <h3 className="text-2xl font-bold mt-2 text-slate-900 dark:text-white tracking-tight">₹{totalInvested.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0">
                             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Current Value</p>
                             <h3 className="text-2xl font-bold mt-2 text-slate-900 dark:text-white tracking-tight">₹{currentTotalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
                         </div>
-                        <div className={`rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 ${totalProfitLoss >= 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'}`}>
+                        <div className={`min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0 ${totalProfitLoss >= 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'}`}>
                             <p className={`text-sm font-medium uppercase tracking-wider ${totalProfitLoss >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>Total P/L</p>
                             <h3 className={`text-2xl font-bold mt-2 tracking-tight ${totalProfitLoss >= 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
                                 {totalProfitLoss >= 0 ? '+' : ''}₹{totalProfitLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </h3>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0">
                             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">ROI</p>
                             <h3 className={`text-2xl font-bold mt-2 tracking-tight ${roi >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                 {roi.toFixed(2)}%
@@ -107,7 +107,7 @@ export const InvestmentReport: React.FC<InvestmentReportProps> = ({ investments,
                         </div>
                     </div>
 
-                    {}
+
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white">Portfolio Analysis</h2>
                         <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl">
@@ -128,7 +128,7 @@ export const InvestmentReport: React.FC<InvestmentReportProps> = ({ investments,
 
                     {viewMode === 'charts' ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            {}
+
                             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Portfolio Allocation</h3>
                                 <div className="flex flex-col sm:flex-row items-center gap-8">
@@ -170,7 +170,7 @@ export const InvestmentReport: React.FC<InvestmentReportProps> = ({ investments,
                                 </div>
                             </div>
 
-                            {}
+
                             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Investment Performance</h3>
                                 <div className="h-80">
@@ -193,9 +193,9 @@ export const InvestmentReport: React.FC<InvestmentReportProps> = ({ investments,
                         </div>
                     ) : (
                         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700">
-                                    <thead className="bg-slate-50 dark:bg-slate-700">
+                            <div className="overflow-x-auto max-h-[500px] overflow-y-auto custom-scrollbar">
+                                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700 relative">
+                                    <thead className="bg-slate-50 dark:bg-slate-700 sticky top-0 z-10">
                                         <tr>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Name</th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>

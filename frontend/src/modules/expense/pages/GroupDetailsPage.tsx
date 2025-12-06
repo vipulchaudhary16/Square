@@ -279,7 +279,7 @@ export const GroupDetailsPage: React.FC = () => {
                                 No expenses recorded in this group yet.
                             </div>
                         ) : (
-                            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+                            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden h-[600px] overflow-y-auto">
                                 <ul className="divide-y divide-gray-100 dark:divide-slate-700">
                                     {expenses.map((expense: Expense) => (
                                         <li key={expense.id} className="p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer" onClick={() => navigate(`/expenses/${expense.id}`)}>

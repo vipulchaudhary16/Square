@@ -22,6 +22,9 @@ interface AddExpenseFormProps {
     onSuccess?: () => void;
     initialData?: Expense;
     defaultGroupId?: string;
+    formId?: string;
+    hideSubmitButton?: boolean;
+    onLoadingChange?: (loading: boolean) => void;
 }
 
 interface Member {
@@ -30,7 +33,7 @@ interface Member {
     email: string;
 }
 
-export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initialData, defaultGroupId }) => {
+export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initialData, defaultGroupId, formId, hideSubmitButton, onLoadingChange }) => {
     const [mode, setMode] = useState<'personal' | 'group'>('personal');
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedGroupId, setSelectedGroupId] = useState<string>('');
@@ -71,6 +74,10 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
     });
 
     const loading = createLoading || updateLoading;
+    
+    useEffect(() => {
+        onLoadingChange?.(loading);
+    }, [loading, onLoadingChange]);
 
     useEffect(() => {
         if (initialData) {
@@ -239,44 +246,66 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
 
     return (
         <div className="w-full">
-            {!defaultGroupId && (
-                <div className="flex mb-6 bg-gray-100 dark:bg-slate-700 p-1 rounded-lg">
-                    <button
-                        onClick={() => setMode('personal')}
-                        className={cn(
-                            "flex-1 py-2 rounded-md text-sm font-medium transition-all",
-                            mode === 'personal' ? "bg-white dark:bg-slate-600 shadow text-gray-900 dark:text-white" : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
-                        )}
-                    >
-                        Personal
-                    </button>
-                    <button
-                        onClick={() => setMode('group')}
-                        className={cn(
-                            "flex-1 py-2 rounded-md text-sm font-medium transition-all",
-                            mode === 'group' ? "bg-white dark:bg-slate-600 shadow text-gray-900 dark:text-white" : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
-                        )}
-                    >
-                        Group
-                    </button>
-                </div>
-            )}
+            <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="flex flex-col md:block gap-4">
+                    <div className="flex gap-3 md:block">
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Amount</label>
-                    <div className="relative mt-1 rounded-md shadow-sm">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <span className="text-gray-500 dark:text-slate-400 sm:text-sm">₹</span>
+                        {!defaultGroupId && (
+                            <div className="md:hidden w-1/2">
+                                <select
+                                    value={mode}
+                                    onChange={(e) => setMode(e.target.value as 'personal' | 'group')}
+                                    className="block w-full rounded-xl border-gray-300 dark:border-slate-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2.5 px-4 bg-white dark:bg-slate-700 text-gray-900 dark:text-white font-medium h-[42px]"
+                                >
+                                    <option value="personal">Personal</option>
+                                    <option value="group">Group</option>
+                                </select>
+                            </div>
+                        )}
+
+
+                        <div className={!defaultGroupId ? "w-1/2 md:w-full" : "w-full"}>
+                            <label className="hidden md:block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
+                            <div className="relative rounded-md shadow-sm h-[42px] md:h-auto">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span className="text-gray-500 dark:text-slate-400 sm:text-sm">₹</span>
+                                </div>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    {...register("amount", { required: true })}
+                                    className="block w-full h-full md:h-auto rounded-xl md:rounded-md border-gray-300 dark:border-slate-600 pl-7 pr-4 focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                                    placeholder="0.00"
+                                />
+                            </div>
                         </div>
-                        <input
-                            type="number"
-                            step="0.01"
-                            {...register("amount", { required: true })}
-                            className="block w-full rounded-md border-gray-300 dark:border-slate-600 pl-7 pr-12 focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                            placeholder="0.00"
-                        />
                     </div>
+
+
+                    {!defaultGroupId && (
+                        <div className="hidden md:flex bg-gray-100 dark:bg-slate-700 p-1 rounded-lg mb-6 mt-2">
+                            <button
+                                type="button"
+                                onClick={() => setMode('personal')}
+                                className={cn(
+                                    "flex-1 py-2 rounded-md text-sm font-medium transition-all",
+                                    mode === 'personal' ? "bg-white dark:bg-slate-600 shadow text-gray-900 dark:text-white" : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                                )}
+                            >
+                                Personal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMode('group')}
+                                className={cn(
+                                    "flex-1 py-2 rounded-md text-sm font-medium transition-all",
+                                    mode === 'group' ? "bg-white dark:bg-slate-600 shadow text-gray-900 dark:text-white" : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                                )}
+                            >
+                                Group
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {mode === 'group' && (
@@ -517,13 +546,15 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
 
 
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                    {loading ? 'Saving...' : (initialData ? 'Update Expense' : 'Add Expense')}
-                </button>
+                {!hideSubmitButton && (
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                        {loading ? 'Saving...' : (initialData ? 'Update Expense' : 'Add Expense')}
+                    </button>
+                )}
             </form >
         </div >
     );
