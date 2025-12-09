@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Users, Mail, ArrowLeft, Calendar, User as UserIcon, Search, Plus, ArrowRight } from 'lucide-react';
 import useFetchData from '../../../hooks/useFetchData';
 import useApiCall from '../../../hooks/useApiCall';
-import { getGroupDetails, inviteUser, addMember, GroupDetails } from '../../../api/groups';
+import { getGroupDetails, inviteUser, addMember, settleDebt, GroupDetails } from '../../../api/groups';
 import { searchUsers, User } from '../../../api/users';
 import { getGroupExpenses, Expense } from '../../../api/expenses';
 
@@ -23,7 +23,11 @@ export const GroupDetailsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'reports' | 'balances'>('expenses');
     const [showAddMember, setShowAddMember] = useState(false);
     const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
+
     const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
+    const [settleModalOpen, setSettleModalOpen] = useState(false);
+    const [settleToUser, setSettleToUser] = useState<{ id: string, name: string, amount: number } | null>(null);
+    const [settleAmount, setSettleAmount] = useState('');
 
     const { data, loading, error, refetch } = useFetchData({
         apiCall: () => getGroupDetails(id!)
@@ -105,6 +109,33 @@ export const GroupDetailsPage: React.FC = () => {
         }
     };
 
+    const { execute: executeSettle, loading: settleLoading } = useApiCall({
+        apiCall: (data: { toUserId: string, amount: number }) => settleDebt(id!, data.toUserId, data.amount)
+    });
+
+    const handleSettle = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!settleToUser || !settleAmount) return;
+        
+        try {
+            await executeSettle({ toUserId: settleToUser.id, amount: parseFloat(settleAmount) });
+            alert('Settlement recorded!');
+            setSettleModalOpen(false);
+            setSettleToUser(null);
+            setSettleAmount('');
+            refetch(undefined);
+            refetchExpenses(undefined);
+        } catch (err) {
+            alert('Failed to record settlement');
+        }
+    };
+
+    const openSettleModal = (userId: string, userName: string, amount: number) => {
+        setSettleToUser({ id: userId, name: userName, amount });
+        setSettleAmount(amount.toString());
+        setSettleModalOpen(true);
+    };
+
     const getSplitDetails = (expense: Expense) => {
         if (!user) return null;
 
@@ -166,45 +197,40 @@ export const GroupDetailsPage: React.FC = () => {
             </button>
 
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden mb-6">
-                <div className="p-4 md:p-8 border-b border-gray-100 dark:border-slate-700">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                <div className="p-4 md:p-5 border-b border-gray-100 dark:border-slate-700">
+                    <div className="flex justify-between items-start gap-4 mb-2">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{groupDetails.group.name}</h1>
-                            <p className="text-gray-500 dark:text-slate-400 text-base md:text-lg">{groupDetails.group.description}</p>
-
-                            {}
-                            <div className="mt-2 flex items-center gap-2">
-                                <span className="text-sm text-gray-500 dark:text-slate-400">Your Net Balance:</span>
-                                <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${Math.abs(myBalance) < 0.01
-                                    ? 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'
-                                    : myBalance > 0
-                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                    }`}>
-                                    {Math.abs(myBalance) < 0.01 ? 'Settled' : (myBalance > 0 ? `+₹${myBalance.toFixed(2)}` : `-₹${Math.abs(myBalance).toFixed(2)}`)}
-                                </span>
-                            </div>
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{groupDetails.group.name}</h1>
+                            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{groupDetails.group.description}</p>
                         </div>
-                        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-                            <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-lg flex items-center gap-2 font-medium">
-                                <Users className="w-5 h-5" />
-                                <span className="hidden sm:inline">{groupDetails.members.length} Members</span>
-                                <span className="sm:hidden">{groupDetails.members.length}</span>
-                            </div>
-                            <button
-                                onClick={() => setIsAddExpenseModalOpen(true)}
-                                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-medium"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">Add Expense</span>
-                                <span className="sm:hidden">Add</span>
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => setIsAddExpenseModalOpen(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-medium whitespace-nowrap flex-shrink-0"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span className="hidden sm:inline">Add Expense</span>
+                            <span className="sm:hidden">Add</span>
+                        </button>
                     </div>
-                    <div className="flex items-center gap-4 mt-6 text-sm text-gray-500 dark:text-slate-400">
-                        <div className="flex items-center gap-1">
+
+                    <div className="flex flex-wrap items-center gap-4 mt-3">
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${Math.abs(myBalance) < 0.01
+                                ? 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'
+                                : myBalance > 0
+                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                }`}>
+                                {Math.abs(myBalance) < 0.01 ? 'Settled' : (myBalance > 0 ? `You are owed ₹${myBalance.toFixed(2)}` : `You owe ₹${Math.abs(myBalance).toFixed(2)}`)}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400">
+                            <Users className="w-4 h-4" />
+                            <span>{groupDetails.members.length} Members</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400">
                             <Calendar className="w-4 h-4" />
-                            Created {new Date(groupDetails.group.created_at).toLocaleDateString()}
+                            <span>Created {new Date(groupDetails.group.created_at).toLocaleDateString()}</span>
                         </div>
                     </div>
                 </div>
@@ -219,6 +245,15 @@ export const GroupDetailsPage: React.FC = () => {
                             }`}
                     >
                         Expenses
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('balances')}
+                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${activeTab === 'balances'
+                            ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
+                            }`}
+                    >
+                        Balances
                     </button>
                     <button
                         onClick={() => setActiveTab('members')}
@@ -243,15 +278,7 @@ export const GroupDetailsPage: React.FC = () => {
                     >
                         Reports
                     </button>
-                    <button
-                        onClick={() => setActiveTab('balances')}
-                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${activeTab === 'balances'
-                            ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
-                            }`}
-                    >
-                        Balances
-                    </button>
+                    
                 </div>
             </div>
 
@@ -438,15 +465,17 @@ export const GroupDetailsPage: React.FC = () => {
                                 {groupDetails.debts.map((debt, index) => {
                                     const fromUser = groupDetails.members.find(m => m.id === debt.from);
                                     const toUser = groupDetails.members.find(m => m.id === debt.to);
+                                    const fromUserName = fromUser?.first_name + " " + fromUser?.last_name || fromUser?.username || "User";
+                                    const toUserName = toUser?.first_name + " " + toUser?.last_name || toUser?.username || "User";
                                     return (
                                         <li key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg gap-2 sm:gap-0">
                                             <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <div className="w-8 h-8 bg-red-100 dark:bg-red-900/20 rounded-full flex-shrink-0 flex items-center justify-center text-red-600 dark:text-red-400 font-bold text-xs">
-                                                        {fromUser?.username?.charAt(0).toUpperCase() || '?'}
+                                                        {fromUserName?.charAt(0).toUpperCase() || '?'}
                                                     </div>
                                                     <span className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[80px] sm:max-w-[120px]">
-                                                        {fromUser?.username || 'Unknown'}
+                                                        {fromUserName}
                                                     </span>
                                                 </div>
 
@@ -457,16 +486,26 @@ export const GroupDetailsPage: React.FC = () => {
 
                                                 <div className="flex items-center gap-2 min-w-0 justify-end">
                                                     <span className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[80px] sm:max-w-[120px] text-right">
-                                                        {toUser?.username || 'Unknown'}
+                                                        {toUserName}
                                                     </span>
                                                     <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-full flex-shrink-0 flex items-center justify-center text-green-600 dark:text-green-400 font-bold text-xs">
-                                                        {toUser?.username?.charAt(0).toUpperCase() || '?'}
+                                                        {toUserName?.charAt(0).toUpperCase() || '?'}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="font-bold text-gray-900 dark:text-white text-right sm:ml-4 border-t sm:border-t-0 border-gray-200 dark:border-slate-600 pt-2 sm:pt-0 mt-1 sm:mt-0">
-                                                ₹{debt.amount.toFixed(2)}
+                                            <div className="flex flex-col items-end sm:ml-4 border-t sm:border-t-0 border-gray-200 dark:border-slate-600 pt-2 sm:pt-0 mt-1 sm:mt-0">
+                                                <div className="font-bold text-gray-900 dark:text-white text-right">
+                                                    ₹{debt.amount.toFixed(2)}
+                                                </div>
+                                                {debt.from === user?.id && (
+                                                    <button
+                                                        onClick={() => openSettleModal(debt.to, toUser?.username || 'Unknown', debt.amount)}
+                                                        className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline mt-1"
+                                                    >
+                                                        Settle Up
+                                                    </button>
+                                                )}
                                             </div>
                                         </li>
                                     );
@@ -489,6 +528,48 @@ export const GroupDetailsPage: React.FC = () => {
                         refetchExpenses(undefined);
                     }}
                 />
+            </Modal>
+
+            <Modal
+                isOpen={settleModalOpen}
+                onClose={() => setSettleModalOpen(false)}
+                title={`Settle Up with ${settleToUser?.name}`}
+            >
+                <form onSubmit={handleSettle} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                            <input
+                                type="number"
+                                step="0.01"
+                                required
+                                value={settleAmount}
+                                onChange={(e) => setSettleAmount(e.target.value)}
+                                className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                            />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Full amount owed: ₹{settleToUser?.amount.toFixed(2)}
+                        </p>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setSettleModalOpen(false)}
+                            className="px-4 py-2 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={settleLoading}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        >
+                            {settleLoading ? 'Recording...' : 'Record Payment'}
+                        </button>
+                    </div>
+                </form>
             </Modal>
         </div>
     );

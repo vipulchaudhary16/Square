@@ -319,3 +319,60 @@ func generateOTP() (string, error) {
 	}
 	return fmt.Sprintf("%06d", n), nil
 }
+
+func SettleDebt(c *fiber.Ctx) error {
+	groupId := c.Params("id")
+	groupObjID, err := primitive.ObjectIDFromHex(groupId)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid group ID"})
+	}
+
+	var input struct {
+		ToUserID string  `json:"to_user_id"`
+		Amount   float64 `json:"amount"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid input"})
+	}
+
+	userID := c.Locals("user_id").(string)
+	payerID, _ := primitive.ObjectIDFromHex(userID)
+	toUserObjID, err := primitive.ObjectIDFromHex(input.ToUserID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid to_user_id"})
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	expense := models.Expense{
+		ID:           primitive.NewObjectID(),
+		Description:  "Settlement payment",
+		Amount:       input.Amount,
+		Category:     "Settlement",
+		Date:         time.Now(),
+		PayerID:      payerID,
+		GroupID:      &groupObjID,
+		Participants: []primitive.ObjectID{toUserObjID},
+		CreatedAt:    time.Now(),
+		SplitType:    models.SplitEqual,
+		Splits:       map[string]float64{toUserObjID.Hex(): input.Amount},
+	}
+
+	_, err = db.DB.Collection("expenses").InsertOne(ctx, expense)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not create settlement"})
+	}
+
+	log := models.ActivityLog{
+		ID:        primitive.NewObjectID(),
+		ExpenseID: &expense.ID,
+		UserID:    payerID,
+		Action:    "SETTLE",
+		Details:   fmt.Sprintf("Settled %.2f with user %s", input.Amount, input.ToUserID),
+		CreatedAt: time.Now(),
+	}
+	db.DB.Collection("activity_logs").InsertOne(ctx, log)
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Settlement recorded", "expense": expense})
+}

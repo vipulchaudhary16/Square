@@ -52,3 +52,8 @@ export const addMember = async (groupId: string, userId: string) => {
     const response = await api.post(`/groups/${groupId}/members`, { user_id: userId });
     return response.data;
 };
+
+export const settleDebt = async (groupId: string, toUserId: string, amount: number) => {
+    const response = await api.post(`/groups/${groupId}/settle`, { to_user_id: toUserId, amount });
+    return response.data;
+};

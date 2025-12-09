@@ -13,14 +13,14 @@ export const GroupsPage: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div className="flex flex-row justify-between items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Your Groups</h1>
-                    <p className="text-gray-500 dark:text-slate-400">Manage your shared expenses and groups.</p>
+                    <p className="text-gray-500 dark:text-slate-400 hidden sm:block">Manage your shared expenses.</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full md:w-auto"
+                    className="flex items-center justify-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
                 >
                     <Plus className="w-4 h-4" />
                     Create Group
@@ -55,20 +55,26 @@ export const GroupsPage: React.FC = () => {
                         <Link
                             key={group.id}
                             to={`/groups/${group.id}`}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 hover:shadow-md transition-shadow block"
+                            className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 hover:shadow-md transition-shadow block"
                         >
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                                    {group.name.charAt(0).toUpperCase()}
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1 min-w-0 mr-4">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex-shrink-0 flex items-center justify-center text-white font-bold text-base">
+                                            {group.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{group.name}</h3>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-slate-400 line-clamp-2 pl-11">{group.description || "No description"}</p>
                                 </div>
-                                <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-slate-300">
-                                    {group.members.length} members
+                                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                                    <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-slate-300 whitespace-nowrap">
+                                        {group.members.length} members
+                                    </div>
+                                    <div className="flex items-center text-blue-600 dark:text-blue-400 text-xs font-medium whitespace-nowrap">
+                                        View <ArrowRight className="w-3 h-3 ml-1" />
+                                    </div>
                                 </div>
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{group.name}</h3>
-                            <p className="text-sm text-gray-500 dark:text-slate-400 mb-4 line-clamp-2">{group.description || "No description"}</p>
-                            <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium">
-                                View Details <ArrowRight className="w-4 h-4 ml-1" />
                             </div>
                         </Link>
                     ))}

@@ -48,6 +48,7 @@ func main() {
 	api.Post("/groups/join", middleware.Protected(), handlers.JoinGroup)
 	api.Post("/groups/:id/members", middleware.Protected(), handlers.AddMemberToGroup)
 	api.Get("/groups/:id/expenses", middleware.Protected(), handlers.GetGroupExpenses)
+	api.Post("/groups/:id/settle", middleware.Protected(), handlers.SettleDebt)
 
 	
 	api.Get("/users/search", middleware.Protected(), handlers.SearchUsers)
