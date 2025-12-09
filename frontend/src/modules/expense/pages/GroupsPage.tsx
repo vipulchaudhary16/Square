@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Users, Plus, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useFetchData from '../../../hooks/useFetchData';
 import { getUserGroups, Group } from '../../../api/groups';
 import { CreateGroupModal } from '../components/CreateGroupModal';
+import { EmptyState } from '../../common/components/ui/EmptyState';
 
 export const GroupsPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { data: groups, loading, error, refetch } = useFetchData({
         apiCall: getUserGroups
     });
+    console.log(groups);
 
     return (
         <div>
@@ -33,22 +35,11 @@ export const GroupsPage: React.FC = () => {
                 </div>
             ) : error ? (
                 <div className="text-center text-red-500 p-12">Failed to load groups.</div>
-            ) : groups?.length === 0 ? (
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-12 text-center">
-                    <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Users className="w-8 h-8 text-blue-500 dark:text-blue-400" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No groups yet</h3>
-                    <p className="text-gray-500 dark:text-slate-400 max-w-sm mx-auto mb-6">
-                        Create a group to start splitting bills with friends, roommates, or family members.
-                    </p>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300"
-                    >
-                        Create your first group &rarr;
-                    </button>
-                </div>
+            ) : (groups?.length === 0 || !groups) ? (
+                <EmptyState
+                    title="No groups yet"
+                    description="Create a group to start splitting bills with friends, roommates, or family members."
+                />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {groups?.map((group: Group) => (

@@ -69,6 +69,11 @@ Built with a robust **Go** backend and a dynamic **React** frontend, Square comb
     npm run dev
     ```
 
+## Task
+
+1. Show/Hide password feature for login and register page
+2. 
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

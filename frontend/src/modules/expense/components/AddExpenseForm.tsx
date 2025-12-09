@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { cn } from './ExpenseCard';
 import useApiCall from '../../../hooks/useApiCall';
 import { createExpense, updateExpense, Expense } from '../../../api/expenses';
 import { getUserGroups, getGroupDetails, Group } from '../../../api/groups';
-import { Loader2, Sparkles, Users, ChevronRight } from 'lucide-react';
+import { Loader2, Sparkles, Users, ChevronRight, X } from 'lucide-react';
 import { suggestCategory, isAIEnabled } from '../../../services/ai';
 import { Drawer } from '../../common/components/ui/Drawer';
+import { AmountInput } from '../../common/components/ui/AmountInput';
 
 interface ExpenseFormInputs {
     description: string;
@@ -25,6 +26,7 @@ interface AddExpenseFormProps {
     formId?: string;
     hideSubmitButton?: boolean;
     onLoadingChange?: (loading: boolean) => void;
+    onCancel?: () => void;
 }
 
 interface Member {
@@ -33,14 +35,14 @@ interface Member {
     email: string;
 }
 
-export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initialData, defaultGroupId, formId, hideSubmitButton, onLoadingChange }) => {
+export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initialData, defaultGroupId, formId, onLoadingChange, onCancel }) => {
     const [mode, setMode] = useState<'personal' | 'group'>('personal');
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedGroupId, setSelectedGroupId] = useState<string>('');
     const [groupMembers, setGroupMembers] = useState<Member[]>([]);
     const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
 
-    
+
     const [splitType, setSplitType] = useState<'EQUAL' | 'EXACT' | 'PERCENT'>('EQUAL');
     const [splitValues, setSplitValues] = useState<Record<string, number>>({});
 
@@ -49,7 +51,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
     const [isSuggesting, setIsSuggesting] = useState(false);
     const [isSplitDrawerOpen, setIsSplitDrawerOpen] = useState(false);
 
-    const { register, handleSubmit, reset, watch, setValue } = useForm<ExpenseFormInputs>();
+    const { register, handleSubmit, reset, watch, setValue, control } = useForm<ExpenseFormInputs>();
     const amount = watch('amount');
 
     const handleSuggestCategory = async () => {
@@ -74,7 +76,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
     });
 
     const loading = createLoading || updateLoading;
-    
+
     useEffect(() => {
         onLoadingChange?.(loading);
     }, [loading, onLoadingChange]);
@@ -89,12 +91,12 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
             if (initialData.group_id) {
                 setMode('group');
                 setSelectedGroupId(initialData.group_id);
-                
+
             } else {
                 setMode('personal');
             }
         } else {
-            
+
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             setValue('date', now.toISOString().slice(0, 16));
@@ -131,16 +133,16 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
                     setGroupMembers(res.members || []);
 
                     if (initialData && initialData.group_id === selectedGroupId) {
-                        
+
                         setSelectedParticipants(initialData.participants || []);
                         setSplitType((initialData.split_type as any) || 'EQUAL');
                         setSplitValues(initialData.splits || {});
                     } else if (!initialData) {
-                        
+
                         const allMemberIds = res.members.map((m: Member) => m.id);
                         setSelectedParticipants(allMemberIds);
 
-                        
+
                         const initialSplits: Record<string, number> = {};
                         allMemberIds.forEach((id: string) => initialSplits[id] = 0);
                         setSplitValues(initialSplits);
@@ -168,7 +170,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
                 ? prev.filter(id => id !== userId)
                 : [...prev, userId];
 
-            
+
             setSplitValues(prevSplits => ({
                 ...prevSplits,
                 [userId]: 0
@@ -202,7 +204,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
                 return;
             }
 
-            
+
             if (splitType === 'EXACT') {
                 const total = getRunningTotal();
                 if (Math.abs(total - Number(data.amount)) > 0.01) {
@@ -245,7 +247,29 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
     };
 
     return (
-        <div className="w-full">
+        <div className="w-full relative">
+            <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 py-4 -mx-6 -mt-4 mb-6 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    {initialData ? 'Edit Expense' : 'Add New Expense'}
+                </h3>
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="p-2 rounded-full text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={handleSubmit(onSubmit)}
+                        disabled={loading}
+                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 text-sm font-medium"
+                    >
+                        {loading ? 'Saving...' : 'Save'}
+                    </button>
+                </div>
+            </div>
+
             <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="flex flex-col md:block gap-4">
                     <div className="flex gap-3 md:block">
@@ -266,16 +290,19 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
 
                         <div className={!defaultGroupId ? "w-1/2 md:w-full" : "w-full"}>
                             <label className="hidden md:block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
-                            <div className="relative rounded-md shadow-sm h-[42px] md:h-auto">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <span className="text-gray-500 dark:text-slate-400 sm:text-sm">₹</span>
-                                </div>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    {...register("amount", { required: true })}
-                                    className="block w-full h-full md:h-auto rounded-xl md:rounded-md border-gray-300 dark:border-slate-600 pl-7 pr-4 focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                                    placeholder="0.00"
+                            <div className="h-[42px] md:h-auto">
+                                <Controller
+                                    name="amount"
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field: { onChange, value }, fieldState: { error } }) => (
+                                        <AmountInput
+                                            value={value}
+                                            onChange={onChange}
+                                            error={!!error}
+                                            className="h-full md:h-auto"
+                                        />
+                                    )}
                                 />
                             </div>
                         </div>
@@ -464,6 +491,11 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
                                                                         <input
                                                                             type="number"
                                                                             step={splitType === 'PERCENT' ? "0.1" : "0.01"}
+                                                                            onKeyDown={(e) => {
+                                                                                if (['e', 'E', '+', '-'].includes(e.key)) {
+                                                                                    e.preventDefault();
+                                                                                }
+                                                                            }}
                                                                             className="block w-full pl-8 pr-4 py-2.5 text-base border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
                                                                             placeholder="0.00"
                                                                             value={splitValues[member.id] || ''}
@@ -546,15 +578,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
 
 
 
-                {!hideSubmitButton && (
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                    >
-                        {loading ? 'Saving...' : (initialData ? 'Update Expense' : 'Add Expense')}
-                    </button>
-                )}
+
             </form >
         </div >
     );

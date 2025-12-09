@@ -20,7 +20,7 @@ interface Comment {
     text: string;
     created_at: string;
     user_id: string;
-    username?: string; 
+    username?: string;
 }
 
 interface ExpenseDetails extends Expense {
@@ -72,7 +72,7 @@ const ExpenseDetailsPage: React.FC = () => {
         if (window.confirm("Are you sure you want to delete this expense?")) {
             try {
                 await executeDelete();
-                navigate(-1); 
+                navigate(-1);
             } catch (error) {
                 alert("Failed to delete expense");
             }
@@ -86,7 +86,7 @@ const ExpenseDetailsPage: React.FC = () => {
         try {
             await executeAddComment(newComment);
             setNewComment('');
-            loadData(); 
+            loadData();
         } catch (error) {
             alert("Failed to add comment");
         }
@@ -115,7 +115,7 @@ const ExpenseDetailsPage: React.FC = () => {
                 >
                     <ArrowLeft className="w-5 h-5 mr-2" /> Back
                 </button>
-                
+
                 {!isEditing && (
                     <DropdownMenu
                         items={[
@@ -139,8 +139,8 @@ const ExpenseDetailsPage: React.FC = () => {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Expense</h2>
-                        <button 
-                            onClick={() => setIsEditing(false)} 
+                        <button
+                            onClick={() => setIsEditing(false)}
                             className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 font-medium"
                         >
                             Cancel
@@ -159,7 +159,7 @@ const ExpenseDetailsPage: React.FC = () => {
 
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
-                        
+
                         <div className="relative">
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
                                 <div>
@@ -207,22 +207,20 @@ const ExpenseDetailsPage: React.FC = () => {
                             <nav className="-mb-px flex space-x-8 min-w-max" aria-label="Tabs">
                                 <button
                                     onClick={() => setActiveTab('split')}
-                                    className={`${
-                                        activeTab === 'split'
-                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                    className={`${activeTab === 'split'
+                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                        : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
+                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
                                     <CreditCard className="w-4 h-4" />
                                     Split Details
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('comments')}
-                                    className={`${
-                                        activeTab === 'comments'
-                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                    className={`${activeTab === 'comments'
+                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                        : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
+                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
                                     <MessageSquare className="w-4 h-4" />
                                     Comments
@@ -232,11 +230,10 @@ const ExpenseDetailsPage: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('activity')}
-                                    className={`${
-                                        activeTab === 'activity'
-                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                    className={`${activeTab === 'activity'
+                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                        : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
+                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
                                     <History className="w-4 h-4" />
                                     Activity Log
@@ -255,7 +252,7 @@ const ExpenseDetailsPage: React.FC = () => {
                                             {expense.split_type} Split
                                         </span>
                                     </h3>
-                                    
+
                                     <div className="space-y-4">
                                         {expense.splits && Object.entries(expense.splits).map(([userId, amount]) => (
                                             <div key={userId} className="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-transparent hover:border-gray-200 dark:hover:border-slate-600 transition-colors">
@@ -327,7 +324,7 @@ const ExpenseDetailsPage: React.FC = () => {
                             {activeTab === 'activity' && (
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 animate-fade-in">
                                     <div className="flow-root">
-                                        <ul className="-mb-8">
+                                        <ul className="">
                                             {expense.logs && expense.logs.map((log, logIdx) => (
                                                 <li key={log.id}>
                                                     <div className="relative pb-8">

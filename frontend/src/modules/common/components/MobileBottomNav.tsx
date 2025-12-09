@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useSession } from '../../../hooks/useSession';
 import { useTheme } from '../../../context/ThemeContext';
+import logo from '../../../assets/square.png';
 
 export const MobileBottomNav: React.FC = () => {
     const location = useLocation();
@@ -121,7 +122,10 @@ export const MobileBottomNav: React.FC = () => {
                         >
                             <div className="p-5 space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Menu</h2>
+                                    <div className="flex items-center gap-2">
+                                        <img src={logo} alt="Square Logo" className="w-8 h-8 rounded-lg" />
+                                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Square</h2>
+                                    </div>
                                     <button
                                         onClick={() => setIsMenuOpen(false)}
                                         className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500"
@@ -131,28 +135,16 @@ export const MobileBottomNav: React.FC = () => {
                                 </div>
 
 
-                                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-                                    <div className="flex items-center gap-3 mb-3">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-2 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                    <div className="flex items-center gap-3">
                                         <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold text-lg">
-                                            {user?.username?.charAt(0).toUpperCase()}
+                                            {user?.first_name?.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <div className="font-bold text-slate-900 dark:text-white">{user?.username}</div>
-                                            <div className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</div>
+                                            <div className="font-bold text-slate-900 dark:text-white">{user?.first_name + ' ' + user?.last_name}</div>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={toggleTheme}
-                                        className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-300"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            {theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                                            <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
-                                        </div>
-                                        <div className={`w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-primary-600' : ''}`}>
-                                            <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${theme === 'dark' ? 'translate-x-4' : ''}`} />
-                                        </div>
-                                    </button>
+
                                 </div>
 
 
@@ -177,7 +169,19 @@ export const MobileBottomNav: React.FC = () => {
                                     })}
                                 </div>
 
-                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                                    <button
+                                        onClick={toggleTheme}
+                                        className="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-300"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                                            <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+                                        </div>
+                                        <div className={`w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-primary-600' : ''}`}>
+                                            <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${theme === 'dark' ? 'translate-x-4' : ''}`} />
+                                        </div>
+                                    </button>
                                     <button
                                         onClick={handleLogout}
                                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

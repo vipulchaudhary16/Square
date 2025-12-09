@@ -15,7 +15,7 @@ const InvestmentDetailsPage: React.FC = () => {
     const [newComment, setNewComment] = useState('');
     const [activeTab, setActiveTab] = useState<'comments' | 'activity'>('comments');
 
-    
+
     const [formData, setFormData] = useState({
         name: '',
         type: 'STOCK',
@@ -50,7 +50,7 @@ const InvestmentDetailsPage: React.FC = () => {
                 comments: response.comments || [],
                 users: response.users || {}
             });
-            
+
             setFormData({
                 name: response.investment.name,
                 type: response.investment.type,
@@ -135,7 +135,7 @@ const InvestmentDetailsPage: React.FC = () => {
                 >
                     <ArrowLeft className="w-5 h-5 mr-2" /> Back
                 </button>
-                
+
                 {!isEditing && (
                     <DropdownMenu
                         items={[
@@ -159,8 +159,8 @@ const InvestmentDetailsPage: React.FC = () => {
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 animate-fade-in">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Investment</h2>
-                        <button 
-                            onClick={() => setIsEditing(false)} 
+                        <button
+                            onClick={() => setIsEditing(false)}
                             className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 font-medium"
                         >
                             Cancel
@@ -249,7 +249,7 @@ const InvestmentDetailsPage: React.FC = () => {
 
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
-                        
+
                         <div className="relative">
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
                                 <div>
@@ -290,7 +290,7 @@ const InvestmentDetailsPage: React.FC = () => {
                                         {isProfit ? '+' : ''}{profitLoss.toFixed(2)}
                                     </div>
                                 </div>
-                                
+
                                 {investment.description && (
                                     <div className="col-span-1 sm:col-span-2 mt-2 p-4 bg-gray-50 dark:bg-slate-700/30 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">
                                         <h3 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
@@ -308,11 +308,10 @@ const InvestmentDetailsPage: React.FC = () => {
                         <nav className="-mb-px flex space-x-8 min-w-max" aria-label="Tabs">
                             <button
                                 onClick={() => setActiveTab('comments')}
-                                className={`${
-                                    activeTab === 'comments'
+                                className={`${activeTab === 'comments'
                                         ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                                         : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                             >
                                 <MessageSquare className="w-4 h-4" />
                                 Comments
@@ -322,11 +321,10 @@ const InvestmentDetailsPage: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => setActiveTab('activity')}
-                                className={`${
-                                    activeTab === 'activity'
+                                className={`${activeTab === 'activity'
                                         ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                                         : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                             >
                                 <History className="w-4 h-4" />
                                 Activity Log
@@ -384,7 +382,7 @@ const InvestmentDetailsPage: React.FC = () => {
                         ) : (
                             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-8 animate-fade-in">
                                 <div className="flow-root">
-                                    <ul className="-mb-8">
+                                    <ul className="">
                                         {investment.logs && investment.logs.map((log, logIdx) => (
                                             <li key={log.id}>
                                                 <div className="relative pb-8">

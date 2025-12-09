@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getIncomes, createIncome, Income } from '../../../api/finance';
-import { Plus, DollarSign, Calendar } from 'lucide-react';
+import { Plus, DollarSign, Calendar, X } from 'lucide-react';
 
 const IncomePage: React.FC = () => {
     const navigate = useNavigate();
@@ -66,77 +66,81 @@ const IncomePage: React.FC = () => {
 
             <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                 {showForm && (
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md mb-8 animate-fade-in border dark:border-slate-700">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add New Income</h2>
-                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Source</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.source}
-                                    onChange={e => setFormData({ ...formData, source: e.target.value })}
-                                    placeholder="e.g. Salary, Freelance"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
-                                <input
-                                    type="number"
-                                    required
-                                    step="0.01"
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.amount}
-                                    onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                                    placeholder="0.00"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Category</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.category}
-                                    onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                    placeholder="e.g. Primary Job, Side Hustle"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Date</label>
-                                <input
-                                    type="date"
-                                    required
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.date}
-                                    onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label>
-                                <textarea
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    rows={2}
-                                />
-                            </div>
-                            <div className="md:col-span-2 flex justify-end gap-2">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md mb-8 animate-fade-in border dark:border-slate-700 overflow-hidden">
+                        <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Income</h2>
+                            <div className="flex items-center gap-3">
                                 <button
-                                    type="button"
                                     onClick={() => setShowForm(false)}
-                                    className="px-4 py-2 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
+                                    className="p-2 rounded-full text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                                 >
-                                    Cancel
+                                    <X className="w-5 h-5" />
                                 </button>
                                 <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                    onClick={handleSubmit}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
                                 >
                                     Save Income
                                 </button>
                             </div>
-                        </form>
+                        </div>
+
+                        <div className="p-6">
+                            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Source</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.source}
+                                        onChange={e => setFormData({ ...formData, source: e.target.value })}
+                                        placeholder="e.g. Salary, Freelance"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        step="0.01"
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.amount}
+                                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Category</label>
+                                    <input
+                                        type="text"
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.category}
+                                        onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                        placeholder="e.g. Primary Job, Side Hustle"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Date</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.date}
+                                        onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label>
+                                    <textarea
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                        rows={2}
+                                    />
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
 
@@ -177,8 +181,8 @@ const IncomePage: React.FC = () => {
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

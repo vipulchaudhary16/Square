@@ -7,6 +7,7 @@ import { useSession } from '../../../hooks/useSession';
 import { TrendingUp, ArrowLeftRight, Wallet, Sparkles, Loader2, Plus } from 'lucide-react';
 import { generateInsights, isAIEnabled } from '../../../services/ai';
 import { Modal } from '../../common/components/ui/Modal';
+import { EmptyState } from '../../common/components/ui/EmptyState';
 
 export const Dashboard: React.FC = () => {
     const { user } = useSession();
@@ -54,15 +55,17 @@ export const Dashboard: React.FC = () => {
     const netBalance = total_income - total_expenses;
 
     const StatCard = ({ title, amount, icon: Icon, color, subtext }: any) => (
-        <div className="glass-card p-6 hover:shadow-2xl border border-white/40 dark:border-slate-700/50">
-            <div className="flex items-center gap-3 mb-4">
-                <div className={`p - 2 rounded - lg ${color} bg - opacity - 20 backdrop - blur - sm`}>
-                    <Icon className="w-5 h-5" />
+        <div className="glass-card p-6 hover:shadow-2xl border border-white/40 dark:border-slate-700/50 h-full flex flex-col justify-between">
+            <div>
+                <div className="flex items-center gap-3 mb-4">
+                    <div className={`p-2 rounded-lg ${color} bg-opacity-20 backdrop-blur-sm`}>
+                        <Icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">{title}</h3>
                 </div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">{title}</h3>
-            </div>
-            <div className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">
-                ₹{amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <div className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">
+                    ₹{amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
             </div>
             {subtext && <p className="text-xs font-medium text-slate-400 dark:text-slate-500">{subtext}</p>}
         </div>
@@ -70,9 +73,9 @@ export const Dashboard: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-            {}
+            {/* Stats Grid */}
             <div className="flex overflow-x-auto pb-4 gap-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:pb-0 mb-8 snap-x snap-mandatory hide-scrollbar">
-                <div className="min-w-[75vw] sm:min-w-[300px] md:min-w-0 snap-center bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-6 text-white shadow-lg shadow-primary-500/20 relative overflow-hidden flex-shrink-0">
+                <div className="min-w-[75vw] sm:min-w-[300px] md:min-w-0 snap-center bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-6 text-white shadow-lg shadow-primary-500/20 relative overflow-hidden flex-shrink-0 h-full flex flex-col justify-between">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none"></div>
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-4">
@@ -126,7 +129,7 @@ export const Dashboard: React.FC = () => {
 
 
             <div className="grid grid-cols-1 lg:col-span-2 lg:grid-cols-3 gap-8">
-                {}
+                { }
                 <div className="lg:col-span-2">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white">Recent Expenses</h2>
@@ -140,10 +143,10 @@ export const Dashboard: React.FC = () => {
 
                     <div className="space-y-3">
                         {recent_expenses.length === 0 ? (
-                            <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 border-dashed">
-                                <p className="text-slate-500 dark:text-slate-400 font-medium">No expenses yet</p>
-                                <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Add your first expense to get started</p>
-                            </div>
+                            <EmptyState
+                                title="No expenses yet"
+                                description="Add your first expense to get started"
+                            />
                         ) : (
                             recent_expenses.map((exp: any) => (
                                 <ExpenseCard key={exp.id} expense={exp} currentUserId={currentUserId} />
@@ -152,7 +155,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="hidden lg:col-span-1 lg:block">
                     <div className="glass-card p-6 sticky top-24 border border-white/40 dark:border-slate-700/50">
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
@@ -165,7 +168,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {}
+                { }
                 {isAIEnabled() && (
                     <div className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl p-4 md:p-6 border border-purple-100 dark:border-purple-800">
                         <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between mb-4">
@@ -209,7 +212,7 @@ export const Dashboard: React.FC = () => {
                 )}
             </div>
 
-            {}
+            { }
             <button
                 onClick={() => setIsAddExpenseModalOpen(true)}
                 className="fixed bottom-6 right-6 hidden z-40 bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg shadow-primary-600/30 transition-transform hover:scale-110 active:scale-95"
@@ -218,16 +221,20 @@ export const Dashboard: React.FC = () => {
                 <Plus className="w-6 h-6" />
             </button>
 
-            {}
+            { }
             <Modal
                 isOpen={isAddExpenseModalOpen}
                 onClose={() => setIsAddExpenseModalOpen(false)}
                 title="Add New Expense"
+                hideHeader={true}
             >
-                <AddExpenseForm onSuccess={() => {
-                    fetchDashboardData();
-                    setIsAddExpenseModalOpen(false);
-                }} />
+                <AddExpenseForm
+                    onSuccess={() => {
+                        fetchDashboardData();
+                        setIsAddExpenseModalOpen(false);
+                    }}
+                    onCancel={() => setIsAddExpenseModalOpen(false)}
+                />
             </Modal>
         </div>
     );

@@ -68,7 +68,7 @@ export const Topbar: React.FC = () => {
     }, [lastScrollY]);
 
     return (
-        <nav className={`bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}>
+        <nav className={`hidden md:block bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}>
             <div className="mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
@@ -121,7 +121,7 @@ export const Topbar: React.FC = () => {
                                     <UserIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                                 </div>
                                 <div className="flex flex-col items-start mr-1">
-                                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-none">{user?.username}</span>
+                                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-none">{user?.first_name + ' ' + user?.last_name}</span>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
                             </button>

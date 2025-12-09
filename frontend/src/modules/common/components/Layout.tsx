@@ -21,7 +21,7 @@ export const Layout: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-white transition-colors duration-300 relative">
-            {}
+            { }
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 dark:bg-purple-900 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-xl opacity-70 dark:opacity-20 animate-blob"></div>
                 <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 dark:bg-yellow-900 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-xl opacity-70 dark:opacity-20 animate-blob animation-delay-2000"></div>
@@ -30,7 +30,7 @@ export const Layout: React.FC = () => {
 
             <div className="relative z-10">
                 <Topbar />
-                <main className="max-w-7xl mx-auto px-2 sm:px-2 lg:px-8 py-2 pb-24 lg:pb-8">
+                <main className="max-w-7xl mx-auto px-4 sm:px-2 lg:px-8 pt-4 pb-24 lg:py-8">
                     <Outlet />
                 </main>
                 <MobileBottomNav />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getLoans, createLoan, Loan } from '../../../api/finance';
-import { Plus, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Plus, ArrowLeftRight, X, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
 const LoansPage: React.FC = () => {
     const navigate = useNavigate();
@@ -70,77 +70,92 @@ const LoansPage: React.FC = () => {
 
             <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                 {showForm && (
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md mb-8 animate-fade-in border dark:border-slate-700">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add New Loan Record</h2>
-                        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Person Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.counterparty_name}
-                                    onChange={e => setFormData({ ...formData, counterparty_name: e.target.value })}
-                                    placeholder="e.g. John Doe"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Type</label>
-                                <select
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.type}
-                                    onChange={e => setFormData({ ...formData, type: e.target.value })}
-                                >
-                                    <option value="LENT">I Lent (They owe me)</option>
-                                    <option value="BORROWED">I Borrowed (I owe them)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
-                                <input
-                                    type="number"
-                                    required
-                                    step="0.01"
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.amount}
-                                    onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                                    placeholder="0.00"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Due Date (Optional)</label>
-                                <input
-                                    type="date"
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.due_date}
-                                    onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label>
-                                <textarea
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    rows={2}
-                                />
-                            </div>
-                            <div className="md:col-span-2 flex justify-end gap-2">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md mb-8 animate-fade-in border dark:border-slate-700 overflow-hidden">
+                        <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Loan</h2>
+                            <div className="flex items-center gap-3">
                                 <button
-                                    type="button"
                                     onClick={() => setShowForm(false)}
-                                    className="px-4 py-2 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
+                                    className="p-2 rounded-full text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                                 >
-                                    Cancel
+                                    <X className="w-5 h-5" />
                                 </button>
                                 <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                                    type="submit" // Changed from onClick={handleSubmit} to type="submit" to correctly trigger form submission
+                                    form="loan-form" // Added form attribute to link button to form
+                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
                                 >
-                                    Save Record
+                                    Save Loan
                                 </button>
                             </div>
-                        </form>
+                        </div>
+
+                        <div className="p-6">
+                            <form id="loan-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Person/Entity</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.counterparty_name} // Changed from formData.person to formData.counterparty_name
+                                        onChange={e => setFormData({ ...formData, counterparty_name: e.target.value })} // Changed from person to counterparty_name
+                                        placeholder="e.g. John Doe, Bank of America"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Type</label>
+                                    <select
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.type}
+                                        onChange={e => setFormData({ ...formData, type: e.target.value as 'LENT' | 'BORROWED' })}
+                                    >
+                                        <option value="LENT">Lent (Given)</option>
+                                        <option value="BORROWED">Borrowed (Taken)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        step="0.01"
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.amount}
+                                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Date</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.date}
+                                        onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Due Date (Optional)</label>
+                                    <input
+                                        type="date"
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.due_date}
+                                        onChange={e => setFormData({ ...formData, due_date: e.target.value })}
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label>
+                                    <textarea
+                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                                        value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                        rows={2}
+                                    />
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 )}
 
