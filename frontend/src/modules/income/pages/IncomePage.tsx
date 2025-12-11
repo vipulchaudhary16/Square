@@ -1,19 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getIncomes, createIncome, Income } from '../../../api/finance';
-import { Plus, DollarSign, Calendar, X } from 'lucide-react';
+import { getIncomes, Income } from '../../../api/finance';
+import { Plus, DollarSign, Calendar } from 'lucide-react';
 
 const IncomePage: React.FC = () => {
     const navigate = useNavigate();
     const [incomes, setIncomes] = useState<Income[]>([]);
-    const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({
-        source: '',
-        amount: '',
-        category: '',
-        date: new Date().toISOString().split('T')[0],
-        description: ''
-    });
 
     useEffect(() => {
         fetchIncomes();
@@ -28,35 +20,12 @@ const IncomePage: React.FC = () => {
         }
     };
 
-
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await createIncome({
-                ...formData,
-                amount: parseFloat(formData.amount)
-            });
-            setShowForm(false);
-            setFormData({
-                source: '',
-                amount: '',
-                category: '',
-                date: new Date().toISOString().split('T')[0],
-                description: ''
-            });
-            fetchIncomes();
-        } catch (error) {
-            console.error("Failed to create income", error);
-        }
-    };
-
     return (
         <div className="flex flex-col h-[calc(100vh-8rem)]">
             <div className="flex justify-between items-center mb-6 px-1">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Income</h1>
                 <button
-                    onClick={() => setShowForm(!showForm)}
+                    onClick={() => navigate('/new/income')}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors"
                 >
                     <Plus size={20} />
@@ -65,85 +34,6 @@ const IncomePage: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-                {showForm && (
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md mb-8 animate-fade-in border dark:border-slate-700 overflow-hidden">
-                        <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
-                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Income</h2>
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => setShowForm(false)}
-                                    className="p-2 rounded-full text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={handleSubmit}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
-                                >
-                                    Save Income
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="p-6">
-                            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Source</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                        value={formData.source}
-                                        onChange={e => setFormData({ ...formData, source: e.target.value })}
-                                        placeholder="e.g. Salary, Freelance"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        step="0.01"
-                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                        value={formData.amount}
-                                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Category</label>
-                                    <input
-                                        type="text"
-                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                        value={formData.category}
-                                        onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                        placeholder="e.g. Primary Job, Side Hustle"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Date</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                        value={formData.date}
-                                        onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                    />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label>
-                                    <textarea
-                                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                                        value={formData.description}
-                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                        rows={2}
-                                    />
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-
                 <div className="grid gap-4 pb-4">
                     {incomes.map((income) => (
                         <div
@@ -181,8 +71,8 @@ const IncomePage: React.FC = () => {
                         </div>
                     )}
                 </div>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 

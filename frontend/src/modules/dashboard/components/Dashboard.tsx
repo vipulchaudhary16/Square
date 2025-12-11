@@ -6,7 +6,6 @@ import { getDashboardData } from '../../../api/dashboard';
 import { useSession } from '../../../hooks/useSession';
 import { TrendingUp, ArrowLeftRight, Wallet, Sparkles, Loader2, Plus } from 'lucide-react';
 import { generateInsights, isAIEnabled } from '../../../services/ai';
-import { Modal } from '../../common/components/ui/Modal';
 import { EmptyState } from '../../common/components/ui/EmptyState';
 
 export const Dashboard: React.FC = () => {
@@ -18,7 +17,7 @@ export const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [insights, setInsights] = useState<string[]>([]);
     const [loadingInsights, setLoadingInsights] = useState(false);
-    const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
+
 
     const handleGenerateInsights = async () => {
         if (!dashboardData?.recent_expenses) return;
@@ -162,9 +161,12 @@ export const Dashboard: React.FC = () => {
                             <span className="w-1 h-6 bg-primary-500 rounded-full"></span>
                             Quick Add
                         </h2>
-                        <AddExpenseForm onSuccess={() => {
-                            fetchDashboardData();
-                        }} />
+                        <AddExpenseForm 
+                            onSuccess={() => {
+                                fetchDashboardData();
+                            }} 
+                            hideHeader={true}
+                        />
                     </div>
                 </div>
 
@@ -214,28 +216,15 @@ export const Dashboard: React.FC = () => {
 
             { }
             <button
-                onClick={() => setIsAddExpenseModalOpen(true)}
-                className="fixed bottom-6 right-6 hidden z-40 bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg shadow-primary-600/30 transition-transform hover:scale-110 active:scale-95"
+                onClick={() => navigate('/new/expense')}
+                className="fixed bottom-6 right-6 z-40 bg-primary-600 hover:bg-primary-700 text-white p-4 rounded-full shadow-lg shadow-primary-600/30 transition-transform hover:scale-110 active:scale-95"
                 aria-label="Add Expense"
             >
                 <Plus className="w-6 h-6" />
             </button>
 
             { }
-            <Modal
-                isOpen={isAddExpenseModalOpen}
-                onClose={() => setIsAddExpenseModalOpen(false)}
-                title="Add New Expense"
-                hideHeader={true}
-            >
-                <AddExpenseForm
-                    onSuccess={() => {
-                        fetchDashboardData();
-                        setIsAddExpenseModalOpen(false);
-                    }}
-                    onCancel={() => setIsAddExpenseModalOpen(false)}
-                />
-            </Modal>
+
         </div>
     );
 };

@@ -27,6 +27,7 @@ interface AddExpenseFormProps {
     hideSubmitButton?: boolean;
     onLoadingChange?: (loading: boolean) => void;
     onCancel?: () => void;
+    hideHeader?: boolean;
 }
 
 interface Member {
@@ -35,7 +36,7 @@ interface Member {
     email: string;
 }
 
-export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initialData, defaultGroupId, formId, onLoadingChange, onCancel }) => {
+export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initialData, defaultGroupId, formId, onLoadingChange, onCancel, hideHeader }) => {
     const [mode, setMode] = useState<'personal' | 'group'>('personal');
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedGroupId, setSelectedGroupId] = useState<string>('');
@@ -248,27 +249,29 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
 
     return (
         <div className="w-full relative">
-            <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 py-4 -mx-6 -mt-4 mb-6 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    {initialData ? 'Edit Expense' : 'Add New Expense'}
-                </h3>
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="p-2 rounded-full text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={handleSubmit(onSubmit)}
-                        disabled={loading}
-                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 text-sm font-medium"
-                    >
-                        {loading ? 'Saving...' : 'Save'}
-                    </button>
+            {!hideHeader && (
+                <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 py-4 -mx-6 -mt-4 mb-6 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        {initialData ? 'Edit Expense' : 'Add New Expense'}
+                    </h3>
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            className="p-2 rounded-full text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={handleSubmit(onSubmit)}
+                            disabled={loading}
+                            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 text-sm font-medium"
+                        >
+                            {loading ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <form id={formId} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="flex flex-col md:block gap-4">

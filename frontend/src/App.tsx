@@ -19,6 +19,7 @@ import LoansPage from './modules/loan/pages/LoansPage'
 import LoanDetailsPage from './modules/loan/pages/LoanDetailsPage'
 import { BudgetPage } from './modules/expense/pages/BudgetPage'
 import { TransactionsPage } from './modules/common/pages/TransactionsPage'
+import { CreateEntityPage } from './modules/common/pages/CreateEntityPage'
 import './index.css'
 
 import { ThemeProvider } from './context/ThemeContext'
@@ -53,6 +54,7 @@ function App() {
                         <Route path="/budgets" element={<BudgetPage />} />
                         <Route path="/transactions" element={<TransactionsPage />} />
                         <Route path="/join" element={<JoinGroupPage />} />
+                        <Route path="/new/:type" element={<CreateEntityPage />} />
                     </Route>
                 </Routes>
             </Router>

@@ -27,6 +27,7 @@ export const AddExpensePage: React.FC = () => {
                 formId="add-expense-form"
                 hideSubmitButton={true}
                 onLoadingChange={setLoading}
+                hideHeader={true}
             />
         </div>
     );
