@@ -9,11 +9,5 @@ export default defineConfig({
       '9b59011b78dc.ngrok-free.app'
     ],
     host: true,
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8080',
-        changeOrigin: true,
-      }
-    }
   }
 })
