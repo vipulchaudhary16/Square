@@ -50,3 +50,7 @@ func Connect() {
 	DB = client.Database("expense_tracker")
 	log.Println("Connected to MongoDB!")
 }
+
+func GetContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 30*time.Second)
+}

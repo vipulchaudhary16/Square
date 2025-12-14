@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"context"
-	"time"
+
+
 
 	"github.com/codewithvipul/expense-tracker/backend/pkg/db"
 	"github.com/gofiber/fiber/v2"
@@ -14,7 +14,7 @@ func GetDashboardData(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	objID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"context"
+
 	"strings"
 	"time"
 
@@ -17,7 +17,7 @@ func GetIncomes(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	objID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	filter := bson.M{"user_id": objID}
@@ -105,7 +105,7 @@ func CreateIncome(c *fiber.Ctx) error {
 		CreatedAt:   time.Now(),
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("incomes").InsertOne(ctx, income)
@@ -143,7 +143,7 @@ func UpdateIncome(c *fiber.Ctx) error {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	update := bson.M{
@@ -171,7 +171,7 @@ func DeleteIncome(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("incomes").DeleteOne(ctx, bson.M{"_id": objID})
@@ -192,7 +192,7 @@ func GetIncomeDetails(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var income models.Income
@@ -281,7 +281,7 @@ func UpdateIncomeWithLog(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var existing models.Income
@@ -350,7 +350,7 @@ func AddIncomeComment(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	comment := models.Comment{
@@ -382,7 +382,7 @@ func GetInvestments(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	objID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	filter := bson.M{"user_id": objID}
@@ -471,7 +471,7 @@ func CreateInvestment(c *fiber.Ctx) error {
 		CreatedAt:      time.Now(),
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("investments").InsertOne(ctx, investment)
@@ -510,7 +510,7 @@ func UpdateInvestment(c *fiber.Ctx) error {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	update := bson.M{
@@ -539,7 +539,7 @@ func DeleteInvestment(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("investments").DeleteOne(ctx, bson.M{"_id": objID})
@@ -560,7 +560,7 @@ func GetInvestmentDetails(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var investment models.Investment
@@ -650,7 +650,7 @@ func UpdateInvestmentWithLog(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var existing models.Investment
@@ -717,7 +717,7 @@ func AddInvestmentComment(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	comment := models.Comment{
@@ -749,7 +749,7 @@ func GetLoans(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	objID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	filter := bson.M{"user_id": objID}
@@ -851,7 +851,7 @@ func CreateLoan(c *fiber.Ctx) error {
 		CreatedAt:        time.Now(),
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("loans").InsertOne(ctx, loan)
@@ -902,7 +902,7 @@ func UpdateLoan(c *fiber.Ctx) error {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	update := bson.M{
@@ -932,7 +932,7 @@ func DeleteLoan(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("loans").DeleteOne(ctx, bson.M{"_id": objID})
@@ -953,7 +953,7 @@ func GetLoanDetails(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var loan models.Loan
@@ -1027,7 +1027,7 @@ func UpdateLoanWithLog(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var existing models.Loan
@@ -1095,7 +1095,7 @@ func AddLoanComment(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	comment := models.Comment{

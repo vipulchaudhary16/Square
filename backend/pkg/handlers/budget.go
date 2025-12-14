@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"context"
+
 	"time"
 
 	"github.com/codewithvipul/expense-tracker/backend/pkg/db"
@@ -25,7 +25,7 @@ func CreateBudget(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	
@@ -62,7 +62,7 @@ func GetBudgets(c *fiber.Ctx) error {
 
 	month := c.Query("month") 
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	filter := bson.M{"user_id": userObjID}
@@ -97,7 +97,7 @@ func UpdateBudget(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	update := bson.M{"$set": bson.M{"amount": input.Amount}}
@@ -116,7 +116,7 @@ func DeleteBudget(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("budgets").DeleteOne(ctx, bson.M{"_id": objID})

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"context"
+
 	"crypto/rand"
 	"fmt"
 	"math/big"
@@ -30,7 +30,7 @@ func CreateGroup(c *fiber.Ctx) error {
 	input.CreatedAt = time.Now()
 	input.Members = []primitive.ObjectID{userObjID}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err := db.DB.Collection("groups").InsertOne(ctx, input)
@@ -45,7 +45,7 @@ func GetUserGroups(c *fiber.Ctx) error {
 	userId := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userId)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	cursor, err := db.DB.Collection("groups").Find(ctx, bson.M{"members": userObjID})
@@ -68,7 +68,7 @@ func GetGroupDetails(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid group ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var group models.Group
@@ -201,7 +201,7 @@ func InviteUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	
@@ -247,7 +247,7 @@ func JoinGroup(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid input"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var invite models.GroupInvite
@@ -293,7 +293,7 @@ func AddMemberToGroup(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	
@@ -342,7 +342,7 @@ func SettleDebt(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid to_user_id"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	expense := models.Expense{

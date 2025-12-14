@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"context"
-	"time"
+
+
 
 	"github.com/codewithvipul/expense-tracker/backend/pkg/db"
 	"github.com/codewithvipul/expense-tracker/backend/pkg/models"
@@ -17,7 +17,7 @@ func SearchUsers(c *fiber.Ctx) error {
 		return c.JSON([]models.User{})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	

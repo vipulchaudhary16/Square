@@ -110,7 +110,7 @@ func CreateExpense(c *fiber.Ctx) error {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err := db.DB.Collection("expenses").InsertOne(ctx, expense)
@@ -149,7 +149,7 @@ func GetExpenses(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	objID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	
@@ -295,7 +295,7 @@ func GetGroupExpenses(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid group ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	
@@ -372,7 +372,7 @@ func GetExpenseDetails(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid expense ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	var expense models.Expense
@@ -643,7 +643,7 @@ func UpdateExpense(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(string)
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	if err := UpdateExpenseWithLog(ctx, expenseObjID, input, userObjID); err != nil {
@@ -660,7 +660,7 @@ func DeleteExpense(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid expense ID"})
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("expenses").DeleteOne(ctx, bson.M{"_id": expenseObjID})
@@ -700,7 +700,7 @@ func AddComment(c *fiber.Ctx) error {
 		CreatedAt: time.Now(),
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := db.GetContext()
 	defer cancel()
 
 	_, err = db.DB.Collection("comments").InsertOne(ctx, comment)
