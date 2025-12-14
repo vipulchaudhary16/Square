@@ -580,7 +580,24 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
                 </div>
 
 
-
+                {hideHeader && (
+                    <div className="pt-4">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 transition-colors"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                                    Saving...
+                                </>
+                            ) : (
+                                'Save Expense'
+                            )}
+                        </button>
+                    </div>
+                )}
 
             </form >
         </div >

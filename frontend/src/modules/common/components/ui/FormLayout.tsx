@@ -10,7 +10,7 @@ interface FormLayoutProps {
 
 export const FormLayout: React.FC<FormLayoutProps> = ({ title, children, actions, onClose }) => {
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+        <div className="bg-gray-50 dark:bg-slate-900">
             <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-4 py-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
                     <button
