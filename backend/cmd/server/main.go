@@ -24,6 +24,10 @@ func main() {
 	app.Use(cors.New())
 	app.Use(middleware.Logger())
 
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Server is healthy")
+	})
+
 	api := app.Group("/api")
 
 	api.Post("/auth/signup", handlers.Signup)
