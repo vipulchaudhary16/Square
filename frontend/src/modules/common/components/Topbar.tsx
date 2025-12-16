@@ -78,13 +78,13 @@ export const Topbar: React.FC = () => {
                                 alt="Square Logo"
                                 className="w-9 h-9 rounded-xl group-hover:scale-105 transition-transform duration-200"
                             />
-                            <span className="hidden md:block text-xl font-bold text-slate-800 dark:text-white tracking-tight">
+                            <span className="hidden 2xl:block text-xl font-bold text-slate-800 dark:text-white tracking-tight">
                                 Square
                             </span>
                         </Link>
                     </div>
 
-                    <div className="hidden xl:flex items-center space-x-1">
+                    <div className="hidden xl:flex items-center space-x-0.5">
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const active = isActive(item.path);
@@ -92,7 +92,7 @@ export const Topbar: React.FC = () => {
                                 <Link
                                     key={item.path}
                                     to={item.path}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${active
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 ${active
                                         ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 shadow-sm'
                                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                                         }`}

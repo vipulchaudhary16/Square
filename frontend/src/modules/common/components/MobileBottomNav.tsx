@@ -50,8 +50,7 @@ export const MobileBottomNav: React.FC = () => {
 
     return (
         <>
-
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe z-50">
+            <div className="xl:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 pb-safe z-50">
                 <div className="flex justify-around items-center h-16 px-2">
 
                     {mainNavItems.map((item) => {
@@ -111,14 +110,14 @@ export const MobileBottomNav: React.FC = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsMenuOpen(false)}
-                            className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                            className="xl:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
                         />
                         <motion.div
                             initial={{ x: '100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="md:hidden fixed inset-y-0 right-0 w-3/4 max-w-xs bg-white dark:bg-slate-900 shadow-2xl z-50 overflow-y-auto"
+                            className="xl:hidden fixed inset-y-0 right-0 w-3/4 max-w-xs bg-white dark:bg-slate-900 shadow-2xl z-50 overflow-y-auto"
                         >
                             <div className="p-5 space-y-6">
                                 <div className="flex items-center justify-between">

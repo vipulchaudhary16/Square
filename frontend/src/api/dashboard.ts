@@ -7,6 +7,7 @@ export interface DashboardData {
     recent_expenses: any[]; 
     lent_amount: number;
     borrowed_amount: number;
+    expense_graph: { day: number; current_month: number; last_month: number }[];
 }
 
 export const getDashboardData = async (): Promise<DashboardData> => {

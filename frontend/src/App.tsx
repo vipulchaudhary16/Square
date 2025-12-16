@@ -31,13 +31,11 @@ function App() {
         <ThemeProvider>
             <Router>
                 <Routes>
-                    {}
                     <Route path="/" element={!isAuthenticated ? <Landing /> : <Navigate to="/dashboard" />} />
                     <Route path="/auth" element={!isAuthenticated ? <Auth /> : <Navigate to="/dashboard" />} />
                     <Route path="/auth/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to="/dashboard" />} />
                     <Route path="/auth/reset-password" element={!isAuthenticated ? <ResetPassword /> : <Navigate to="/dashboard" />} />
 
-                    {}
                     <Route element={<Layout />}>
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/expenses" element={<AddExpensePage />} />

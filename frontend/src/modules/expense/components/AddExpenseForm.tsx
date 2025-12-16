@@ -5,8 +5,7 @@ import { cn } from './ExpenseCard';
 import useApiCall from '../../../hooks/useApiCall';
 import { createExpense, updateExpense, Expense } from '../../../api/expenses';
 import { getUserGroups, getGroupDetails, Group } from '../../../api/groups';
-import { Loader2, Sparkles, Users, ChevronRight, X } from 'lucide-react';
-import { suggestCategory, isAIEnabled } from '../../../services/ai';
+import { Loader2, Users, ChevronRight, X } from 'lucide-react';
 import { Drawer } from '../../common/components/ui/Drawer';
 import { AmountInput } from '../../common/components/ui/AmountInput';
 
@@ -49,24 +48,10 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
 
     const [loadingGroups, setLoadingGroups] = useState(false);
     const [loadingMembers, setLoadingMembers] = useState(false);
-    const [isSuggesting, setIsSuggesting] = useState(false);
     const [isSplitDrawerOpen, setIsSplitDrawerOpen] = useState(false);
 
     const { register, handleSubmit, reset, watch, setValue, control } = useForm<ExpenseFormInputs>();
     const amount = watch('amount');
-
-    const handleSuggestCategory = async () => {
-        const desc = watch('description');
-        if (!desc) return;
-
-        setIsSuggesting(true);
-        const category = await suggestCategory(desc);
-        setIsSuggesting(false);
-
-        if (category) {
-            setValue('category', category);
-        }
-    };
 
     const { execute: executeCreateExpense, loading: createLoading } = useApiCall({
         apiCall: createExpense
@@ -539,17 +524,6 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({ onSuccess, initi
                             className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                             placeholder="Dinner, Movie, etc."
                         />
-                        {isAIEnabled() && (
-                            <button
-                                type="button"
-                                onClick={handleSuggestCategory}
-                                disabled={isSuggesting}
-                                className="mt-1 px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors flex items-center gap-2"
-                                title="Auto-suggest category with AI"
-                            >
-                                <Sparkles className={`w-4 h-4 ${isSuggesting ? 'animate-spin' : ''}`} />
-                            </button>
-                        )}
                     </div>
                 </div>
 
