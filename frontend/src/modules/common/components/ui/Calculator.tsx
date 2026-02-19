@@ -41,7 +41,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValue = 0, onSave
         try {
             const fullEquation = equation + display;
             // eslint-disable-next-line no-new-func
-            const result = new Function('return ' + fullEquation.replace(/[^0-9+\-*/().\s]/g, ''))();
+            const result = new Function(
+                'return ' + fullEquation.replace(/[^0-9+\-*/().\s]/g, ''),
+            )();
             setDisplay(String(result));
             setEquation('');
             setIsNewNumber(true);
@@ -81,7 +83,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValue = 0, onSave
             try {
                 const fullEquation = equation + display;
                 // eslint-disable-next-line no-new-func
-                const result = new Function('return ' + fullEquation.replace(/[^0-9+\-*/().\s]/g, ''))();
+                const result = new Function(
+                    'return ' + fullEquation.replace(/[^0-9+\-*/().\s]/g, ''),
+                )();
                 onSave(Number(result));
             } catch (error) {
                 onSave(Number(display));
@@ -92,22 +96,50 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValue = 0, onSave
     };
 
     const buttons = [
-        { label: 'C', onClick: handleClear, className: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
-        { label: '(', onClick: () => handleOperator('('), className: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' },
-        { label: ')', onClick: () => handleOperator(')'), className: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' },
-        { label: '÷', onClick: () => handleOperator('/'), className: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+        {
+            label: 'C',
+            onClick: handleClear,
+            className: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+        },
+        {
+            label: '(',
+            onClick: () => handleOperator('('),
+            className: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+        },
+        {
+            label: ')',
+            onClick: () => handleOperator(')'),
+            className: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+        },
+        {
+            label: '÷',
+            onClick: () => handleOperator('/'),
+            className: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+        },
         { label: '7', onClick: () => handleNumber('7') },
         { label: '8', onClick: () => handleNumber('8') },
         { label: '9', onClick: () => handleNumber('9') },
-        { label: '×', onClick: () => handleOperator('*'), className: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+        {
+            label: '×',
+            onClick: () => handleOperator('*'),
+            className: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+        },
         { label: '4', onClick: () => handleNumber('4') },
         { label: '5', onClick: () => handleNumber('5') },
         { label: '6', onClick: () => handleNumber('6') },
-        { label: '-', onClick: () => handleOperator('-'), className: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+        {
+            label: '-',
+            onClick: () => handleOperator('-'),
+            className: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+        },
         { label: '1', onClick: () => handleNumber('1') },
         { label: '2', onClick: () => handleNumber('2') },
         { label: '3', onClick: () => handleNumber('3') },
-        { label: '+', onClick: () => handleOperator('+'), className: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+        {
+            label: '+',
+            onClick: () => handleOperator('+'),
+            className: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+        },
         { label: '0', onClick: () => handleNumber('0'), className: 'col-span-2' },
         { label: '.', onClick: handleDecimal },
         { label: '=', onClick: handleEqual, className: 'bg-blue-600 text-white' },
@@ -117,13 +149,21 @@ export const Calculator: React.FC<CalculatorProps> = ({ initialValue = 0, onSave
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-xs overflow-hidden">
             <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Calculator</h3>
-                    <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        Calculator
+                    </h3>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
                 <div className="text-right">
-                    <div className="h-6 text-xs text-slate-400 font-mono overflow-hidden">{equation}</div>
+                    <div className="h-6 text-xs text-slate-400 font-mono overflow-hidden">
+                        {equation}
+                    </div>
                     <div className="text-3xl font-bold text-slate-800 dark:text-white font-mono tracking-wider overflow-x-auto scrollbar-hide">
                         {display}
                     </div>

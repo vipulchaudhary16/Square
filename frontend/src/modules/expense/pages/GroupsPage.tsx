@@ -8,8 +8,13 @@ import { EmptyState } from '../../common/components/ui/EmptyState';
 
 export const GroupsPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { data: groups, loading, error, refetch } = useFetchData({
-        apiCall: getUserGroups
+    const {
+        data: groups,
+        loading,
+        error,
+        refetch,
+    } = useFetchData({
+        apiCall: getUserGroups,
     });
     console.log(groups);
 
@@ -17,8 +22,12 @@ export const GroupsPage: React.FC = () => {
         <div>
             <div className="flex flex-row justify-between items-center gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Your Groups</h1>
-                    <p className="text-gray-500 dark:text-slate-400 hidden sm:block">Manage your shared expenses.</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        Your Groups
+                    </h1>
+                    <p className="text-gray-500 dark:text-slate-400 hidden sm:block">
+                        Manage your shared expenses.
+                    </p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
@@ -35,7 +44,7 @@ export const GroupsPage: React.FC = () => {
                 </div>
             ) : error ? (
                 <div className="text-center text-red-500 p-12">Failed to load groups.</div>
-            ) : (groups?.length === 0 || !groups) ? (
+            ) : groups?.length === 0 || !groups ? (
                 <EmptyState
                     title="No groups yet"
                     description="Create a group to start splitting bills with friends, roommates, or family members."
@@ -54,9 +63,13 @@ export const GroupsPage: React.FC = () => {
                                         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex-shrink-0 flex items-center justify-center text-white font-bold text-base">
                                             {group.name.charAt(0).toUpperCase()}
                                         </div>
-                                        <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{group.name}</h3>
+                                        <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">
+                                            {group.name}
+                                        </h3>
                                     </div>
-                                    <p className="text-xs text-gray-500 dark:text-slate-400 line-clamp-2 pl-11">{group.description || "No description"}</p>
+                                    <p className="text-xs text-gray-500 dark:text-slate-400 line-clamp-2 pl-11">
+                                        {group.description || 'No description'}
+                                    </p>
                                 </div>
                                 <div className="flex flex-col items-end gap-2 flex-shrink-0">
                                     <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-slate-300 whitespace-nowrap">

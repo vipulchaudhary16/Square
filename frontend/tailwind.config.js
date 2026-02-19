@@ -1,9 +1,5 @@
-
 export default {
-    content: [
-        "./index.html",
-        "./src/**/*.{js,ts,jsx,tsx}",
-    ],
+    content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
     darkMode: 'class',
     theme: {
         extend: {
@@ -26,8 +22,8 @@ export default {
                 },
             },
             animation: {
-                'blob': 'blob 7s infinite',
-                'float': 'float 6s ease-in-out infinite',
+                blob: 'blob 7s infinite',
+                float: 'float 6s ease-in-out infinite',
             },
             keyframes: {
                 blob: {
@@ -44,4 +40,4 @@ export default {
         },
     },
     plugins: [],
-}
+};

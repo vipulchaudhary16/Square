@@ -10,7 +10,7 @@ export default function ForgotPassword() {
     const [successMessage, setSuccessMessage] = useState('');
 
     const { execute, loading, error } = useApiCall({
-        apiCall: (email: string) => forgotPassword(email)
+        apiCall: (email: string) => forgotPassword(email),
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -18,16 +18,13 @@ export default function ForgotPassword() {
         try {
             const res = await execute(email);
             setSuccessMessage(res.message);
-        } catch (err) {
-
-        }
+        } catch (err) {}
     };
 
     const errorMessage = (error as any)?.response?.data?.error;
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 overflow-hidden relative transition-colors duration-300">
-
             <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary-200/40 dark:bg-primary-900/20 rounded-full blur-[120px]" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-200/40 dark:bg-purple-900/20 rounded-full blur-[120px]" />
 
@@ -57,7 +54,9 @@ export default function ForgotPassword() {
                     {!successMessage ? (
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">Email Address</label>
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                                    Email Address
+                                </label>
                                 <div className="relative group">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                     <input

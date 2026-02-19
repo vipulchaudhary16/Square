@@ -13,7 +13,7 @@ interface UseFetchDataReturn<T> {
     refetch: (payload: any) => Promise<void>;
 }
 
-const useFetchData = <T,>(props: Props<T>): UseFetchDataReturn<T> => {
+const useFetchData = <T>(props: Props<T>): UseFetchDataReturn<T> => {
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<any>(null);
@@ -46,7 +46,6 @@ const useFetchData = <T,>(props: Props<T>): UseFetchDataReturn<T> => {
 
     useEffect(() => {
         fetchData();
-        
     }, dependencies);
 
     return { data, loading, error, refetch };

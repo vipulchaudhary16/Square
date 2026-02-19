@@ -2,7 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getExpenseDetails, deleteExpense, addComment, Expense } from '../../../api/expenses';
 import useApiCall from '../../../hooks/useApiCall';
-import { Loader2, Trash2, Edit2, Send, MessageSquare, History, ArrowLeft, Calendar, User, CreditCard } from 'lucide-react';
+import {
+    Loader2,
+    Trash2,
+    Edit2,
+    Send,
+    MessageSquare,
+    History,
+    ArrowLeft,
+    Calendar,
+    User,
+    CreditCard,
+} from 'lucide-react';
 import { AddExpenseForm } from '../components/AddExpenseForm';
 import { useSession } from '../../../hooks/useSession';
 import { DropdownMenu } from '../../common/components/ui/DropdownMenu';
@@ -39,15 +50,15 @@ const ExpenseDetailsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'comments' | 'activity' | 'split'>('split');
 
     const { execute: fetchDetails, loading } = useApiCall({
-        apiCall: () => getExpenseDetails(id!)
+        apiCall: () => getExpenseDetails(id!),
     });
 
     const { execute: executeDelete } = useApiCall({
-        apiCall: () => deleteExpense(id!)
+        apiCall: () => deleteExpense(id!),
     });
 
     const { execute: executeAddComment, loading: commentLoading } = useApiCall({
-        apiCall: (text: string) => addComment(id!, text)
+        apiCall: (text: string) => addComment(id!, text),
     });
 
     const loadData = async () => {
@@ -57,10 +68,10 @@ const ExpenseDetailsPage: React.FC = () => {
                 ...response.expense,
                 logs: response.logs || [],
                 comments: response.comments || [],
-                users: response.users || {}
+                users: response.users || {},
             });
         } catch (error) {
-            console.error("Failed to load expense details", error);
+            console.error('Failed to load expense details', error);
         }
     };
 
@@ -69,12 +80,12 @@ const ExpenseDetailsPage: React.FC = () => {
     }, [id]);
 
     const handleDelete = async () => {
-        if (window.confirm("Are you sure you want to delete this expense?")) {
+        if (window.confirm('Are you sure you want to delete this expense?')) {
             try {
                 await executeDelete();
                 navigate(-1);
             } catch (error) {
-                alert("Failed to delete expense");
+                alert('Failed to delete expense');
             }
         }
     };
@@ -88,7 +99,7 @@ const ExpenseDetailsPage: React.FC = () => {
             setNewComment('');
             loadData();
         } catch (error) {
-            alert("Failed to add comment");
+            alert('Failed to add comment');
         }
     };
 
@@ -122,14 +133,14 @@ const ExpenseDetailsPage: React.FC = () => {
                             {
                                 label: 'Edit Expense',
                                 icon: <Edit2 className="w-4 h-4" />,
-                                onClick: () => setIsEditing(true)
+                                onClick: () => setIsEditing(true),
                             },
                             {
                                 label: 'Delete Expense',
                                 icon: <Trash2 className="w-4 h-4" />,
                                 variant: 'danger',
-                                onClick: handleDelete
-                            }
+                                onClick: handleDelete,
+                            },
                         ]}
                     />
                 )}
@@ -138,7 +149,9 @@ const ExpenseDetailsPage: React.FC = () => {
             {isEditing ? (
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Expense</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            Edit Expense
+                        </h2>
                         <button
                             onClick={() => setIsEditing(false)}
                             className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 font-medium"
@@ -156,7 +169,6 @@ const ExpenseDetailsPage: React.FC = () => {
                 </div>
             ) : (
                 <div className="space-y-8 animate-fade-in">
-
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
 
@@ -173,10 +185,14 @@ const ExpenseDetailsPage: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">{expense.description}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                                        {expense.description}
+                                    </h1>
                                 </div>
                                 <div className="text-left md:text-right">
-                                    <div className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white tracking-tight">₹{expense.amount.toFixed(2)}</div>
+                                    <div className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white tracking-tight">
+                                        ₹{expense.amount.toFixed(2)}
+                                    </div>
                                 </div>
                             </div>
 
@@ -186,8 +202,12 @@ const ExpenseDetailsPage: React.FC = () => {
                                         <User className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase font-semibold tracking-wider">Paid By</p>
-                                        <p className="font-medium">{getUserName(expense.payer_id)}</p>
+                                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase font-semibold tracking-wider">
+                                            Paid By
+                                        </p>
+                                        <p className="font-medium">
+                                            {getUserName(expense.payer_id)}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 text-gray-600 dark:text-slate-300">
@@ -195,32 +215,42 @@ const ExpenseDetailsPage: React.FC = () => {
                                         <Calendar className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase font-semibold tracking-wider">Date</p>
-                                        <p className="font-medium">{new Date(expense.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase font-semibold tracking-wider">
+                                            Date
+                                        </p>
+                                        <p className="font-medium">
+                                            {new Date(expense.date).toLocaleDateString(undefined, {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                            })}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-
                         <div className="border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
                             <nav className="-mb-px flex space-x-8 min-w-max" aria-label="Tabs">
                                 <button
                                     onClick={() => setActiveTab('split')}
-                                    className={`${activeTab === 'split'
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                    className={`${
+                                        activeTab === 'split'
+                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
                                     <CreditCard className="w-4 h-4" />
                                     Split Details
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('comments')}
-                                    className={`${activeTab === 'comments'
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                    className={`${
+                                        activeTab === 'comments'
+                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
                                     <MessageSquare className="w-4 h-4" />
                                     Comments
@@ -230,17 +260,17 @@ const ExpenseDetailsPage: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('activity')}
-                                    className={`${activeTab === 'activity'
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                        : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                    className={`${
+                                        activeTab === 'activity'
+                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
+                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
                                     <History className="w-4 h-4" />
                                     Activity Log
                                 </button>
                             </nav>
                         </div>
-
 
                         <div className="mt-6">
                             {activeTab === 'split' && (
@@ -254,17 +284,29 @@ const ExpenseDetailsPage: React.FC = () => {
                                     </h3>
 
                                     <div className="space-y-4">
-                                        {expense.splits && Object.entries(expense.splits).map(([userId, amount]) => (
-                                            <div key={userId} className="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-transparent hover:border-gray-200 dark:hover:border-slate-600 transition-colors">
-                                                <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
-                                                    <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-600 flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-slate-300 shadow-sm">
-                                                        {getUserName(userId).charAt(0).toUpperCase()}
+                                        {expense.splits &&
+                                            Object.entries(expense.splits).map(
+                                                ([userId, amount]) => (
+                                                    <div
+                                                        key={userId}
+                                                        className="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-slate-700/50 border border-transparent hover:border-gray-200 dark:hover:border-slate-600 transition-colors"
+                                                    >
+                                                        <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
+                                                            <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-600 flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-slate-300 shadow-sm">
+                                                                {getUserName(userId)
+                                                                    .charAt(0)
+                                                                    .toUpperCase()}
+                                                            </div>
+                                                            <span className="font-medium text-gray-700 dark:text-slate-200 truncate">
+                                                                {getUserName(userId)}
+                                                            </span>
+                                                        </div>
+                                                        <span className="font-bold text-gray-900 dark:text-white whitespace-nowrap">
+                                                            ₹{amount.toFixed(2)}
+                                                        </span>
                                                     </div>
-                                                    <span className="font-medium text-gray-700 dark:text-slate-200 truncate">{getUserName(userId)}</span>
-                                                </div>
-                                                <span className="font-bold text-gray-900 dark:text-white whitespace-nowrap">₹{amount.toFixed(2)}</span>
-                                            </div>
-                                        ))}
+                                                ),
+                                            )}
                                         {!expense.splits && (
                                             <div className="text-center py-8 text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-700/30 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">
                                                 No detailed split info available.
@@ -278,17 +320,27 @@ const ExpenseDetailsPage: React.FC = () => {
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 animate-fade-in">
                                     <div className="space-y-4 mb-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                         {expense.comments && expense.comments.length > 0 ? (
-                                            expense.comments.map(comment => (
+                                            expense.comments.map((comment) => (
                                                 <div key={comment.id} className="flex gap-3 group">
                                                     <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex-shrink-0 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">
-                                                        {getUserName(comment.user_id).charAt(0).toUpperCase()}
+                                                        {getUserName(comment.user_id)
+                                                            .charAt(0)
+                                                            .toUpperCase()}
                                                     </div>
                                                     <div className="flex-1 bg-gray-50 dark:bg-slate-700/50 rounded-2xl rounded-tl-none p-4">
                                                         <div className="flex justify-between items-start mb-1">
-                                                            <span className="text-xs font-bold text-gray-900 dark:text-white">{getUserName(comment.user_id)}</span>
-                                                            <span className="text-[10px] text-gray-400 dark:text-slate-500">{new Date(comment.created_at).toLocaleString()}</span>
+                                                            <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                                                {getUserName(comment.user_id)}
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-400 dark:text-slate-500">
+                                                                {new Date(
+                                                                    comment.created_at,
+                                                                ).toLocaleString()}
+                                                            </span>
                                                         </div>
-                                                        <p className="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">{comment.text}</p>
+                                                        <p className="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
+                                                            {comment.text}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             ))
@@ -297,7 +349,9 @@ const ExpenseDetailsPage: React.FC = () => {
                                                 <div className="w-12 h-12 bg-gray-50 dark:bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-300 dark:text-slate-600">
                                                     <MessageSquare className="w-6 h-6" />
                                                 </div>
-                                                <p className="text-sm text-gray-500 dark:text-slate-400">No comments yet. Start the conversation!</p>
+                                                <p className="text-sm text-gray-500 dark:text-slate-400">
+                                                    No comments yet. Start the conversation!
+                                                </p>
                                             </div>
                                         )}
                                     </div>
@@ -315,7 +369,11 @@ const ExpenseDetailsPage: React.FC = () => {
                                             disabled={commentLoading || !newComment.trim()}
                                             className="absolute right-2 top-1.5 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors shadow-sm"
                                         >
-                                            {commentLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                            {commentLoading ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Send className="w-4 h-4" />
+                                            )}
                                         </button>
                                     </form>
                                 </div>
@@ -325,35 +383,44 @@ const ExpenseDetailsPage: React.FC = () => {
                                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 animate-fade-in">
                                     <div className="flow-root">
                                         <ul className="">
-                                            {expense.logs && expense.logs.map((log, logIdx) => (
-                                                <li key={log.id}>
-                                                    <div className="relative pb-8">
-                                                        {logIdx !== expense.logs.length - 1 ? (
-                                                            <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-100 dark:bg-slate-700" aria-hidden="true" />
-                                                        ) : null}
-                                                        <div className="relative flex space-x-3">
-                                                            <div>
-                                                                <span className="h-8 w-8 rounded-full bg-gray-50 dark:bg-slate-700 flex items-center justify-center ring-4 ring-white dark:ring-slate-800">
-                                                                    <div className="w-2 h-2 rounded-full bg-blue-400 dark:bg-blue-500" />
-                                                                </span>
-                                                            </div>
-                                                            <div className="min-w-0 flex-1 pt-1.5">
-                                                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                    {log.action}
-                                                                </p>
-                                                                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                                                                    by {getUserName(log.user_id)}
-                                                                </p>
-                                                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-                                                                    {new Date(log.created_at).toLocaleString()}
-                                                                </p>
+                                            {expense.logs &&
+                                                expense.logs.map((log, logIdx) => (
+                                                    <li key={log.id}>
+                                                        <div className="relative pb-8">
+                                                            {logIdx !== expense.logs.length - 1 ? (
+                                                                <span
+                                                                    className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-100 dark:bg-slate-700"
+                                                                    aria-hidden="true"
+                                                                />
+                                                            ) : null}
+                                                            <div className="relative flex space-x-3">
+                                                                <div>
+                                                                    <span className="h-8 w-8 rounded-full bg-gray-50 dark:bg-slate-700 flex items-center justify-center ring-4 ring-white dark:ring-slate-800">
+                                                                        <div className="w-2 h-2 rounded-full bg-blue-400 dark:bg-blue-500" />
+                                                                    </span>
+                                                                </div>
+                                                                <div className="min-w-0 flex-1 pt-1.5">
+                                                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                        {log.action}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                                                                        by{' '}
+                                                                        {getUserName(log.user_id)}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                                                                        {new Date(
+                                                                            log.created_at,
+                                                                        ).toLocaleString()}
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                </li>
-                                            ))}
+                                                    </li>
+                                                ))}
                                             {(!expense.logs || expense.logs.length === 0) && (
-                                                <li className="text-sm text-gray-500 dark:text-slate-400 italic text-center py-4">No activity recorded.</li>
+                                                <li className="text-sm text-gray-500 dark:text-slate-400 italic text-center py-4">
+                                                    No activity recorded.
+                                                </li>
                                             )}
                                         </ul>
                                     </div>

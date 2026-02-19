@@ -11,21 +11,20 @@ export default function ResetPassword() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [success, setSuccess] = useState(false);
-    
+
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
     const navigate = useNavigate();
 
     const { execute, loading, error } = useApiCall({
-        apiCall: (token: string, pass: string) => resetPassword(token, pass)
+        apiCall: (token: string, pass: string) => resetPassword(token, pass),
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        if (password !== confirmPassword) {
 
-            return; 
+        if (password !== confirmPassword) {
+            return;
         }
 
         if (!token) return;
@@ -36,9 +35,7 @@ export default function ResetPassword() {
             setTimeout(() => {
                 navigate('/auth');
             }, 3000);
-        } catch (err) {
-
-        }
+        } catch (err) {}
     };
 
     const errorMessage = (error as any)?.response?.data?.error;
@@ -46,19 +43,24 @@ export default function ResetPassword() {
 
     if (!token) {
         return (
-             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
                 <div className="text-center">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Invalid Link</h2>
-                    <p className="text-slate-500 dark:text-slate-400 mb-4">This password reset link is invalid or missing a token.</p>
-                    <Link to="/auth" className="text-primary-600 hover:underline">Back to Login</Link>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        Invalid Link
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-400 mb-4">
+                        This password reset link is invalid or missing a token.
+                    </p>
+                    <Link to="/auth" className="text-primary-600 hover:underline">
+                        Back to Login
+                    </Link>
                 </div>
-             </div>
+            </div>
         );
     }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 overflow-hidden relative transition-colors duration-300">
-
             <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary-200/40 dark:bg-primary-900/20 rounded-full blur-[120px]" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-200/40 dark:bg-purple-900/20 rounded-full blur-[120px]" />
 
@@ -88,11 +90,13 @@ export default function ResetPassword() {
                     {!success ? (
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">New Password</label>
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                                    New Password
+                                </label>
                                 <div className="relative group">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                     <input
-                                        type={showPassword ? "text" : "password"}
+                                        type={showPassword ? 'text' : 'password'}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••"
@@ -115,11 +119,13 @@ export default function ResetPassword() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">Confirm Password</label>
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                                    Confirm Password
+                                </label>
                                 <div className="relative group">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                     <input
-                                        type={showConfirmPassword ? "text" : "password"}
+                                        type={showConfirmPassword ? 'text' : 'password'}
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="••••••••"
@@ -140,7 +146,9 @@ export default function ResetPassword() {
                                     </button>
                                 </div>
                                 {!passwordsMatch && confirmPassword && (
-                                    <p className="text-xs text-red-500 ml-1">Passwords do not match</p>
+                                    <p className="text-xs text-red-500 ml-1">
+                                        Passwords do not match
+                                    </p>
                                 )}
                             </div>
 
@@ -177,7 +185,9 @@ export default function ResetPassword() {
                             >
                                 <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
                             </motion.div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Password Reset Successful!</h3>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                                Password Reset Successful!
+                            </h3>
                             <p className="text-slate-500 dark:text-slate-400 mb-6">
                                 You can now login with your new password. Redirecting...
                             </p>

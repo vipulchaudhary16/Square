@@ -10,8 +10,12 @@ export const AddExpensePage: React.FC = () => {
         <div className="max-w-2xl mx-auto p-2">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Expense</h1>
-                    <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Record a new transaction.</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        Add New Expense
+                    </h1>
+                    <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
+                        Record a new transaction.
+                    </p>
                 </div>
                 <button
                     type="submit"
@@ -22,8 +26,8 @@ export const AddExpensePage: React.FC = () => {
                     {loading ? 'Saving...' : 'Save'}
                 </button>
             </div>
-            <AddExpenseForm 
-                onSuccess={() => navigate('/dashboard')} 
+            <AddExpenseForm
+                onSuccess={() => navigate('/dashboard')}
                 formId="add-expense-form"
                 hideSubmitButton={true}
                 onLoadingChange={setLoading}

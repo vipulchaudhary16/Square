@@ -1,7 +1,17 @@
 import api from './index';
 
-export const signup = async (email: string, password: string, firstName: string, lastName: string) => {
-    const response = await api.post('/auth/signup', { email, password, first_name: firstName, last_name: lastName });
+export const signup = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+) => {
+    const response = await api.post('/auth/signup', {
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+    });
     return response.data;
 };
 

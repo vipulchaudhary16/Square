@@ -7,7 +7,16 @@ export interface PaginatedResponse<T> {
     limit: number;
 }
 
-export const getExpenses = async (startDate?: string, endDate?: string, personalOnly?: boolean, category?: string, page?: number, limit?: number, sortBy?: string, sortOrder?: 'asc' | 'desc'): Promise<PaginatedResponse<Expense> | Expense[]> => {
+export const getExpenses = async (
+    startDate?: string,
+    endDate?: string,
+    personalOnly?: boolean,
+    category?: string,
+    page?: number,
+    limit?: number,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
+): Promise<PaginatedResponse<Expense> | Expense[]> => {
     const params = new URLSearchParams();
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
@@ -61,7 +70,13 @@ export const addComment = async (id: string, text: string) => {
     return response.data;
 };
 
-export const getGroupExpenses = async (groupId: string, startDate?: string, endDate?: string, category?: string, search?: string) => {
+export const getGroupExpenses = async (
+    groupId: string,
+    startDate?: string,
+    endDate?: string,
+    category?: string,
+    search?: string,
+) => {
     const params = new URLSearchParams();
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);

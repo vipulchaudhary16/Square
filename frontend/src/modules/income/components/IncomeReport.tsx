@@ -1,8 +1,29 @@
 import React, { useState, useMemo } from 'react';
 import { Income } from '../../../api/finance';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import {
+    PieChart,
+    Pie,
+    Cell,
+    ResponsiveContainer,
+    Tooltip as RechartsTooltip,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+} from 'recharts';
 import { useBodyScrollLock } from '../../../hooks/useBodyScrollLock';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO, isWithinInterval } from 'date-fns';
+import {
+    format,
+    startOfWeek,
+    endOfWeek,
+    startOfMonth,
+    endOfMonth,
+    startOfYear,
+    endOfYear,
+    parseISO,
+    isWithinInterval,
+} from 'date-fns';
 import { PieChart as PieIcon, Table as TableIcon, Filter, X } from 'lucide-react';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -52,20 +73,23 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
     };
 
     const filteredIncomes = useMemo(() => {
-        return incomes.filter(income => {
+        return incomes.filter((income) => {
             const date = parseISO(income.date);
             return isWithinInterval(date, {
                 start: parseISO(startDate),
-                end: parseISO(endDate)
+                end: parseISO(endDate),
             });
         });
     }, [incomes, startDate, endDate]);
 
-    const totalIncome = useMemo(() => filteredIncomes.reduce((sum, i) => sum + i.amount, 0), [filteredIncomes]);
+    const totalIncome = useMemo(
+        () => filteredIncomes.reduce((sum, i) => sum + i.amount, 0),
+        [filteredIncomes],
+    );
 
     const sourceData = useMemo(() => {
         const data: Record<string, number> = {};
-        filteredIncomes.forEach(i => {
+        filteredIncomes.forEach((i) => {
             data[i.source] = (data[i.source] || 0) + i.amount;
         });
         return Object.entries(data).map(([name, value]) => ({ name, value }));
@@ -73,7 +97,7 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
 
     const dailyData = useMemo(() => {
         const data: Record<string, number> = {};
-        filteredIncomes.forEach(i => {
+        filteredIncomes.forEach((i) => {
             const date = format(parseISO(i.date), 'MMM dd');
             data[date] = (data[date] || 0) + i.amount;
         });
@@ -82,15 +106,26 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
 
     const axisColor = theme === 'dark' ? '#94a3b8' : '#64748b';
     const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
-    const tooltipStyle = theme === 'dark'
-        ? { backgroundColor: '#1e293b', border: '1px solid #334155', color: '#f8fafc', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)' }
-        : { backgroundColor: '#fff', border: 'none', color: '#0f172a', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' };
+    const tooltipStyle =
+        theme === 'dark'
+            ? {
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  color: '#f8fafc',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)',
+              }
+            : {
+                  backgroundColor: '#fff',
+                  border: 'none',
+                  color: '#0f172a',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              };
 
     return (
         <div className="space-y-8">
-
             <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-
                 <div className="md:hidden">
                     <button
                         onClick={() => setIsFilterOpen(true)}
@@ -101,11 +136,12 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
                     </button>
                 </div>
 
-
                 <div className="hidden md:flex flex-col md:flex-row md:items-end gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow">
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">Start Date</label>
+                            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
+                                Start Date
+                            </label>
                             <input
                                 type="date"
                                 value={startDate}
@@ -114,7 +150,9 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">End Date</label>
+                            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
+                                End Date
+                            </label>
                             <input
                                 type="date"
                                 value={endDate}
@@ -135,28 +173,48 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
                         </button>
                     </div>
                 </div>
-                
 
                 <div className="mt-4 flex flex-wrap gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
-                    <button onClick={() => handleQuickFilter('week')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap">This Week</button>
-                    <button onClick={() => handleQuickFilter('month')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap">This Month</button>
-                    <button onClick={() => handleQuickFilter('year')} className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap">This Year</button>
+                    <button
+                        onClick={() => handleQuickFilter('week')}
+                        className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap"
+                    >
+                        This Week
+                    </button>
+                    <button
+                        onClick={() => handleQuickFilter('month')}
+                        className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap"
+                    >
+                        This Month
+                    </button>
+                    <button
+                        onClick={() => handleQuickFilter('year')}
+                        className="px-4 py-1.5 text-xs font-medium bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full transition-colors border border-slate-200 dark:border-slate-600 whitespace-nowrap"
+                    >
+                        This Year
+                    </button>
                 </div>
             </div>
-
 
             {isFilterOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 fade-in duration-200">
                         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Filter Income</h3>
-                            <button onClick={() => setIsFilterOpen(false)} className="text-slate-400 hover:text-slate-500">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                                Filter Income
+                            </h3>
+                            <button
+                                onClick={() => setIsFilterOpen(false)}
+                                className="text-slate-400 hover:text-slate-500"
+                            >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Start Date</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                    Start Date
+                                </label>
                                 <input
                                     type="date"
                                     value={startDate}
@@ -165,7 +223,9 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">End Date</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                    End Date
+                                </label>
                                 <input
                                     type="date"
                                     value={endDate}
@@ -202,27 +262,47 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
                 </div>
             ) : (
                 <>
-
                     <div className="flex overflow-x-auto pb-4 gap-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:gap-6 md:pb-0 snap-x snap-mandatory hide-scrollbar">
                         <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-6 text-white shadow-lg shadow-green-500/20 flex-shrink-0">
-                            <p className="text-green-100 text-sm font-medium uppercase tracking-wider">Total Income</p>
-                            <h3 className="text-3xl font-bold mt-2 tracking-tight">₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                            <p className="text-green-100 text-sm font-medium uppercase tracking-wider">
+                                Total Income
+                            </p>
+                            <h3 className="text-3xl font-bold mt-2 tracking-tight">
+                                ₹
+                                {totalIncome.toLocaleString('en-IN', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                })}
+                            </h3>
                         </div>
                         <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0">
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Transactions</p>
-                            <h3 className="text-3xl font-bold mt-2 text-slate-900 dark:text-white tracking-tight">{filteredIncomes.length}</h3>
-                        </div>
-                        <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0">
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Average</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">
+                                Transactions
+                            </p>
                             <h3 className="text-3xl font-bold mt-2 text-slate-900 dark:text-white tracking-tight">
-                                ₹{filteredIncomes.length ? (totalIncome / filteredIncomes.length).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                                {filteredIncomes.length}
+                            </h3>
+                        </div>
+                        <div className="min-w-[85vw] sm:min-w-[300px] md:min-w-0 snap-center bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex-shrink-0">
+                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">
+                                Average
+                            </p>
+                            <h3 className="text-3xl font-bold mt-2 text-slate-900 dark:text-white tracking-tight">
+                                ₹
+                                {filteredIncomes.length
+                                    ? (totalIncome / filteredIncomes.length).toLocaleString(
+                                          'en-IN',
+                                          { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+                                      )
+                                    : '0.00'}
                             </h3>
                         </div>
                     </div>
 
-
                     <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Detailed Analysis</h2>
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+                            Detailed Analysis
+                        </h2>
                         <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl">
                             <button
                                 onClick={() => setViewMode('charts')}
@@ -241,9 +321,10 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
 
                     {viewMode === 'charts' ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
                             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Income by Source</h3>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
+                                    Income by Source
+                                </h3>
                                 <div className="flex flex-col sm:flex-row items-center gap-8">
                                     <div className="h-64 w-full sm:w-1/2">
                                         <ResponsiveContainer width="100%" height="100%">
@@ -258,24 +339,39 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
                                                     dataKey="value"
                                                 >
                                                     {sourceData.map((_, index) => (
-                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} strokeWidth={0} />
+                                                        <Cell
+                                                            key={`cell-${index}`}
+                                                            fill={COLORS[index % COLORS.length]}
+                                                            strokeWidth={0}
+                                                        />
                                                     ))}
                                                 </Pie>
-                                                <RechartsTooltip
-                                                    contentStyle={tooltipStyle}
-                                                />
+                                                <RechartsTooltip contentStyle={tooltipStyle} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
                                     <div className="w-full sm:w-1/2">
                                         <ul className="space-y-3">
                                             {sourceData.map((entry, index) => (
-                                                <li key={index} className="flex justify-between items-center text-sm">
+                                                <li
+                                                    key={index}
+                                                    className="flex justify-between items-center text-sm"
+                                                >
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                                        <span className="text-slate-700 dark:text-slate-300 font-medium">{entry.name}</span>
+                                                        <div
+                                                            className="w-3 h-3 rounded-full"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    COLORS[index % COLORS.length],
+                                                            }}
+                                                        ></div>
+                                                        <span className="text-slate-700 dark:text-slate-300 font-medium">
+                                                            {entry.name}
+                                                        </span>
                                                     </div>
-                                                    <span className="font-bold text-slate-900 dark:text-white">₹{entry.value.toFixed(0)}</span>
+                                                    <span className="font-bold text-slate-900 dark:text-white">
+                                                        ₹{entry.value.toFixed(0)}
+                                                    </span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -285,18 +381,41 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
 
                             {}
                             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Daily Income Trend</h3>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">
+                                    Daily Income Trend
+                                </h3>
                                 <div className="h-80">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={dailyData}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
-                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 12 }} dy={10} />
-                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 12 }} />
+                                            <CartesianGrid
+                                                strokeDasharray="3 3"
+                                                vertical={false}
+                                                stroke={gridColor}
+                                            />
+                                            <XAxis
+                                                dataKey="name"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: axisColor, fontSize: 12 }}
+                                                dy={10}
+                                            />
+                                            <YAxis
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: axisColor, fontSize: 12 }}
+                                            />
                                             <RechartsTooltip
-                                                cursor={{ fill: theme === 'dark' ? '#334155' : '#f1f5f9' }}
+                                                cursor={{
+                                                    fill: theme === 'dark' ? '#334155' : '#f1f5f9',
+                                                }}
                                                 contentStyle={tooltipStyle}
                                             />
-                                            <Bar dataKey="value" fill="#10B981" radius={[4, 4, 0, 0]} barSize={32} />
+                                            <Bar
+                                                dataKey="value"
+                                                fill="#10B981"
+                                                radius={[4, 4, 0, 0]}
+                                                barSize={32}
+                                            />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -308,15 +427,26 @@ export const IncomeReport: React.FC<IncomeReportProps> = ({ incomes, isLoading }
                                 <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-700 relative">
                                     <thead className="bg-slate-50 dark:bg-slate-700 sticky top-0 z-10">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Source</th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
-                                            <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Amount</th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Date
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Source
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Category
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Amount
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700">
                                         {filteredIncomes.map((income) => (
-                                            <tr key={income.id} className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                                            <tr
+                                                key={income.id}
+                                                className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                                            >
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400 font-medium">
                                                     {format(parseISO(income.date), 'MMM dd, yyyy')}
                                                 </td>

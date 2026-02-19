@@ -28,7 +28,7 @@ interface DataTableProps<T> {
 export function DataTable<T extends { id: string | number }>({
     data,
     columns,
-    searchPlaceholder = "Search...",
+    searchPlaceholder = 'Search...',
     currentPage,
     totalPages,
     onPageChange,
@@ -41,18 +41,15 @@ export function DataTable<T extends { id: string | number }>({
 }: DataTableProps<T>) {
     const [searchQuery, setSearchQuery] = useState('');
 
-    
     const filteredData = React.useMemo(() => {
         if (!searchQuery) return data;
         return data.filter((row) =>
             Object.values(row as any).some((value) =>
-                String(value).toLowerCase().includes(searchQuery.toLowerCase())
-            )
+                String(value).toLowerCase().includes(searchQuery.toLowerCase()),
+            ),
         );
     }, [data, searchQuery]);
 
-    
-    
     const sortedData = filteredData;
 
     const handleSort = (key: string) => {
@@ -80,7 +77,10 @@ export function DataTable<T extends { id: string | number }>({
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                     <Filter className="w-4 h-4" />
-                    <span>{totalRecords !== undefined ? totalRecords : sortedData.length} records found</span>
+                    <span>
+                        {totalRecords !== undefined ? totalRecords : sortedData.length} records
+                        found
+                    </span>
                 </div>
             </div>
 
@@ -99,8 +99,15 @@ export function DataTable<T extends { id: string | number }>({
                                     <th
                                         key={idx}
                                         className={`px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group ${col.className || ''}`}
-                                        onClick={() => typeof col.accessor === 'string' && handleSort(col.accessor as string)}
-                                        title={typeof col.accessor === 'string' ? "Click to sort" : undefined}
+                                        onClick={() =>
+                                            typeof col.accessor === 'string' &&
+                                            handleSort(col.accessor as string)
+                                        }
+                                        title={
+                                            typeof col.accessor === 'string'
+                                                ? 'Click to sort'
+                                                : undefined
+                                        }
                                     >
                                         <div className="flex items-center gap-2">
                                             {col.header}
@@ -130,19 +137,25 @@ export function DataTable<T extends { id: string | number }>({
                                     className={`transition-colors group ${onRowClick ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/50' : ''}`}
                                 >
                                     {columns.map((col, colIdx) => (
-                                        <td key={colIdx} className={`px-6 py-4 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap ${col.tdClassName || ''}`}>
-                                            {col.render ? col.render(row) : (
-                                                typeof col.accessor === 'function'
-                                                    ? col.accessor(row)
-                                                    : (row[col.accessor] as React.ReactNode)
-                                            )}
+                                        <td
+                                            key={colIdx}
+                                            className={`px-6 py-4 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap ${col.tdClassName || ''}`}
+                                        >
+                                            {col.render
+                                                ? col.render(row)
+                                                : typeof col.accessor === 'function'
+                                                  ? col.accessor(row)
+                                                  : (row[col.accessor] as React.ReactNode)}
                                         </td>
                                     ))}
                                 </tr>
                             ))}
                             {sortedData.length === 0 && (
                                 <tr>
-                                    <td colSpan={columns.length} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                                    <td
+                                        colSpan={columns.length}
+                                        className="px-6 py-12 text-center text-slate-500 dark:text-slate-400"
+                                    >
                                         No results found
                                     </td>
                                 </tr>

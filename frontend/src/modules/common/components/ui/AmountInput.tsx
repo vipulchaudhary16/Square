@@ -10,7 +10,13 @@ interface AmountInputProps {
     error?: boolean;
 }
 
-export const AmountInput: React.FC<AmountInputProps> = ({ value, onChange, placeholder, className, error }) => {
+export const AmountInput: React.FC<AmountInputProps> = ({
+    value,
+    onChange,
+    placeholder,
+    className,
+    error,
+}) => {
     const [inputValue, setInputValue] = useState(value?.toString() || '');
     const [showCalculator, setShowCalculator] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -63,7 +69,24 @@ export const AmountInput: React.FC<AmountInputProps> = ({ value, onChange, place
         }
         // Allow navigation, backspace, delete, etc.
         // Allow numbers and math operators
-        const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Home', 'End', '.', '+', '-', '*', '/', '(', ')', ' '];
+        const allowedKeys = [
+            'Backspace',
+            'Delete',
+            'ArrowLeft',
+            'ArrowRight',
+            'Tab',
+            'Enter',
+            'Home',
+            'End',
+            '.',
+            '+',
+            '-',
+            '*',
+            '/',
+            '(',
+            ')',
+            ' ',
+        ];
         if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
             // If it's not a number or allowed key, prevent default?
             // The user specifically asked to prevent alphabets before.
@@ -122,7 +145,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({ value, onChange, place
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
                     className={`block w-full rounded-xl md:rounded-md border-gray-300 dark:border-slate-600 pl-7 pr-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white ${className} ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
-                    placeholder={placeholder || "10 + 5"}
+                    placeholder={placeholder || '10 + 5'}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <button
@@ -136,7 +159,9 @@ export const AmountInput: React.FC<AmountInputProps> = ({ value, onChange, place
             </div>
 
             {showCalculator && (
-                <div className={`absolute right-0 ${openUpwards ? 'bottom-full mb-2' : 'top-full mt-2'} z-[60] w-72 origin-top-right`}>
+                <div
+                    className={`absolute right-0 ${openUpwards ? 'bottom-full mb-2' : 'top-full mt-2'} z-[60] w-72 origin-top-right`}
+                >
                     <Calculator
                         initialValue={parseFloat(inputValue) || 0}
                         onSave={handleCalculatorSave}

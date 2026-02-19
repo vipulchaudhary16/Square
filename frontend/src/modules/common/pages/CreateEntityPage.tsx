@@ -30,26 +30,11 @@ export const CreateEntityPage: React.FC = () => {
                     />
                 );
             case 'investment':
-                return (
-                    <InvestmentForm
-                        onSuccess={handleSuccess}
-                        onCancel={handleCancel}
-                    />
-                );
+                return <InvestmentForm onSuccess={handleSuccess} onCancel={handleCancel} />;
             case 'loan':
-                return (
-                    <LoanForm
-                        onSuccess={handleSuccess}
-                        onCancel={handleCancel}
-                    />
-                );
+                return <LoanForm onSuccess={handleSuccess} onCancel={handleCancel} />;
             case 'income':
-                return (
-                    <IncomeForm
-                        onSuccess={handleSuccess}
-                        onCancel={handleCancel}
-                    />
-                );
+                return <IncomeForm onSuccess={handleSuccess} onCancel={handleCancel} />;
             default:
                 return <div>Invalid type</div>;
         }
@@ -57,17 +42,23 @@ export const CreateEntityPage: React.FC = () => {
 
     const getTitle = () => {
         switch (type) {
-            case 'expense': return 'Add New Expense';
-            case 'investment': return 'Add New Investment';
-            case 'loan': return 'Add New Loan';
-            case 'income': return 'Add New Income';
-            default: return 'Create New';
+            case 'expense':
+                return 'Add New Expense';
+            case 'investment':
+                return 'Add New Investment';
+            case 'loan':
+                return 'Add New Loan';
+            case 'income':
+                return 'Add New Income';
+            default:
+                return 'Create New';
         }
     };
 
     const getSubmitButtonText = () => {
         switch (type) {
-            default: return 'Save';
+            default:
+                return 'Save';
         }
     };
 
