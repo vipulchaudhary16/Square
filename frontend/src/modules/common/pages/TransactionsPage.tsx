@@ -2,20 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../components/DataTable';
 import { getExpenses, Expense } from '../../../api/expenses';
-import { getIncomes, getInvestments, getLoans, Income, Investment, Loan } from '../../../api/finance';
-import { LayoutDashboard, DollarSign, TrendingUp, ArrowLeftRight, Filter, ChevronRight } from 'lucide-react';
+import {
+    getIncomes,
+    getInvestments,
+    getLoans,
+    Income,
+    Investment,
+    Loan,
+} from '../../../api/finance';
+import {
+    LayoutDashboard,
+    DollarSign,
+    TrendingUp,
+    ArrowLeftRight,
+    Filter,
+    ChevronRight,
+} from 'lucide-react';
 
 export const TransactionsPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'expenses' | 'income' | 'investments' | 'loans'>('expenses');
+    const [activeTab, setActiveTab] = useState<'expenses' | 'income' | 'investments' | 'loans'>(
+        'expenses',
+    );
     const [loading, setLoading] = useState(false);
 
-    
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(window.innerWidth < 768 ? 5 : 10);
     const [total, setTotal] = useState(0);
 
-    
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
+        { key: 'date', direction: 'desc' },
+    );
 
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [incomes, setIncomes] = useState<Income[]>([]);
@@ -34,8 +50,8 @@ export const TransactionsPage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        setPage(1); 
-        setSortConfig({ key: 'date', direction: 'desc' }); 
+        setPage(1);
+        setSortConfig({ key: 'date', direction: 'desc' });
     }, [activeTab]);
 
     useEffect(() => {
@@ -51,7 +67,16 @@ export const TransactionsPage: React.FC = () => {
             const ensureId = (item: any) => ({ ...item, id: item.id || item._id || item.ID });
 
             if (activeTab === 'expenses') {
-                const response = await getExpenses(startDate, endDate, undefined, undefined, page, limit, sortBy, sortOrder);
+                const response = await getExpenses(
+                    startDate,
+                    endDate,
+                    undefined,
+                    undefined,
+                    page,
+                    limit,
+                    sortBy,
+                    sortOrder,
+                );
                 if (Array.isArray(response)) {
                     setExpenses(response.map(ensureId));
                     setTotal(response.length);
@@ -60,7 +85,14 @@ export const TransactionsPage: React.FC = () => {
                     setTotal(response.total);
                 }
             } else if (activeTab === 'income') {
-                const response = await getIncomes(page, limit, sortBy, sortOrder, startDate, endDate);
+                const response = await getIncomes(
+                    page,
+                    limit,
+                    sortBy,
+                    sortOrder,
+                    startDate,
+                    endDate,
+                );
                 if (Array.isArray(response)) {
                     setIncomes(response.map(ensureId));
                     setTotal(response.length);
@@ -69,7 +101,14 @@ export const TransactionsPage: React.FC = () => {
                     setTotal(response.total);
                 }
             } else if (activeTab === 'investments') {
-                const response = await getInvestments(page, limit, sortBy, sortOrder, startDate, endDate);
+                const response = await getInvestments(
+                    page,
+                    limit,
+                    sortBy,
+                    sortOrder,
+                    startDate,
+                    endDate,
+                );
                 if (Array.isArray(response)) {
                     setInvestments(response.map(ensureId));
                     setTotal(response.length);
@@ -88,14 +127,14 @@ export const TransactionsPage: React.FC = () => {
                 }
             }
         } catch (error) {
-            console.error("Error fetching data:", error);
+            console.error('Error fetching data:', error);
         } finally {
             setLoading(false);
         }
     };
 
     const handleSort = (key: string) => {
-        let direction: 'asc' | 'desc' = 'desc'; 
+        let direction: 'asc' | 'desc' = 'desc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
             direction = 'asc';
         }
@@ -103,114 +142,162 @@ export const TransactionsPage: React.FC = () => {
     };
 
     const expenseColumns: any[] = [
-        { header: 'Date', accessor: 'date', render: (row: Expense) => new Date(row.date).toLocaleDateString() },
+        {
+            header: 'Date',
+            accessor: 'date',
+            render: (row: Expense) => new Date(row.date).toLocaleDateString(),
+        },
         { header: 'Description', accessor: 'description' },
         {
-            header: 'Category', accessor: 'category', render: (row: Expense) => (
+            header: 'Category',
+            accessor: 'category',
+            render: (row: Expense) => (
                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                     {row.category}
                 </span>
-            )
+            ),
         },
         {
-            header: 'Amount', accessor: 'amount', render: (row: Expense) => (
-                <span className="font-bold text-red-600 dark:text-red-400">-₹{row.amount.toFixed(2)}</span>
-            )
+            header: 'Amount',
+            accessor: 'amount',
+            render: (row: Expense) => (
+                <span className="font-bold text-red-600 dark:text-red-400">
+                    -₹{row.amount.toFixed(2)}
+                </span>
+            ),
         },
         {
             header: '',
             accessor: 'actions',
-            className: 'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-            tdClassName: 'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-            render: () => (
-                <ChevronRight className="w-5 h-5 text-slate-400" />
-            )
+            className:
+                'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            tdClassName:
+                'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            render: () => <ChevronRight className="w-5 h-5 text-slate-400" />,
         },
     ];
 
     const incomeColumns: any[] = [
-        { header: 'Date', accessor: 'date', render: (row: Income) => new Date(row.date).toLocaleDateString() },
+        {
+            header: 'Date',
+            accessor: 'date',
+            render: (row: Income) => new Date(row.date).toLocaleDateString(),
+        },
         { header: 'Source', accessor: 'source' },
         { header: 'Description', accessor: 'description' },
         {
-            header: 'Amount', accessor: 'amount', render: (row: Income) => (
-                <span className="font-bold text-green-600 dark:text-green-400">+₹{row.amount.toFixed(2)}</span>
-            )
+            header: 'Amount',
+            accessor: 'amount',
+            render: (row: Income) => (
+                <span className="font-bold text-green-600 dark:text-green-400">
+                    +₹{row.amount.toFixed(2)}
+                </span>
+            ),
         },
         {
             header: '',
             accessor: 'actions',
-            className: 'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-            tdClassName: 'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-            render: () => (
-                <ChevronRight className="w-5 h-5 text-slate-400" />
-            )
+            className:
+                'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            tdClassName:
+                'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            render: () => <ChevronRight className="w-5 h-5 text-slate-400" />,
         },
     ];
 
     const investmentColumns: any[] = [
-        { header: 'Date', accessor: 'date', render: (row: Investment) => new Date(row.date).toLocaleDateString() },
+        {
+            header: 'Date',
+            accessor: 'date',
+            render: (row: Investment) => new Date(row.date).toLocaleDateString(),
+        },
         { header: 'Type', accessor: 'type' },
         { header: 'Description', accessor: 'description' },
         {
-            header: 'Amount', accessor: 'amount_invested', render: (row: Investment) => (
-                <span className="font-bold text-blue-600 dark:text-blue-400">₹{row.amount_invested.toFixed(2)}</span>
-            )
+            header: 'Amount',
+            accessor: 'amount_invested',
+            render: (row: Investment) => (
+                <span className="font-bold text-blue-600 dark:text-blue-400">
+                    ₹{row.amount_invested.toFixed(2)}
+                </span>
+            ),
         },
         {
-            header: 'Current Value', accessor: 'current_value', render: (row: Investment) => (
-                <span className={`font-bold ${row.current_value >= row.amount_invested ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            header: 'Current Value',
+            accessor: 'current_value',
+            render: (row: Investment) => (
+                <span
+                    className={`font-bold ${row.current_value >= row.amount_invested ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                >
                     ₹{row.current_value.toFixed(2)}
                 </span>
-            )
+            ),
         },
         {
             header: '',
             accessor: 'actions',
-            className: 'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-            tdClassName: 'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-            render: () => (
-                <ChevronRight className="w-5 h-5 text-slate-400" />
-            )
+            className:
+                'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            tdClassName:
+                'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            render: () => <ChevronRight className="w-5 h-5 text-slate-400" />,
         },
     ];
 
     const loanColumns: any[] = [
-        { header: 'Date', accessor: 'date', render: (row: Loan) => new Date(row.date).toLocaleDateString() },
+        {
+            header: 'Date',
+            accessor: 'date',
+            render: (row: Loan) => new Date(row.date).toLocaleDateString(),
+        },
         { header: 'Person', accessor: 'counterparty_name' },
         {
-            header: 'Type', accessor: 'type', render: (row: Loan) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.type === 'LENT'
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                    }`}>
+            header: 'Type',
+            accessor: 'type',
+            render: (row: Loan) => (
+                <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        row.type === 'LENT'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                    }`}
+                >
                     {row.type}
                 </span>
-            )
+            ),
         },
         {
-            header: 'Amount', accessor: 'amount', render: (row: Loan) => (
-                <span className="font-bold text-slate-800 dark:text-white">₹{row.amount.toFixed(2)}</span>
-            )
+            header: 'Amount',
+            accessor: 'amount',
+            render: (row: Loan) => (
+                <span className="font-bold text-slate-800 dark:text-white">
+                    ₹{row.amount.toFixed(2)}
+                </span>
+            ),
         },
         {
-            header: 'Status', accessor: 'status', render: (row: Loan) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'PAID'
-                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                    : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                    }`}>
+            header: 'Status',
+            accessor: 'status',
+            render: (row: Loan) => (
+                <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        row.status === 'PAID'
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                    }`}
+                >
                     {row.status}
                 </span>
-            )
+            ),
         },
         {
             header: '',
             accessor: 'actions',
-            className: 'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-            tdClassName: 'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
-            render: () => (
-                <ChevronRight className="w-5 h-5 text-slate-400" />
-            )
+            className:
+                'w-10 sticky right-0 bg-slate-50 dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            tdClassName:
+                'sticky right-0 bg-white dark:bg-slate-800 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]',
+            render: () => <ChevronRight className="w-5 h-5 text-slate-400" />,
         },
     ];
 
@@ -259,10 +346,11 @@ export const TransactionsPage: React.FC = () => {
         <div className="relative" ref={filterRef}>
             <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors shadow-sm ${isFilterOpen || startDate || endDate
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
-                    : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700'
-                    }`}
+                className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                    isFilterOpen || startDate || endDate
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
+                        : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700'
+                }`}
             >
                 <Filter className="w-4 h-4" />
                 Filter
@@ -278,10 +366,14 @@ export const TransactionsPage: React.FC = () => {
                 <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
                     <div className="space-y-4">
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Date Range</h3>
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                                Date Range
+                            </h3>
                             <div className="space-y-3">
                                 <div>
-                                    <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Start Date</label>
+                                    <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+                                        Start Date
+                                    </label>
                                     <input
                                         type="date"
                                         value={startDate}
@@ -290,7 +382,9 @@ export const TransactionsPage: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">End Date</label>
+                                    <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">
+                                        End Date
+                                    </label>
                                     <input
                                         type="date"
                                         value={endDate}
@@ -325,10 +419,13 @@ export const TransactionsPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Transactions</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">View and manage all your financial records in one place.</p>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                        Transactions
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">
+                        View and manage all your financial records in one place.
+                    </p>
                 </div>
-
 
                 <div className="md:hidden">
                     <select
@@ -345,7 +442,6 @@ export const TransactionsPage: React.FC = () => {
                 </div>
             </div>
 
-
             <div className="hidden md:flex space-x-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl w-full md:w-fit overflow-x-auto">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
@@ -354,10 +450,11 @@ export const TransactionsPage: React.FC = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${isActive
-                                ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
-                                }`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                                isActive
+                                    ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                            }`}
                         >
                             <Icon size={16} />
                             {tab.label}
@@ -365,7 +462,6 @@ export const TransactionsPage: React.FC = () => {
                     );
                 })}
             </div>
-
 
             {activeTab === 'expenses' && (
                 <DataTable

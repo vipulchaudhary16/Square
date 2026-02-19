@@ -16,7 +16,7 @@ const IncomePage: React.FC = () => {
             const data = await getIncomes();
             setIncomes(Array.isArray(data) ? data : data.data || []);
         } catch (error) {
-            console.error("Failed to fetch incomes", error);
+            console.error('Failed to fetch incomes', error);
         }
     };
 
@@ -46,7 +46,9 @@ const IncomePage: React.FC = () => {
                                     <DollarSign size={24} />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <h3 className="font-semibold text-lg text-gray-800 dark:text-white truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{income.source}</h3>
+                                    <h3 className="font-semibold text-lg text-gray-800 dark:text-white truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                                        {income.source}
+                                    </h3>
                                     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-slate-400 mt-1">
                                         <span className="flex items-center gap-1">
                                             <Calendar size={14} />

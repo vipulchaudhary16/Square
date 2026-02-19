@@ -13,7 +13,7 @@ export const JoinGroupPage: React.FC = () => {
     const [groupId, setGroupId] = useState('');
 
     const { execute } = useApiCall({
-        apiCall: joinGroup
+        apiCall: joinGroup,
     });
 
     useEffect(() => {
@@ -31,7 +31,9 @@ export const JoinGroupPage: React.FC = () => {
                 setGroupId(res.group_id);
             } catch (err: any) {
                 setStatus('error');
-                setMessage(err.response?.data?.error || 'Failed to join group. The link may be expired.');
+                setMessage(
+                    err.response?.data?.error || 'Failed to join group. The link may be expired.',
+                );
             }
         };
 
@@ -44,8 +46,12 @@ export const JoinGroupPage: React.FC = () => {
                 {status === 'loading' && (
                     <div className="flex flex-col items-center">
                         <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Joining Group...</h2>
-                        <p className="text-gray-500 dark:text-slate-400 mt-2">Please wait while we verify your invitation.</p>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                            Joining Group...
+                        </h2>
+                        <p className="text-gray-500 dark:text-slate-400 mt-2">
+                            Please wait while we verify your invitation.
+                        </p>
                     </div>
                 )}
 
@@ -54,7 +60,9 @@ export const JoinGroupPage: React.FC = () => {
                         <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-4">
                             <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
                         </div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Welcome!</h2>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                            Welcome!
+                        </h2>
                         <p className="text-gray-600 dark:text-slate-300 mt-2 mb-6">{message}</p>
                         <button
                             onClick={() => navigate(`/groups/${groupId}`)}

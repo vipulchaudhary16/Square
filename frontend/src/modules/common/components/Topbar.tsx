@@ -12,7 +12,8 @@ import {
     TrendingUp,
     ArrowLeftRight,
     Wallet,
-    Table2
+    Table2,
+    Plus,
 } from 'lucide-react';
 import { useSession } from '../../../hooks/useSession';
 
@@ -68,11 +69,16 @@ export const Topbar: React.FC = () => {
     }, [lastScrollY]);
 
     return (
-        <nav className={`hidden md:block bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}>
+        <nav
+            className={`hidden md:block bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}
+        >
             <div className="mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
-                        <Link to="/dashboard" className="flex-shrink-0 flex items-center gap-2 group">
+                        <Link
+                            to="/dashboard"
+                            className="flex-shrink-0 flex items-center gap-2 group"
+                        >
                             <img
                                 src={logo}
                                 alt="Square Logo"
@@ -92,12 +98,15 @@ export const Topbar: React.FC = () => {
                                 <Link
                                     key={item.path}
                                     to={item.path}
-                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 ${active
-                                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 shadow-sm'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                        }`}
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 ${
+                                        active
+                                            ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                    }`}
                                 >
-                                    <Icon className={`w-4 h-4 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400'}`} />
+                                    <Icon
+                                        className={`w-4 h-4 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400'}`}
+                                    />
                                     {item.name}
                                 </Link>
                             );
@@ -105,11 +114,23 @@ export const Topbar: React.FC = () => {
                     </div>
 
                     <div className="hidden md:flex items-center ml-4 gap-2">
+                        <Link
+                            to="/expenses"
+                            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm shadow-primary-500/20"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span className="hidden lg:inline">Add Expense</span>
+                        </Link>
+
                         <button
                             onClick={toggleTheme}
                             className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
                         >
-                            {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                            {theme === 'light' ? (
+                                <Moon className="w-5 h-5" />
+                            ) : (
+                                <Sun className="w-5 h-5" />
+                            )}
                         </button>
 
                         <div className="relative">
@@ -121,9 +142,13 @@ export const Topbar: React.FC = () => {
                                     <UserIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                                 </div>
                                 <div className="flex flex-col items-start mr-1">
-                                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-none">{user?.first_name + ' ' + user?.last_name}</span>
+                                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-none">
+                                        {user?.first_name + ' ' + user?.last_name}
+                                    </span>
                                 </div>
-                                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                                <ChevronDown
+                                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
+                                />
                             </button>
 
                             <AnimatePresence>
@@ -136,8 +161,12 @@ export const Topbar: React.FC = () => {
                                         className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 ring-1 ring-black ring-opacity-5 focus:outline-none origin-top-right overflow-hidden"
                                     >
                                         <div className="px-4 py-3 border-b border-slate-50 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
-                                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Signed in as</p>
-                                            <p className="text-sm font-semibold text-slate-900 dark:text-white truncate mt-0.5">{user?.email}</p>
+                                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Signed in as
+                                            </p>
+                                            <p className="text-sm font-semibold text-slate-900 dark:text-white truncate mt-0.5">
+                                                {user?.email}
+                                            </p>
                                         </div>
                                         <div className="p-1">
                                             <button
@@ -153,9 +182,8 @@ export const Topbar: React.FC = () => {
                             </AnimatePresence>
                         </div>
                     </div>
-
                 </div>
             </div>
-        </nav >
+        </nav>
     );
 };

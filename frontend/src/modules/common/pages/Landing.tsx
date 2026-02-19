@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion';
-import { 
-    ArrowRight, 
-    Users, 
-    TrendingUp, 
-    Wallet, 
+import {
+    ArrowRight,
+    Users,
+    TrendingUp,
+    Wallet,
     BarChart3,
     Sparkles,
-    ArrowLeftRight
+    ArrowLeftRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -30,8 +30,8 @@ export default function Landing() {
                         </span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Link 
-                            to="/auth" 
+                        <Link
+                            to="/auth"
                             className="hidden sm:block text-gray-300 hover:text-white transition-colors"
                         >
                             Log In
@@ -54,7 +54,9 @@ export default function Landing() {
                         className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-8 backdrop-blur-sm"
                     >
                         <span className="flex h-2 w-2 rounded-full bg-green-400 animate-pulse"></span>
-                        <span className="text-sm font-medium text-gray-300">New: Investment Tracking & Budgeting</span>
+                        <span className="text-sm font-medium text-gray-300">
+                            New: Investment Tracking & Budgeting
+                        </span>
                     </motion.div>
 
                     <motion.h1
@@ -75,8 +77,8 @@ export default function Landing() {
                         transition={{ duration: 0.8, delay: 0.2 }}
                         className="text-xl text-gray-400 mb-10 max-w-2xl leading-relaxed"
                     >
-                        Track expenses, split bills, manage investments, and plan your budget. 
-                        All in one beautiful, secure place.
+                        Track expenses, split bills, manage investments, and plan your budget. All
+                        in one beautiful, secure place.
                     </motion.p>
 
                     <motion.div
@@ -102,10 +104,10 @@ export default function Landing() {
                     >
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-transparent to-transparent z-10" />
                         <div className="rounded-xl overflow-hidden border border-white/10 shadow-2xl shadow-purple-500/20 ring-1 ring-white/10">
-                             <img 
-                                src="/images/Dashboard.png" 
-                                alt="App Dashboard" 
-                                className="w-full h-auto object-cover transform hover:scale-[1.01] transition-transform duration-700 overflow-hidden" 
+                            <img
+                                src="/images/Dashboard.png"
+                                alt="App Dashboard"
+                                className="w-full h-auto object-cover transform hover:scale-[1.01] transition-transform duration-700 overflow-hidden"
                             />
                         </div>
                     </motion.div>
@@ -131,7 +133,7 @@ export default function Landing() {
                             title="Group Splitting"
                             description="Split bills with friends, roommates, or family. We calculate who owes what automatically."
                         />
-                         <FeatureCard
+                        <FeatureCard
                             icon={<TrendingUp className="w-8 h-8 text-green-400" />}
                             title="Investments"
                             description="Track your portfolio performance. Stocks, crypto, and assets all in one view."
@@ -141,7 +143,7 @@ export default function Landing() {
                             title="Budget Planning"
                             description="Set monthly budgets for different categories. Get alerted when you're close to limits."
                         />
-                         <FeatureCard
+                        <FeatureCard
                             icon={<ArrowLeftRight className="w-8 h-8 text-indigo-400" />}
                             title="Loan Management"
                             description="Keep track of money lent to and borrowed from friends. Never forget a debt again."
@@ -154,12 +156,12 @@ export default function Landing() {
                     </div>
                 </div>
 
-
                 <div className="py-24 text-center">
                     <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-3xl p-12 border border-white/10 backdrop-blur-sm">
                         <h2 className="text-4xl font-bold mb-6">Ready to take control?</h2>
                         <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                            Join some of users who are mastering their finances with Square and Split.
+                            Join some of users who are mastering their finances with Square and
+                            Split.
                         </p>
                         <Link
                             to="/auth"
@@ -173,10 +175,18 @@ export default function Landing() {
                 {/* Footer */}
                 <footer className="border-t border-white/10 py-12 text-center text-gray-500 text-sm">
                     <div className="flex justify-center gap-8 mb-8">
-                        <a href="#" className="hover:text-white transition-colors">Privacy</a>
-                        <a href="#" className="hover:text-white transition-colors">Terms</a>
-                        <a href="#" className="hover:text-white transition-colors">Contact</a>
-                        <a href="#" className="hover:text-white transition-colors">Twitter</a>
+                        <a href="#" className="hover:text-white transition-colors">
+                            Privacy
+                        </a>
+                        <a href="#" className="hover:text-white transition-colors">
+                            Terms
+                        </a>
+                        <a href="#" className="hover:text-white transition-colors">
+                            Contact
+                        </a>
+                        <a href="#" className="hover:text-white transition-colors">
+                            Twitter
+                        </a>
                     </div>
                     <p>© 2024 ExpenseTracker. All rights reserved.</p>
                 </footer>
@@ -185,24 +195,26 @@ export default function Landing() {
     );
 }
 
-function FeatureCard({ 
-    icon, 
-    title, 
+function FeatureCard({
+    icon,
+    title,
     description,
-    image 
-}: { 
-    icon: React.ReactNode; 
-    title: string; 
+    image,
+}: {
+    icon: React.ReactNode;
+    title: string;
     description: string;
     image?: string;
 }) {
     return (
         <div className="group p-8 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-all hover:-translate-y-1">
-            <div className="mb-6 p-4 bg-white/5 rounded-xl w-fit group-hover:scale-110 transition-transform duration-300">{icon}</div>
+            <div className="mb-6 p-4 bg-white/5 rounded-xl w-fit group-hover:scale-110 transition-transform duration-300">
+                {icon}
+            </div>
             <h3 className="text-xl font-bold mb-3">{title}</h3>
             <p className="text-gray-400 leading-relaxed mb-6">{description}</p>
             {image && (
-                 <div className="mt-4 rounded-lg overflow-hidden border border-white/5 opacity-80 group-hover:opacity-100 transition-opacity">
+                <div className="mt-4 rounded-lg overflow-hidden border border-white/5 opacity-80 group-hover:opacity-100 transition-opacity">
                     <img src={image} alt={title} className="w-full h-40 object-cover object-top" />
                 </div>
             )}

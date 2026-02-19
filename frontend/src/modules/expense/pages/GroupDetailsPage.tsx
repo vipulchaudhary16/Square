@@ -1,9 +1,24 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, Mail, ArrowLeft, Calendar, User as UserIcon, Search, Plus, ArrowRight } from 'lucide-react';
+import {
+    Users,
+    Mail,
+    ArrowLeft,
+    Calendar,
+    User as UserIcon,
+    Search,
+    Plus,
+    ArrowRight,
+} from 'lucide-react';
 import useFetchData from '../../../hooks/useFetchData';
 import useApiCall from '../../../hooks/useApiCall';
-import { getGroupDetails, inviteUser, addMember, settleDebt, GroupDetails } from '../../../api/groups';
+import {
+    getGroupDetails,
+    inviteUser,
+    addMember,
+    settleDebt,
+    GroupDetails,
+} from '../../../api/groups';
 import { searchUsers, User } from '../../../api/users';
 import { getGroupExpenses, Expense } from '../../../api/expenses';
 
@@ -20,22 +35,27 @@ export const GroupDetailsPage: React.FC = () => {
     const [inviteEmail, setInviteEmail] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
-    const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'reports' | 'balances'>('expenses');
+    const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'reports' | 'balances'>(
+        'expenses',
+    );
     const [showAddMember, setShowAddMember] = useState(false);
     const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
 
     const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
     const [settleModalOpen, setSettleModalOpen] = useState(false);
-    const [settleToUser, setSettleToUser] = useState<{ id: string, name: string, amount: number } | null>(null);
+    const [settleToUser, setSettleToUser] = useState<{
+        id: string;
+        name: string;
+        amount: number;
+    } | null>(null);
     const [settleAmount, setSettleAmount] = useState('');
 
     const { data, loading, error, refetch } = useFetchData({
-        apiCall: () => getGroupDetails(id!)
+        apiCall: () => getGroupDetails(id!),
     });
 
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-    
     React.useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchQuery(expenseSearchQuery);
@@ -43,9 +63,13 @@ export const GroupDetailsPage: React.FC = () => {
         return () => clearTimeout(timer);
     }, [expenseSearchQuery]);
 
-    const { data: expenses, loading: expensesLoading, refetch: refetchExpenses } = useFetchData({
+    const {
+        data: expenses,
+        loading: expensesLoading,
+        refetch: refetchExpenses,
+    } = useFetchData({
         apiCall: () => getGroupExpenses(id!, undefined, undefined, undefined, debouncedSearchQuery),
-        dependencies: [id, debouncedSearchQuery]
+        dependencies: [id, debouncedSearchQuery],
     });
 
     const [reportExpenses, setReportExpenses] = useState<Expense[]>([]);
@@ -58,21 +82,18 @@ export const GroupDetailsPage: React.FC = () => {
             const data = await getGroupExpenses(id, startDate, endDate, category);
             setReportExpenses(data || []);
         } catch (error) {
-            console.error("Failed to fetch group report expenses", error);
+            console.error('Failed to fetch group report expenses', error);
         } finally {
             setReportLoading(false);
         }
     };
 
-    
-    
-
     const { execute: executeInvite, loading: inviteLoading } = useApiCall({
-        apiCall: (email: string) => inviteUser(id!, email)
+        apiCall: (email: string) => inviteUser(id!, email),
     });
 
     const { execute: executeAddMember, loading: addMemberLoading } = useApiCall({
-        apiCall: (userId: string) => addMember(id!, userId)
+        apiCall: (userId: string) => addMember(id!, userId),
     });
 
     const handleInvite = async (e: React.FormEvent) => {
@@ -110,13 +131,14 @@ export const GroupDetailsPage: React.FC = () => {
     };
 
     const { execute: executeSettle, loading: settleLoading } = useApiCall({
-        apiCall: (data: { toUserId: string, amount: number }) => settleDebt(id!, data.toUserId, data.amount)
+        apiCall: (data: { toUserId: string; amount: number }) =>
+            settleDebt(id!, data.toUserId, data.amount),
     });
 
     const handleSettle = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!settleToUser || !settleAmount) return;
-        
+
         try {
             await executeSettle({ toUserId: settleToUser.id, amount: parseFloat(settleAmount) });
             alert('Settlement recorded!');
@@ -139,33 +161,48 @@ export const GroupDetailsPage: React.FC = () => {
     const getSplitDetails = (expense: Expense) => {
         if (!user) return null;
 
-        
         if (expense.splits && expense.splits[user.id] !== undefined) {
             const myShare = expense.splits[user.id];
 
             if (expense.payer_id === user.id) {
-                
                 const lentAmount = expense.amount - myShare;
-                if (lentAmount <= 0.01) return <span className="text-gray-500 text-xs">You paid for yourself</span>;
-                return <span className="text-green-600 text-xs font-medium">You lent ₹{lentAmount.toFixed(2)}</span>;
+                if (lentAmount <= 0.01)
+                    return <span className="text-gray-500 text-xs">You paid for yourself</span>;
+                return (
+                    <span className="text-green-600 text-xs font-medium">
+                        You lent ₹{lentAmount.toFixed(2)}
+                    </span>
+                );
             } else {
-                
-                if (myShare <= 0) return <span className="text-gray-400 text-xs">Not involved</span>;
-                return <span className="text-red-600 text-xs font-medium">You owe ₹{myShare.toFixed(2)}</span>;
+                if (myShare <= 0)
+                    return <span className="text-gray-400 text-xs">Not involved</span>;
+                return (
+                    <span className="text-red-600 text-xs font-medium">
+                        You owe ₹{myShare.toFixed(2)}
+                    </span>
+                );
             }
         }
 
-        
         const participants = expense.participants || [];
         const splitAmount = expense.amount / (participants.length || 1);
 
         if (expense.payer_id === user.id) {
             const myShare = participants.includes(user.id) ? splitAmount : 0;
             const lentAmount = expense.amount - myShare;
-            if (lentAmount <= 0) return <span className="text-gray-500 text-xs">You paid for yourself</span>;
-            return <span className="text-green-600 text-xs font-medium">You lent ₹{lentAmount.toFixed(2)}</span>;
+            if (lentAmount <= 0)
+                return <span className="text-gray-500 text-xs">You paid for yourself</span>;
+            return (
+                <span className="text-green-600 text-xs font-medium">
+                    You lent ₹{lentAmount.toFixed(2)}
+                </span>
+            );
         } else if (participants.includes(user.id)) {
-            return <span className="text-red-600 text-xs font-medium">You owe ₹{splitAmount.toFixed(2)}</span>;
+            return (
+                <span className="text-red-600 text-xs font-medium">
+                    You owe ₹{splitAmount.toFixed(2)}
+                </span>
+            );
         } else {
             return <span className="text-gray-400 text-xs">Not involved</span>;
         }
@@ -176,7 +213,7 @@ export const GroupDetailsPage: React.FC = () => {
     const myBalance = React.useMemo(() => {
         if (!user || !groupDetails?.debts) return 0;
         let balance = 0;
-        groupDetails.debts.forEach(debt => {
+        groupDetails.debts.forEach((debt) => {
             if (debt.from === user.id) balance -= debt.amount;
             if (debt.to === user.id) balance += debt.amount;
         });
@@ -200,8 +237,12 @@ export const GroupDetailsPage: React.FC = () => {
                 <div className="p-4 md:p-5 border-b border-gray-100 dark:border-slate-700">
                     <div className="flex justify-between items-start gap-4 mb-2">
                         <div>
-                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{groupDetails.group.name}</h1>
-                            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{groupDetails.group.description}</p>
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                                {groupDetails.group.name}
+                            </h1>
+                            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                                {groupDetails.group.description}
+                            </p>
                         </div>
                         <button
                             onClick={() => setIsAddExpenseModalOpen(true)}
@@ -215,13 +256,20 @@ export const GroupDetailsPage: React.FC = () => {
 
                     <div className="flex flex-wrap items-center gap-4 mt-3">
                         <div className="flex items-center gap-2">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${Math.abs(myBalance) < 0.01
-                                ? 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'
-                                : myBalance > 0
-                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                }`}>
-                                {Math.abs(myBalance) < 0.01 ? 'Settled' : (myBalance > 0 ? `You are owed ₹${myBalance.toFixed(2)}` : `You owe ₹${Math.abs(myBalance).toFixed(2)}`)}
+                            <span
+                                className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                    Math.abs(myBalance) < 0.01
+                                        ? 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'
+                                        : myBalance > 0
+                                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                }`}
+                            >
+                                {Math.abs(myBalance) < 0.01
+                                    ? 'Settled'
+                                    : myBalance > 0
+                                      ? `You are owed ₹${myBalance.toFixed(2)}`
+                                      : `You owe ₹${Math.abs(myBalance).toFixed(2)}`}
                             </span>
                         </div>
                         <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400">
@@ -230,7 +278,10 @@ export const GroupDetailsPage: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400">
                             <Calendar className="w-4 h-4" />
-                            <span>Created {new Date(groupDetails.group.created_at).toLocaleDateString()}</span>
+                            <span>
+                                Created{' '}
+                                {new Date(groupDetails.group.created_at).toLocaleDateString()}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -239,28 +290,31 @@ export const GroupDetailsPage: React.FC = () => {
                 <div className="flex border-b border-gray-200 dark:border-slate-700 px-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
                     <button
                         onClick={() => setActiveTab('expenses')}
-                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${activeTab === 'expenses'
-                            ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
-                            }`}
+                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === 'expenses'
+                                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                                : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
+                        }`}
                     >
                         Expenses
                     </button>
                     <button
                         onClick={() => setActiveTab('balances')}
-                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${activeTab === 'balances'
-                            ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
-                            }`}
+                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === 'balances'
+                                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                                : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
+                        }`}
                     >
                         Balances
                     </button>
                     <button
                         onClick={() => setActiveTab('members')}
-                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${activeTab === 'members'
-                            ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
-                            }`}
+                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === 'members'
+                                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                                : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
+                        }`}
                     >
                         Members
                     </button>
@@ -271,14 +325,14 @@ export const GroupDetailsPage: React.FC = () => {
                                 setReportExpenses(expenses);
                             }
                         }}
-                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${activeTab === 'reports'
-                            ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                            : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
-                            }`}
+                        className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
+                            activeTab === 'reports'
+                                ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                                : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 hover:border-gray-300 dark:hover:border-slate-600'
+                        }`}
                     >
                         Reports
                     </button>
-                    
                 </div>
             </div>
 
@@ -286,7 +340,9 @@ export const GroupDetailsPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-3">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Expenses</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                Expenses
+                            </h2>
                             <div className="relative w-full sm:w-64">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 <input
@@ -300,7 +356,9 @@ export const GroupDetailsPage: React.FC = () => {
                         </div>
 
                         {expensesLoading ? (
-                            <div className="text-center p-8 text-gray-500 dark:text-slate-400">Loading expenses...</div>
+                            <div className="text-center p-8 text-gray-500 dark:text-slate-400">
+                                Loading expenses...
+                            </div>
                         ) : !expenses || expenses.length === 0 ? (
                             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-8 text-center text-gray-500 dark:text-slate-400">
                                 No expenses recorded in this group yet.
@@ -309,27 +367,45 @@ export const GroupDetailsPage: React.FC = () => {
                             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden h-[600px] overflow-y-auto">
                                 <ul className="divide-y divide-gray-100 dark:divide-slate-700">
                                     {expenses.map((expense: Expense) => (
-                                        <li key={expense.id} className="p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer" onClick={() => navigate(`/expenses/${expense.id}`)}>
+                                        <li
+                                            key={expense.id}
+                                            className="p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                                            onClick={() => navigate(`/expenses/${expense.id}`)}
+                                        >
                                             <div className="flex justify-between items-center">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
                                                         {expense.category.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <p className="font-medium text-gray-900 dark:text-white">{expense.description}</p>
+                                                        <p className="font-medium text-gray-900 dark:text-white">
+                                                            {expense.description}
+                                                        </p>
                                                         <p className="text-xs text-gray-500 dark:text-slate-400">
-                                                            Paid by {(() => {
-                                                                const payer = groupDetails.members.find(m => m.id === expense.payer_id);
+                                                            Paid by{' '}
+                                                            {(() => {
+                                                                const payer =
+                                                                    groupDetails.members.find(
+                                                                        (m) =>
+                                                                            m.id ===
+                                                                            expense.payer_id,
+                                                                    );
                                                                 if (payer?.first_name) {
                                                                     return `${payer.first_name} ${payer.last_name}`;
                                                                 }
                                                                 return payer?.username || 'Unknown';
-                                                            })()} • {new Date(expense.date).toLocaleString()}
+                                                            })()}{' '}
+                                                            •{' '}
+                                                            {new Date(
+                                                                expense.date,
+                                                            ).toLocaleString()}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="font-bold text-gray-900 dark:text-white">₹{expense.amount.toFixed(2)}</p>
+                                                    <p className="font-bold text-gray-900 dark:text-white">
+                                                        ₹{expense.amount.toFixed(2)}
+                                                    </p>
                                                     {getSplitDetails(expense)}
                                                 </div>
                                             </div>
@@ -346,7 +422,9 @@ export const GroupDetailsPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Members</h2>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                Members
+                            </h2>
                             <button
                                 onClick={() => setShowAddMember(!showAddMember)}
                                 className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300"
@@ -360,7 +438,7 @@ export const GroupDetailsPage: React.FC = () => {
                                 {}
                                 <div className="flex border-b border-gray-100 dark:border-slate-700 mb-4">
                                     <button
-                                        onClick={() => setActiveTab('search' as any)} 
+                                        onClick={() => setActiveTab('search' as any)}
                                         className={`flex-1 pb-2 text-sm font-medium text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400`}
                                     >
                                         Search / Invite
@@ -376,20 +454,34 @@ export const GroupDetailsPage: React.FC = () => {
                                             className="flex-1 rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                                             placeholder="Search by name or email"
                                         />
-                                        <button type="submit" className="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 px-3 py-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600">
+                                        <button
+                                            type="submit"
+                                            className="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 px-3 py-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600"
+                                        >
                                             <Search className="w-4 h-4" />
                                         </button>
                                     </form>
 
                                     {searchResults.length > 0 && (
                                         <ul className="space-y-2 max-h-40 overflow-y-auto">
-                                            {searchResults.map(user => (
-                                                <li key={user.id} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-slate-700 rounded-md">
+                                            {searchResults.map((user) => (
+                                                <li
+                                                    key={user.id}
+                                                    className="flex justify-between items-center p-2 bg-gray-50 dark:bg-slate-700 rounded-md"
+                                                >
                                                     <div className="text-sm overflow-hidden">
-                                                        <p className="font-medium truncate text-gray-900 dark:text-white">{user.username}</p>
-                                                        <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{user.email}</p>
+                                                        <p className="font-medium truncate text-gray-900 dark:text-white">
+                                                            {user.username}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-slate-400 truncate">
+                                                            {user.email}
+                                                        </p>
                                                     </div>
-                                                    <button onClick={() => handleAddMember(user.id)} disabled={addMemberLoading} className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-600 p-1 rounded">
+                                                    <button
+                                                        onClick={() => handleAddMember(user.id)}
+                                                        disabled={addMemberLoading}
+                                                        className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-600 p-1 rounded"
+                                                    >
                                                         <Plus className="w-4 h-4" />
                                                     </button>
                                                 </li>
@@ -399,7 +491,9 @@ export const GroupDetailsPage: React.FC = () => {
 
                                     <div className="border-t border-gray-100 dark:border-slate-700 pt-4">
                                         <form onSubmit={handleInvite}>
-                                            <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Or Invite by Email</label>
+                                            <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">
+                                                Or Invite by Email
+                                            </label>
                                             <div className="flex gap-2">
                                                 <input
                                                     type="email"
@@ -409,7 +503,11 @@ export const GroupDetailsPage: React.FC = () => {
                                                     className="flex-1 rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                                                     placeholder="friend@example.com"
                                                 />
-                                                <button type="submit" disabled={inviteLoading} className="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                                                <button
+                                                    type="submit"
+                                                    disabled={inviteLoading}
+                                                    className="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                                                >
                                                     <Mail className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -428,11 +526,13 @@ export const GroupDetailsPage: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {(member.first_name)
+                                                {member.first_name
                                                     ? `${member.first_name} ${member.last_name}`
-                                                    : (member.username || "User")}
+                                                    : member.username || 'User'}
                                             </p>
-                                            <p className="text-xs text-gray-500 dark:text-slate-400">{member.email}</p>
+                                            <p className="text-xs text-gray-500 dark:text-slate-400">
+                                                {member.email}
+                                            </p>
                                         </div>
                                     </li>
                                 ))}
@@ -455,7 +555,9 @@ export const GroupDetailsPage: React.FC = () => {
             {activeTab === 'balances' && (
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Balances</h2>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                            Balances
+                        </h2>
                         {!groupDetails.debts || groupDetails.debts.length === 0 ? (
                             <div className="text-center text-gray-500 dark:text-slate-400 py-8">
                                 No debts found. Everyone is settled up!
@@ -463,16 +565,30 @@ export const GroupDetailsPage: React.FC = () => {
                         ) : (
                             <ul className="space-y-4">
                                 {groupDetails.debts.map((debt, index) => {
-                                    const fromUser = groupDetails.members.find(m => m.id === debt.from);
-                                    const toUser = groupDetails.members.find(m => m.id === debt.to);
-                                    const fromUserName = fromUser?.first_name + " " + fromUser?.last_name || fromUser?.username || "User";
-                                    const toUserName = toUser?.first_name + " " + toUser?.last_name || toUser?.username || "User";
+                                    const fromUser = groupDetails.members.find(
+                                        (m) => m.id === debt.from,
+                                    );
+                                    const toUser = groupDetails.members.find(
+                                        (m) => m.id === debt.to,
+                                    );
+                                    const fromUserName =
+                                        fromUser?.first_name + ' ' + fromUser?.last_name ||
+                                        fromUser?.username ||
+                                        'User';
+                                    const toUserName =
+                                        toUser?.first_name + ' ' + toUser?.last_name ||
+                                        toUser?.username ||
+                                        'User';
                                     return (
-                                        <li key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg gap-2 sm:gap-0">
+                                        <li
+                                            key={index}
+                                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg gap-2 sm:gap-0"
+                                        >
                                             <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <div className="w-8 h-8 bg-red-100 dark:bg-red-900/20 rounded-full flex-shrink-0 flex items-center justify-center text-red-600 dark:text-red-400 font-bold text-xs">
-                                                        {fromUserName?.charAt(0).toUpperCase() || '?'}
+                                                        {fromUserName?.charAt(0).toUpperCase() ||
+                                                            '?'}
                                                     </div>
                                                     <span className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[80px] sm:max-w-[120px]">
                                                         {fromUserName}
@@ -480,7 +596,9 @@ export const GroupDetailsPage: React.FC = () => {
                                                 </div>
 
                                                 <div className="flex flex-col items-center px-2">
-                                                    <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider">owes</span>
+                                                    <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                                                        owes
+                                                    </span>
                                                     <ArrowRight className="w-4 h-4 text-gray-400" />
                                                 </div>
 
@@ -500,7 +618,13 @@ export const GroupDetailsPage: React.FC = () => {
                                                 </div>
                                                 {debt.from === user?.id && (
                                                     <button
-                                                        onClick={() => openSettleModal(debt.to, toUser?.username || 'Unknown', debt.amount)}
+                                                        onClick={() =>
+                                                            openSettleModal(
+                                                                debt.to,
+                                                                toUser?.username || 'Unknown',
+                                                                debt.amount,
+                                                            )
+                                                        }
                                                         className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline mt-1"
                                                     >
                                                         Settle Up
@@ -537,9 +661,13 @@ export const GroupDetailsPage: React.FC = () => {
             >
                 <form onSubmit={handleSettle} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Amount</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                            Amount
+                        </label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                ₹
+                            </span>
                             <input
                                 type="number"
                                 step="0.01"

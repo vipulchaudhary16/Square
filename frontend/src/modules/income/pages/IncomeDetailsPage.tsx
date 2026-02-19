@@ -1,8 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getIncomeDetails, deleteIncome, addIncomeComment, updateIncome, IncomeDetails } from '../../../api/finance';
+import {
+    getIncomeDetails,
+    deleteIncome,
+    addIncomeComment,
+    updateIncome,
+    IncomeDetails,
+} from '../../../api/finance';
 import useApiCall from '../../../hooks/useApiCall';
-import { Loader2, Trash2, Edit2, Send, MessageSquare, History, ArrowLeft, Calendar, FileText } from 'lucide-react';
+import {
+    Loader2,
+    Trash2,
+    Edit2,
+    Send,
+    MessageSquare,
+    History,
+    ArrowLeft,
+    Calendar,
+    FileText,
+} from 'lucide-react';
 import { useSession } from '../../../hooks/useSession';
 import { DropdownMenu } from '../../common/components/ui/DropdownMenu';
 
@@ -15,29 +31,28 @@ const IncomeDetailsPage: React.FC = () => {
     const [newComment, setNewComment] = useState('');
     const [activeTab, setActiveTab] = useState<'comments' | 'activity'>('comments');
 
-
     const [formData, setFormData] = useState({
         source: '',
         amount: '',
         category: '',
         date: '',
-        description: ''
+        description: '',
     });
 
     const { execute: fetchDetails, loading } = useApiCall({
-        apiCall: () => getIncomeDetails(id!)
+        apiCall: () => getIncomeDetails(id!),
     });
 
     const { execute: executeDelete } = useApiCall({
-        apiCall: () => deleteIncome(id!)
+        apiCall: () => deleteIncome(id!),
     });
 
     const { execute: executeAddComment, loading: commentLoading } = useApiCall({
-        apiCall: (text: string) => addIncomeComment(id!, text)
+        apiCall: (text: string) => addIncomeComment(id!, text),
     });
 
     const { execute: executeUpdate, loading: updateLoading } = useApiCall({
-        apiCall: (data: any) => updateIncome(id!, data)
+        apiCall: (data: any) => updateIncome(id!, data),
     });
 
     const loadData = async () => {
@@ -47,7 +62,7 @@ const IncomeDetailsPage: React.FC = () => {
                 ...response.income,
                 logs: response.logs || [],
                 comments: response.comments || [],
-                users: response.users || {}
+                users: response.users || {},
             });
 
             setFormData({
@@ -55,10 +70,10 @@ const IncomeDetailsPage: React.FC = () => {
                 amount: response.income.amount.toString(),
                 category: response.income.category,
                 date: new Date(response.income.date).toISOString().split('T')[0],
-                description: response.income.description
+                description: response.income.description,
             });
         } catch (error) {
-            console.error("Failed to load income details", error);
+            console.error('Failed to load income details', error);
         }
     };
 
@@ -67,12 +82,12 @@ const IncomeDetailsPage: React.FC = () => {
     }, [id]);
 
     const handleDelete = async () => {
-        if (window.confirm("Are you sure you want to delete this income record?")) {
+        if (window.confirm('Are you sure you want to delete this income record?')) {
             try {
                 await executeDelete();
                 navigate('/income');
             } catch (error) {
-                alert("Failed to delete income");
+                alert('Failed to delete income');
             }
         }
     };
@@ -86,7 +101,7 @@ const IncomeDetailsPage: React.FC = () => {
             setNewComment('');
             loadData();
         } catch (error) {
-            alert("Failed to add comment");
+            alert('Failed to add comment');
         }
     };
 
@@ -96,12 +111,12 @@ const IncomeDetailsPage: React.FC = () => {
             await executeUpdate({
                 ...formData,
                 amount: parseFloat(formData.amount),
-                date: new Date(formData.date).toISOString()
+                date: new Date(formData.date).toISOString(),
             });
             setIsEditing(false);
             loadData();
         } catch (error) {
-            alert("Failed to update income");
+            alert('Failed to update income');
         }
     };
 
@@ -135,14 +150,14 @@ const IncomeDetailsPage: React.FC = () => {
                             {
                                 label: 'Edit Income',
                                 icon: <Edit2 className="w-4 h-4" />,
-                                onClick: () => setIsEditing(true)
+                                onClick: () => setIsEditing(true),
                             },
                             {
                                 label: 'Delete Income',
                                 icon: <Trash2 className="w-4 h-4" />,
                                 variant: 'danger',
-                                onClick: handleDelete
-                            }
+                                onClick: handleDelete,
+                            },
                         ]}
                     />
                 )}
@@ -151,7 +166,9 @@ const IncomeDetailsPage: React.FC = () => {
             {isEditing ? (
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 animate-fade-in">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Income</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            Edit Income
+                        </h2>
                         <button
                             onClick={() => setIsEditing(false)}
                             className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 font-medium"
@@ -161,32 +178,44 @@ const IncomeDetailsPage: React.FC = () => {
                     </div>
                     <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Source</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                Source
+                            </label>
                             <input
                                 type="text"
                                 required
                                 className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 dark:bg-slate-700/50 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white transition-all focus:bg-white dark:focus:bg-slate-700"
                                 value={formData.source}
-                                onChange={e => setFormData({ ...formData, source: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, source: e.target.value })
+                                }
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Amount</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                Amount
+                            </label>
                             <input
                                 type="number"
                                 required
                                 step="0.01"
                                 className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 dark:bg-slate-700/50 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white transition-all focus:bg-white dark:focus:bg-slate-700"
                                 value={formData.amount}
-                                onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, amount: e.target.value })
+                                }
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Category</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                Category
+                            </label>
                             <select
                                 className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 dark:bg-slate-700/50 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white transition-all focus:bg-white dark:focus:bg-slate-700"
                                 value={formData.category}
-                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, category: e.target.value })
+                                }
                             >
                                 <option value="Salary">Salary</option>
                                 <option value="Freelance">Freelance</option>
@@ -197,21 +226,27 @@ const IncomeDetailsPage: React.FC = () => {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Date</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                Date
+                            </label>
                             <input
                                 type="date"
                                 required
                                 className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 dark:bg-slate-700/50 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white transition-all focus:bg-white dark:focus:bg-slate-700"
                                 value={formData.date}
-                                onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Description</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                Description
+                            </label>
                             <textarea
                                 className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 dark:bg-slate-700/50 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white transition-all focus:bg-white dark:focus:bg-slate-700"
                                 value={formData.description}
-                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({ ...formData, description: e.target.value })
+                                }
                                 rows={3}
                             />
                         </div>
@@ -221,7 +256,9 @@ const IncomeDetailsPage: React.FC = () => {
                                 disabled={updateLoading}
                                 className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 flex items-center shadow-lg shadow-green-500/20 transition-all hover:shadow-green-500/30 font-medium"
                             >
-                                {updateLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                {updateLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : null}
                                 Save Changes
                             </button>
                         </div>
@@ -229,7 +266,6 @@ const IncomeDetailsPage: React.FC = () => {
                 </div>
             ) : (
                 <div className="space-y-8 animate-fade-in">
-
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 md:p-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
 
@@ -241,10 +277,14 @@ const IncomeDetailsPage: React.FC = () => {
                                             {income.category}
                                         </span>
                                     </div>
-                                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">{income.source}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                                        {income.source}
+                                    </h1>
                                 </div>
                                 <div className="text-left md:text-right">
-                                    <div className="text-4xl md:text-5xl font-bold text-green-600 dark:text-green-400 tracking-tight">+₹{income.amount.toFixed(2)}</div>
+                                    <div className="text-4xl md:text-5xl font-bold text-green-600 dark:text-green-400 tracking-tight">
+                                        +₹{income.amount.toFixed(2)}
+                                    </div>
                                 </div>
                             </div>
 
@@ -254,8 +294,17 @@ const IncomeDetailsPage: React.FC = () => {
                                         <Calendar className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase font-semibold tracking-wider">Date</p>
-                                        <p className="font-medium">{new Date(income.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase font-semibold tracking-wider">
+                                            Date
+                                        </p>
+                                        <p className="font-medium">
+                                            {new Date(income.date).toLocaleDateString(undefined, {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                            })}
+                                        </p>
                                     </div>
                                 </div>
                                 {income.description && (
@@ -263,22 +312,24 @@ const IncomeDetailsPage: React.FC = () => {
                                         <h3 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
                                             <FileText className="w-3 h-3" /> Description
                                         </h3>
-                                        <p className="text-gray-600 dark:text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">{income.description}</p>
+                                        <p className="text-gray-600 dark:text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
+                                            {income.description}
+                                        </p>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
 
-
                     <div className="border-b border-gray-200 dark:border-slate-700 overflow-x-auto">
                         <nav className="-mb-px flex space-x-8 min-w-max" aria-label="Tabs">
                             <button
                                 onClick={() => setActiveTab('comments')}
-                                className={`${activeTab === 'comments'
+                                className={`${
+                                    activeTab === 'comments'
                                         ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                                         : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                             >
                                 <MessageSquare className="w-4 h-4" />
                                 Comments
@@ -288,10 +339,11 @@ const IncomeDetailsPage: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => setActiveTab('activity')}
-                                className={`${activeTab === 'activity'
+                                className={`${
+                                    activeTab === 'activity'
                                         ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                                         : 'border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-300 hover:border-gray-300'
-                                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
                             >
                                 <History className="w-4 h-4" />
                                 Activity Log
@@ -299,23 +351,32 @@ const IncomeDetailsPage: React.FC = () => {
                         </nav>
                     </div>
 
-
                     <div className="mt-6">
                         {activeTab === 'comments' ? (
                             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-8 animate-fade-in">
                                 <div className="space-y-4 mb-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                                     {income.comments && income.comments.length > 0 ? (
-                                        income.comments.map(comment => (
+                                        income.comments.map((comment) => (
                                             <div key={comment.id} className="flex gap-3 group">
                                                 <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex-shrink-0 flex items-center justify-center text-xs font-bold text-green-600 dark:text-green-400">
-                                                    {getUserName(comment.user_id).charAt(0).toUpperCase()}
+                                                    {getUserName(comment.user_id)
+                                                        .charAt(0)
+                                                        .toUpperCase()}
                                                 </div>
                                                 <div className="flex-1 bg-gray-50 dark:bg-slate-700/50 rounded-2xl rounded-tl-none p-4">
                                                     <div className="flex justify-between items-start mb-1">
-                                                        <span className="text-xs font-bold text-gray-900 dark:text-white">{getUserName(comment.user_id)}</span>
-                                                        <span className="text-[10px] text-gray-400 dark:text-slate-500">{new Date(comment.created_at).toLocaleString()}</span>
+                                                        <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                                            {getUserName(comment.user_id)}
+                                                        </span>
+                                                        <span className="text-[10px] text-gray-400 dark:text-slate-500">
+                                                            {new Date(
+                                                                comment.created_at,
+                                                            ).toLocaleString()}
+                                                        </span>
                                                     </div>
-                                                    <p className="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">{comment.text}</p>
+                                                    <p className="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
+                                                        {comment.text}
+                                                    </p>
                                                 </div>
                                             </div>
                                         ))
@@ -324,7 +385,9 @@ const IncomeDetailsPage: React.FC = () => {
                                             <div className="w-12 h-12 bg-gray-50 dark:bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-300 dark:text-slate-600">
                                                 <MessageSquare className="w-6 h-6" />
                                             </div>
-                                            <p className="text-sm text-gray-500 dark:text-slate-400">No comments yet. Start the conversation!</p>
+                                            <p className="text-sm text-gray-500 dark:text-slate-400">
+                                                No comments yet. Start the conversation!
+                                            </p>
                                         </div>
                                     )}
                                 </div>
@@ -342,7 +405,11 @@ const IncomeDetailsPage: React.FC = () => {
                                         disabled={commentLoading || !newComment.trim()}
                                         className="absolute right-2 top-1.5 p-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed transition-colors shadow-sm"
                                     >
-                                        {commentLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                        {commentLoading ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Send className="w-4 h-4" />
+                                        )}
                                     </button>
                                 </form>
                             </div>
@@ -350,35 +417,43 @@ const IncomeDetailsPage: React.FC = () => {
                             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 md:p-8 animate-fade-in">
                                 <div className="flow-root">
                                     <ul className="">
-                                        {income.logs && income.logs.map((log, logIdx) => (
-                                            <li key={log.id}>
-                                                <div className="relative pb-8">
-                                                    {logIdx !== income.logs.length - 1 ? (
-                                                        <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-100 dark:bg-slate-700" aria-hidden="true" />
-                                                    ) : null}
-                                                    <div className="relative flex space-x-3">
-                                                        <div>
-                                                            <span className="h-8 w-8 rounded-full bg-gray-50 dark:bg-slate-700 flex items-center justify-center ring-4 ring-white dark:ring-slate-800">
-                                                                <div className="w-2 h-2 rounded-full bg-green-400 dark:bg-green-500" />
-                                                            </span>
-                                                        </div>
-                                                        <div className="min-w-0 flex-1 pt-1.5">
-                                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                {log.action}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                                                                by {getUserName(log.user_id)}
-                                                            </p>
-                                                            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-                                                                {new Date(log.created_at).toLocaleString()}
-                                                            </p>
+                                        {income.logs &&
+                                            income.logs.map((log, logIdx) => (
+                                                <li key={log.id}>
+                                                    <div className="relative pb-8">
+                                                        {logIdx !== income.logs.length - 1 ? (
+                                                            <span
+                                                                className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-100 dark:bg-slate-700"
+                                                                aria-hidden="true"
+                                                            />
+                                                        ) : null}
+                                                        <div className="relative flex space-x-3">
+                                                            <div>
+                                                                <span className="h-8 w-8 rounded-full bg-gray-50 dark:bg-slate-700 flex items-center justify-center ring-4 ring-white dark:ring-slate-800">
+                                                                    <div className="w-2 h-2 rounded-full bg-green-400 dark:bg-green-500" />
+                                                                </span>
+                                                            </div>
+                                                            <div className="min-w-0 flex-1 pt-1.5">
+                                                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {log.action}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                                                                    by {getUserName(log.user_id)}
+                                                                </p>
+                                                                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                                                                    {new Date(
+                                                                        log.created_at,
+                                                                    ).toLocaleString()}
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </li>
-                                        ))}
+                                                </li>
+                                            ))}
                                         {(!income.logs || income.logs.length === 0) && (
-                                            <li className="text-sm text-gray-500 dark:text-slate-400 italic text-center py-4">No activity recorded.</li>
+                                            <li className="text-sm text-gray-500 dark:text-slate-400 italic text-center py-4">
+                                                No activity recorded.
+                                            </li>
                                         )}
                                     </ul>
                                 </div>

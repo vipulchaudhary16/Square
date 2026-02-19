@@ -6,12 +6,20 @@ import { getDashboardData, DashboardData } from '../../../api/dashboard';
 import { useSession } from '../../../hooks/useSession';
 import { TrendingUp, ArrowLeftRight, Wallet } from 'lucide-react';
 import { EmptyState } from '../../common/components/ui/EmptyState';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from 'recharts';
 
 export const Dashboard: React.FC = () => {
     const { user } = useSession();
     const navigate = useNavigate();
-    const currentUserId = user?.id || "";
+    const currentUserId = user?.id || '';
 
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -21,7 +29,7 @@ export const Dashboard: React.FC = () => {
             const data = await getDashboardData();
             setDashboardData(data);
         } catch (error) {
-            console.error("Error fetching dashboard data", error);
+            console.error('Error fetching dashboard data', error);
         } finally {
             setLoading(false);
         }
@@ -39,7 +47,15 @@ export const Dashboard: React.FC = () => {
         );
     }
 
-    const { total_expenses, total_income, total_invested, recent_expenses, lent_amount, borrowed_amount, expense_graph } = dashboardData;
+    const {
+        total_expenses,
+        total_income,
+        total_invested,
+        recent_expenses,
+        lent_amount,
+        borrowed_amount,
+        expense_graph,
+    } = dashboardData;
     const netBalance = total_income - total_expenses;
 
     const StatCard = ({ title, amount, icon: Icon, color, subtext }: any) => (
@@ -49,13 +65,21 @@ export const Dashboard: React.FC = () => {
                     <div className={`p-2 rounded-lg ${color} bg-opacity-20 backdrop-blur-sm`}>
                         <Icon className="w-5 h-5" />
                     </div>
-                    <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">{title}</h3>
+                    <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                        {title}
+                    </h3>
                 </div>
                 <div className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">
-                    ₹{amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ₹
+                    {amount.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                    })}
                 </div>
             </div>
-            {subtext && <p className="text-xs font-medium text-slate-400 dark:text-slate-500">{subtext}</p>}
+            {subtext && (
+                <p className="text-xs font-medium text-slate-400 dark:text-slate-500">{subtext}</p>
+            )}
         </div>
     );
 
@@ -73,7 +97,11 @@ export const Dashboard: React.FC = () => {
                             <span className="text-primary-100 font-medium">Net Balance</span>
                         </div>
                         <div className="text-3xl font-bold mb-2">
-                            ₹{netBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ₹
+                            {netBalance.toLocaleString('en-IN', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-primary-200">
                             <span>Income: ₹{total_income.toLocaleString()}</span>
@@ -118,15 +146,21 @@ export const Dashboard: React.FC = () => {
                 <div className="lg:col-span-2 space-y-6">
                     <div className="glass-card p-6 border border-white/40 dark:border-slate-700/50">
                         <div className="mb-6">
-                            <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Expense Trends</h2>
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                                Expense Trends
+                            </h2>
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-[#8884d8]"></div>
-                                    <span className="text-xs text-slate-500 dark:text-slate-400">Current Month</span>
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                        Current Month
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-[#82ca9d]"></div>
-                                    <span className="text-xs text-slate-500 dark:text-slate-400">Last Month</span>
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                        Last Month
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -134,49 +168,80 @@ export const Dashboard: React.FC = () => {
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={expense_graph}>
                                     <defs>
-                                        <linearGradient id="colorCurrent" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                                            <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                                        <linearGradient
+                                            id="colorCurrent"
+                                            x1="0"
+                                            y1="0"
+                                            x2="0"
+                                            y2="1"
+                                        >
+                                            <stop
+                                                offset="5%"
+                                                stopColor="#8884d8"
+                                                stopOpacity={0.8}
+                                            />
+                                            <stop
+                                                offset="95%"
+                                                stopColor="#8884d8"
+                                                stopOpacity={0}
+                                            />
                                         </linearGradient>
                                         <linearGradient id="colorLast" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-                                            <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                                            <stop
+                                                offset="5%"
+                                                stopColor="#82ca9d"
+                                                stopOpacity={0.8}
+                                            />
+                                            <stop
+                                                offset="95%"
+                                                stopColor="#82ca9d"
+                                                stopOpacity={0}
+                                            />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
-                                    <XAxis 
-                                        dataKey="day" 
-                                        axisLine={false} 
-                                        tickLine={false} 
-                                        tick={{ fontSize: 12 }} 
-                                        stroke="#94a3b8" 
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        vertical={false}
+                                        strokeOpacity={0.1}
                                     />
-                                    <YAxis 
-                                        axisLine={false} 
-                                        tickLine={false} 
-                                        tick={{ fontSize: 12 }} 
-                                        stroke="#94a3b8" 
+                                    <XAxis
+                                        dataKey="day"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 12 }}
+                                        stroke="#94a3b8"
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 12 }}
+                                        stroke="#94a3b8"
                                         tickFormatter={(value) => `₹${value}`}
                                     />
-                                    <Tooltip 
-                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: '#1e293b',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            color: '#fff',
+                                        }}
                                         formatter={(value: number) => [`₹${value}`, 'Amount']}
                                         labelFormatter={(label) => `Day ${label}`}
                                     />
-                                    <Area 
-                                        type="monotone" 
-                                        dataKey="current_month" 
-                                        stroke="#8884d8" 
-                                        fillOpacity={1} 
-                                        fill="url(#colorCurrent)" 
+                                    <Area
+                                        type="monotone"
+                                        dataKey="current_month"
+                                        stroke="#8884d8"
+                                        fillOpacity={1}
+                                        fill="url(#colorCurrent)"
                                         name="Current Month"
                                     />
-                                    <Area 
-                                        type="monotone" 
-                                        dataKey="last_month" 
-                                        stroke="#82ca9d" 
-                                        fillOpacity={1} 
-                                        fill="url(#colorLast)" 
+                                    <Area
+                                        type="monotone"
+                                        dataKey="last_month"
+                                        stroke="#82ca9d"
+                                        fillOpacity={1}
+                                        fill="url(#colorLast)"
                                         name="Last Month"
                                     />
                                 </AreaChart>
@@ -187,8 +252,10 @@ export const Dashboard: React.FC = () => {
 
                 {/* Recent Transactions */}
                 <div className="lg:col-span-1">
-                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Recent Transactions</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+                            Recent Transactions
+                        </h2>
                         <button
                             onClick={() => navigate('/reports')}
                             className="text-sm font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 px-3 py-1.5 rounded-lg transition-colors"
@@ -205,7 +272,11 @@ export const Dashboard: React.FC = () => {
                             />
                         ) : (
                             recent_expenses.map((exp: any) => (
-                                <ExpenseCard key={exp.id} expense={exp} currentUserId={currentUserId} />
+                                <ExpenseCard
+                                    key={exp.id}
+                                    expense={exp}
+                                    currentUserId={currentUserId}
+                                />
                             ))
                         )}
                     </div>

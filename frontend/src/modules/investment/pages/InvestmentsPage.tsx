@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getInvestments, Investment } from '../../../api/finance';
@@ -17,18 +16,15 @@ const InvestmentsPage: React.FC = () => {
             const data = await getInvestments();
             setInvestments(Array.isArray(data) ? data : data.data || []);
         } catch (error) {
-            console.error("Failed to fetch investments", error);
+            console.error('Failed to fetch investments', error);
         }
     };
-
-
 
     const getProfitLoss = (inv: Investment) => {
         const diff = inv.current_value - inv.amount_invested;
         const percent = (diff / inv.amount_invested) * 100;
         return { diff, percent };
     };
-
 
     return (
         <div className="flex flex-col h-[calc(100vh-8rem)] relative">
@@ -58,7 +54,9 @@ const InvestmentsPage: React.FC = () => {
                                         <PieChart className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <div className="font-medium text-gray-900 dark:text-white">{inv.name}</div>
+                                        <div className="font-medium text-gray-900 dark:text-white">
+                                            {inv.name}
+                                        </div>
                                         <div className="text-sm text-gray-500 dark:text-slate-400 flex items-center gap-2">
                                             <span>{new Date(inv.date).toLocaleDateString()}</span>
                                             <span className="px-1.5 py-0.5 bg-gray-200 dark:bg-slate-600 rounded text-[10px] font-medium text-gray-700 dark:text-slate-300">
@@ -68,8 +66,12 @@ const InvestmentsPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-lg font-bold text-gray-900 dark:text-white">${inv.current_value.toFixed(2)}</div>
-                                    <div className={`text-xs font-medium ${inv.current_value >= inv.amount_invested ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                                        ${inv.current_value.toFixed(2)}
+                                    </div>
+                                    <div
+                                        className={`text-xs font-medium ${inv.current_value >= inv.amount_invested ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                                    >
                                         {inv.current_value >= inv.amount_invested ? '+' : ''}
                                         {(inv.current_value - inv.amount_invested).toFixed(2)}
                                     </div>

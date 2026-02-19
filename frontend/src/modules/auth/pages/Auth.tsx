@@ -20,12 +20,21 @@ export default function Auth() {
     const navigate = useNavigate();
     const { login } = useSession();
 
-    const { execute: executeSignup, loading: loadingSignup, error: errorSignup } = useApiCall({
-        apiCall: (email: string, pass: string, first: string, last: string) => signup(email, pass, first, last)
+    const {
+        execute: executeSignup,
+        loading: loadingSignup,
+        error: errorSignup,
+    } = useApiCall({
+        apiCall: (email: string, pass: string, first: string, last: string) =>
+            signup(email, pass, first, last),
     });
 
-    const { execute: executeLogin, loading: loadingLogin, error: errorLogin } = useApiCall({
-        apiCall: (email: string, pass: string) => apiLogin(email, pass)
+    const {
+        execute: executeLogin,
+        loading: loadingLogin,
+        error: errorLogin,
+    } = useApiCall({
+        apiCall: (email: string, pass: string) => apiLogin(email, pass),
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -46,13 +55,12 @@ export default function Auth() {
             }
             login(res.user, res.token);
             navigate('/dashboard');
-        } catch (err) {
-            
-        }
+        } catch (err) {}
     };
 
     const loading = loadingSignup || loadingLogin;
-    const error = (errorSignup as any)?.response?.data?.error || (errorLogin as any)?.response?.data?.error;
+    const error =
+        (errorSignup as any)?.response?.data?.error || (errorLogin as any)?.response?.data?.error;
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 p-4 overflow-hidden relative transition-colors duration-300">
@@ -79,7 +87,9 @@ export default function Auth() {
                             {mode === 'login' ? 'Welcome Back' : 'Create Account'}
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400">
-                            {mode === 'login' ? 'Sign in to manage your expenses' : 'Enter your details to get started'}
+                            {mode === 'login'
+                                ? 'Sign in to manage your expenses'
+                                : 'Enter your details to get started'}
                         </p>
                     </div>
 
@@ -87,7 +97,9 @@ export default function Auth() {
                         {mode === 'signup' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">First Name</label>
+                                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                                        First Name
+                                    </label>
                                     <div className="relative group">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                         <input
@@ -101,7 +113,9 @@ export default function Auth() {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">Last Name</label>
+                                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                                        Last Name
+                                    </label>
                                     <div className="relative group">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                         <input
@@ -118,7 +132,9 @@ export default function Auth() {
                         )}
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">Email Address</label>
+                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                                Email Address
+                            </label>
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                 <input
@@ -133,11 +149,13 @@ export default function Auth() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">Password</label>
+                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                                Password
+                            </label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                 <input
-                                    type={showPassword ? "text" : "password"}
+                                    type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
@@ -160,11 +178,13 @@ export default function Auth() {
 
                         {mode === 'signup' && (
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">Confirm Password</label>
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                                    Confirm Password
+                                </label>
                                 <div className="relative group">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                     <input
-                                        type={showConfirmPassword ? "text" : "password"}
+                                        type={showConfirmPassword ? 'text' : 'password'}
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="••••••••"
@@ -188,7 +208,10 @@ export default function Auth() {
 
                         {mode === 'login' && (
                             <div className="flex justify-end mt-1">
-                                <Link to="/auth/forgot-password" className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 transition-colors">
+                                <Link
+                                    to="/auth/forgot-password"
+                                    className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 transition-colors"
+                                >
                                     Forgot Password?
                                 </Link>
                             </div>
@@ -223,7 +246,8 @@ export default function Auth() {
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
                                 <>
-                                    {mode === 'login' ? 'Sign In' : 'Create Account'} <ArrowRight className="w-5 h-5" />
+                                    {mode === 'login' ? 'Sign In' : 'Create Account'}{' '}
+                                    <ArrowRight className="w-5 h-5" />
                                 </>
                             )}
                         </button>
@@ -234,7 +258,9 @@ export default function Auth() {
                                 onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
                                 className="text-slate-500 dark:text-slate-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium"
                             >
-                                {mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+                                {mode === 'login'
+                                    ? "Don't have an account? Sign Up"
+                                    : 'Already have an account? Login'}
                             </button>
                         </div>
                     </form>

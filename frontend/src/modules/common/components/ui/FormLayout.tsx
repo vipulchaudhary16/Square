@@ -22,14 +22,10 @@ export const FormLayout: React.FC<FormLayoutProps> = ({ title, children, actions
                     </button>
                     <h2 className="text-l font-semibold text-gray-900 dark:text-white">{title}</h2>
                 </div>
-                <div className="flex items-center gap-3">
-                    {actions}
-                </div>
+                <div className="flex items-center gap-3">{actions}</div>
             </div>
 
-            <div className="max-w-3xl mx-auto p-6">
-                {children}
-            </div>
+            <div className="max-w-3xl mx-auto p-6">{children}</div>
         </div>
     );
 };

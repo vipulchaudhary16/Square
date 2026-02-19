@@ -1,7 +1,5 @@
 import api from './index';
 
-
-
 export interface ActivityLog {
     id: string;
     action: string;
@@ -80,9 +78,14 @@ export interface PaginatedResponse<T> {
     limit: number;
 }
 
-
-
-export const getIncomes = async (page?: number, limit?: number, sortBy?: string, sortOrder?: 'asc' | 'desc', startDate?: string, endDate?: string) => {
+export const getIncomes = async (
+    page?: number,
+    limit?: number,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
+    startDate?: string,
+    endDate?: string,
+) => {
     const params = new URLSearchParams();
     if (page) params.append('page', page.toString());
     if (limit) params.append('limit', limit.toString());
@@ -120,9 +123,14 @@ export const addIncomeComment = async (id: string, text: string) => {
     return response.data;
 };
 
-
-
-export const getInvestments = async (page?: number, limit?: number, sortBy?: string, sortOrder?: 'asc' | 'desc', startDate?: string, endDate?: string) => {
+export const getInvestments = async (
+    page?: number,
+    limit?: number,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
+    startDate?: string,
+    endDate?: string,
+) => {
     const params = new URLSearchParams();
     if (page) params.append('page', page.toString());
     if (limit) params.append('limit', limit.toString());
@@ -160,9 +168,14 @@ export const addInvestmentComment = async (id: string, text: string) => {
     return response.data;
 };
 
-
-
-export const getLoans = async (page?: number, limit?: number, sortBy?: string, sortOrder?: 'asc' | 'desc', startDate?: string, endDate?: string) => {
+export const getLoans = async (
+    page?: number,
+    limit?: number,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
+    startDate?: string,
+    endDate?: string,
+) => {
     const params = new URLSearchParams();
     if (page) params.append('page', page.toString());
     if (limit) params.append('limit', limit.toString());
@@ -199,8 +212,6 @@ export const addLoanComment = async (id: string, text: string) => {
     const response = await api.post(`/loans/${id}/comments`, { text });
     return response.data;
 };
-
-
 
 export const getBudgets = async (month: string) => {
     const response = await api.get(`/budgets?month=${month}`);
