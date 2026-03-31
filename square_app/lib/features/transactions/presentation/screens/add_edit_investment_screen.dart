@@ -51,7 +51,6 @@ class _AddEditInvestmentScreenState
         'current_value': currentValue,
         'description': _descriptionController.text,
         'date': _selectedDate.toUtc().toIso8601String(),
-        'user_id': 'USER_ID_PLACEHOLDER',
       };
 
       await ref.read(investmentsProvider.notifier).create(data);

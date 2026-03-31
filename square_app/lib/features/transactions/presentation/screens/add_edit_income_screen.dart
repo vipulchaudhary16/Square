@@ -43,8 +43,6 @@ class _AddEditIncomeScreenState extends ConsumerState<AddEditIncomeScreen> {
         'amount': amount,
         'description': _descriptionController.text,
         'date': _selectedDate.toUtc().toIso8601String(),
-        'user_id':
-            'USER_ID_PLACEHOLDER', // In real app, backend gets from token
       };
 
       await ref.read(incomesProvider.notifier).create(data);

@@ -1,6 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../groups/data/group_model.dart';
 import '../../groups/data/group_repository.dart';
+import '../../expense/data/expense_model.dart';
+
+final groupDetailsProvider = FutureProvider.autoDispose.family<GroupDetails, String>((ref, id) async {
+  final repository = ref.watch(groupRepositoryProvider);
+  return repository.getGroupDetails(id);
+});
+
+final groupExpensesProvider = FutureProvider.autoDispose.family<List<Expense>, String>((ref, arg) async {
+  final parts = arg.split('|');
+  final groupId = parts[0];
+  final search = parts.length > 1 ? (parts[1].isEmpty ? null : parts[1]) : null;
+  final repository = ref.watch(groupRepositoryProvider);
+  return repository.getGroupExpenses(groupId, searchQuery: search);
+});
 
 final groupsProvider = AsyncNotifierProvider<GroupsNotifier, List<Group>>(
   GroupsNotifier.new,

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/auth_provider.dart';
+import '../../../groups/presentation/groups_provider.dart';
 import '../../data/expense_model.dart';
 import '../expense_provider.dart';
 
@@ -64,6 +66,19 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentUser = ref.watch(authProvider).value;
+    final isPayer = widget.expense.payerId == currentUser?.id;
+
+    String payerName = isPayer ? "You" : "Other";
+    if (!isPayer && widget.expense.groupId != null) {
+      final groupDetails = ref.watch(groupDetailsProvider(widget.expense.groupId!)).value;
+      if (groupDetails != null) {
+        final member = groupDetails.members.where((m) => m.id == widget.expense.payerId).firstOrNull;
+        if (member != null) {
+          payerName = member.displayName;
+        }
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -82,7 +97,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
             icon: const Icon(LucideIcons.edit),
             color: isDark ? Colors.white : Colors.black,
             onPressed: () {
-              context.push('/expenses/edit', extra: widget.expense);
+              context.push('/transactions/edit', extra: widget.expense);
             },
           ),
           IconButton(
@@ -160,15 +175,148 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   _buildDetailRow(
                     context,
                     'Paid By',
-                    widget.expense.payerId == "USER_ID_PLACEHOLDER"
-                        ? "You"
-                        : "Other",
+                    payerName,
                   ),
                 ],
               ),
             ),
+            if (widget.expense.groupId != null) ...[
+              const SizedBox(height: 24),
+              _buildSplitBreakdown(context, isDark),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSplitBreakdown(BuildContext context, bool isDark) {
+    final groupDetails = widget.expense.groupId != null
+        ? ref.watch(groupDetailsProvider(widget.expense.groupId!)).value
+        : null;
+
+    final participants = widget.expense.participants;
+    final splits = widget.expense.splits;
+    final totalAmount = widget.expense.amount;
+    final payerId = widget.expense.payerId;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.slate[800] : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.users,
+                size: 20,
+                color: AppColors.primary[600],
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Split Details',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : AppColors.slate[900],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Group members and their shares
+          if (groupDetails != null)
+            ...groupDetails.members.map((member) {
+              final isPayer = member.id == payerId;
+              final isParticipant = participants.contains(member.id);
+              if (!isPayer && !isParticipant) return const SizedBox.shrink();
+
+              double share = 0;
+              if (splits != null && splits.containsKey(member.id)) {
+                share = splits[member.id]!;
+              } else if (isParticipant) {
+                share = totalAmount / participants.length.toDouble();
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: AppColors.primary[100],
+                            child: Text(
+                              member.displayName.isNotEmpty
+                                  ? member.displayName[0].toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary[600],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  member.shortName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.white : AppColors.slate[900],
+                                  ),
+                                ),
+                                if (isPayer)
+                                  Text(
+                                    'Paid the bill',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.green[400],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '₹${share.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white70 : AppColors.slate[700],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            })
+          else
+            const Center(
+              child: Text('Loading split details...'),
+            ),
+        ],
       ),
     );
   }

@@ -17,33 +17,31 @@ class GroupRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-      print('AUTH TOKEN: ${token != null ? "FOUND" : "MISSING"}');
       if (token == null) throw Exception('Not authenticated');
 
-      print('FETCHING GROUPS FROM: ${_dio.options.baseUrl}/groups');
       final response = await _dio.get(
         '/groups',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      print('RESPONSE STATUS: ${response.statusCode}');
-      print('RESPONSE DATA: ${response.data}');
+      if (response.data == null) return [];
 
-      if (response.data == null) {
-        return [];
+      final dynamic rawData = response.data;
+      List<dynamic> dataList = [];
+      if (rawData is List) {
+        dataList = rawData;
+      } else if (rawData is Map && rawData.containsKey('data')) {
+        dataList = rawData['data'] ?? [];
+      } else if (rawData is Map) {
+        // Handle Fiber error response { "error": "msg" }
+        if (rawData.containsKey('error')) throw rawData['error'];
+        dataList = [];
       }
 
-      final List<dynamic> data = response.data is List
-          ? response.data
-          : response.data['data'] ?? [];
-
-      return data.map((json) => Group.fromJson(json)).toList();
+      return dataList.map((json) => Group.fromJson(json)).toList();
     } on DioException catch (e) {
-      print('DIO ERROR: ${e.message}');
-      print('DIO RESPONSE: ${e.response?.data}');
       throw e.response?.data['error'] ?? 'Failed to fetch groups';
     } catch (e) {
-      print('GENERAL ERROR: $e');
       throw Exception('Failed to fetch groups: $e');
     }
   }
@@ -86,13 +84,75 @@ class GroupRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-      final response = await _dio.post(
+      await _dio.post(
         '/groups/$groupId/invite',
         data: {'email': email},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
     } catch (e) {
       throw Exception('Failed to invite user: $e');
+    }
+  }
+
+  Future<void> addMember(String groupId, String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) throw Exception('Not authenticated');
+
+      await _dio.post(
+        '/groups/$groupId/members',
+        data: {'user_id': userId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+    } on DioException catch (e) {
+      throw e.response?.data['error'] ?? 'Failed to add member';
+    } catch (e) {
+      throw Exception('Failed to add member: $e');
+    }
+  }
+
+  Future<List<Expense>> getGroupExpenses(
+    String groupId, {
+    String? searchQuery,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) throw Exception('Not authenticated');
+
+      final queryParams = <String, dynamic>{};
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        queryParams['search'] = searchQuery;
+      }
+
+      final response = await _dio.get(
+        '/groups/$groupId/expenses',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.data == null) {
+        return [];
+      }
+
+      final dynamic rawData = response.data;
+      List<dynamic> dataList = [];
+
+      if (rawData is List) {
+        dataList = rawData;
+      } else if (rawData is Map && rawData.containsKey('data')) {
+        dataList = rawData['data'] ?? [];
+      } else if (rawData is Map) {
+        if (rawData.containsKey('error')) throw rawData['error'];
+        dataList = [];
+      }
+
+      return dataList.map((json) => Expense.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw e.response?.data['error'] ?? 'Failed to fetch group expenses';
+    } catch (e) {
+      throw Exception('Failed to fetch group expenses: $e');
     }
   }
 }

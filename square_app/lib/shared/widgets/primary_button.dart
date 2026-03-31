@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../core/theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -23,12 +22,10 @@ class PrimaryButton extends StatelessWidget {
       height: 56,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [AppColors.primary[600]!, AppColors.primary[700]!],
-        ),
+        color: Theme.of(context).colorScheme.primary,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary[500]!.withOpacity(0.3),
+            color: Theme.of(context).shadowColor.withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -41,11 +38,11 @@ class PrimaryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Center(
             child: isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                       strokeWidth: 2,
                     ),
                   )
@@ -54,15 +51,15 @@ class PrimaryButton extends StatelessWidget {
                     children: [
                       Text(
                         text,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       if (icon != null) ...[
                         const SizedBox(width: 8),
-                        Icon(icon, color: Colors.white, size: 20),
+                        Icon(icon, color: Theme.of(context).colorScheme.onPrimary, size: 20),
                       ],
                     ],
                   ),

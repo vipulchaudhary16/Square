@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../data/group_model.dart';
+import '../../../../shared/widgets/primary_button.dart';
+
 import '../groups_provider.dart';
 
 class GroupsScreen extends ConsumerWidget {
@@ -215,17 +216,12 @@ class GroupsScreen extends ConsumerWidget {
             style: TextStyle(color: AppColors.slate[500], fontSize: 14),
           ),
           const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () => context.push('/groups/create'),
-            icon: const Icon(LucideIcons.plus),
-            label: const Text('Create New Group'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary[600],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: PrimaryButton(
+              onPressed: () => context.push('/groups/create'),
+              icon: LucideIcons.plus,
+              text: 'Create New Group',
             ),
           ),
         ],

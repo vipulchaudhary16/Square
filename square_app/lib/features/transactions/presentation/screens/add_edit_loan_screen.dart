@@ -46,7 +46,6 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
         'status': _status,
         'date': _selectedDate.toUtc().toIso8601String(),
         'description': _descriptionController.text,
-        'user_id': 'USER_ID_PLACEHOLDER',
       };
 
       await ref.read(loansProvider.notifier).create(data);

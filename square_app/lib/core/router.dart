@@ -63,7 +63,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: 'add-expense', // /transactions/add-expense
-                builder: (context, state) => const AddEditExpenseScreen(),
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>? ?? {};
+                  final groupId = extra['groupId'] as String?;
+                  return AddEditExpenseScreen(preselectedGroupId: groupId);
+                },
               ),
               GoRoute(
                 path: 'add-income', // /transactions/add-income
@@ -121,6 +125,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/expenses/:id',
+            builder: (context, state) {
+              final expense = state.extra as Expense;
+              return ExpenseDetailScreen(expense: expense);
+            },
           ),
         ],
       ),

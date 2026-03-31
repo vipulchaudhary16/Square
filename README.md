@@ -55,6 +55,8 @@ Built with a robust **Go** backend and a dynamic **React** frontend, Square comb
     go mod download
     # Run the server
     go run cmd/server/main.go
+    or
+    make dev
     ```
     *Note: Ensure your `.env` contains `MONGO_URI` and `PORT`.*
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/auth_provider.dart';
 import '../expense_provider.dart';
 import '../widgets/expense_card.dart';
 
@@ -13,6 +14,7 @@ class ExpenseListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final expenseState = ref.watch(expenseProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentUser = ref.watch(authProvider).value;
 
     return Scaffold(
       body: expenseState.when(
@@ -53,8 +55,7 @@ class ExpenseListScreen extends ConsumerWidget {
                     final expense = expenses[index];
                     return ExpenseCard(
                       expense: expense,
-                      currentUserId:
-                          "USER_ID_PLACEHOLDER", // TODO: Get from AuthProvider
+                      currentUserId: currentUser?.id ?? '',
                       onTap: () {
                         context.go('/expenses/${expense.id}', extra: expense);
                       },

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../core/theme/app_colors.dart';
 
 class InputField extends StatefulWidget {
   final String label;
@@ -47,9 +46,7 @@ class _InputFieldState extends State<InputField> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.slate[300]
-                  : AppColors.slate[700],
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
             ),
           ),
         ),
@@ -62,20 +59,23 @@ class _InputFieldState extends State<InputField> {
           style: const TextStyle(fontWeight: FontWeight.w500),
           maxLines: widget.maxLines, // Pass it here
           decoration: InputDecoration(
+            contentPadding: widget.maxLines == 1 
+                ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12) 
+                : const EdgeInsets.all(16),
             hintText: widget.hint,
             hintStyle: TextStyle(
-              color: AppColors.slate[400],
+              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
               fontWeight: FontWeight.normal,
             ),
             prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, size: 20, color: AppColors.slate[400])
+                ? Icon(widget.prefixIcon, size: 20, color: Theme.of(context).iconTheme.color?.withOpacity(0.6))
                 : null,
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
                       _obscureText ? LucideIcons.eyeOff : LucideIcons.eye,
                       size: 20,
-                      color: AppColors.slate[400],
+                      color: Theme.of(context).iconTheme.color?.withOpacity(0.6),
                     ),
                     onPressed: () {
                       setState(() {

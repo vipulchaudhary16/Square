@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/expense_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../groups/presentation/groups_provider.dart';
 
-class ExpenseCard extends StatelessWidget {
+class ExpenseCard extends ConsumerWidget {
   final Expense expense;
   final String currentUserId;
   final VoidCallback? onTap;
@@ -16,19 +18,65 @@ class ExpenseCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    // Handling potential missing fields safely
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final description = expense.description;
     final amount = expense.amount;
     final date = expense.date;
     final category = expense.category;
     final payerId = expense.payerId;
-    final groupName = expense.groupName;
     final groupId = expense.groupId;
 
     final isPayer = payerId == currentUserId;
     final isPersonal = groupId == null;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isParticipant = expense.participants.contains(currentUserId);
+    final isInvolved = isPayer || isParticipant;
+
+    // Calculate personal share and involvement
+    double myShare = 0;
+    if (expense.splits != null && expense.splits!.containsKey(currentUserId)) {
+      myShare = expense.splits![currentUserId]!;
+    } else if (isParticipant) {
+      myShare = expense.amount / (expense.participants.length.toDouble());
+    }
+
+    double involvementAmount = 0;
+    String involvementLabel = "";
+    Color involvementColor = Colors.grey;
+
+    if (isPersonal) {
+      involvementAmount = amount;
+      involvementLabel = "Personal";
+      involvementColor = isDark ? Colors.white : Colors.black87;
+    } else if (!isInvolved) {
+      involvementLabel = "Not involved";
+      involvementColor = isDark ? Colors.white38 : Colors.black38;
+    } else if (isPayer) {
+      involvementAmount = amount - myShare;
+      if (involvementAmount <= 0.01) {
+        involvementLabel = "You paid for yourself";
+        involvementColor = isDark ? Colors.white70 : Colors.black54;
+      } else {
+        involvementLabel = "You lent";
+        involvementColor = Colors.green[400]!;
+      }
+    } else {
+      involvementAmount = myShare;
+      involvementLabel = "You owe";
+      involvementColor = Colors.red[400]!;
+    }
+
+    String payerName = isPayer ? "You" : "Other";
+    if (!isPayer && groupId != null) {
+      final groupDetails = ref.watch(groupDetailsProvider(groupId)).value;
+      if (groupDetails != null) {
+        final member = groupDetails.members.where((m) => m.id == payerId).firstOrNull;
+        if (member != null) {
+          payerName = member.shortName;
+        }
+      }
+    }
 
     return GestureDetector(
       onTap: onTap,
@@ -36,14 +84,14 @@ class ExpenseCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.slate[800] : Colors.white,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? AppColors.slate[700]! : AppColors.slate[100]!,
+            color: Theme.of(context).dividerColor,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Theme.of(context).shadowColor.withOpacity(0.05),
               blurRadius: 2,
               offset: const Offset(0, 1),
             ),
@@ -57,12 +105,8 @@ class ExpenseCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: isPersonal
-                    ? (isDark
-                          ? const Color(0xFF064e3b).withOpacity(0.4)
-                          : const Color(0xFFecfdf5)) // Emerald
-                    : (isDark
-                          ? AppColors.primary[900]!.withOpacity(0.2)
-                          : AppColors.primary[50]!),
+                    ? Theme.of(context).colorScheme.secondary.withOpacity(0.2)
+                    : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
@@ -72,12 +116,8 @@ class ExpenseCard extends StatelessWidget {
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: isPersonal
-                        ? (isDark
-                              ? const Color(0xFF34d399)
-                              : const Color(0xFF059669))
-                        : (isDark
-                              ? AppColors.primary[400]
-                              : AppColors.primary[600]),
+                        ? Theme.of(context).colorScheme.secondary
+                        : Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
@@ -93,39 +133,21 @@ class ExpenseCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : AppColors.slate[800],
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        DateFormat('MMM d').format(date),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark
-                              ? AppColors.slate[400]
-                              : AppColors.slate[500],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        Text(
+                          DateFormat('MMM d').format(date),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          '•',
-                          style: TextStyle(color: AppColors.slate[400]),
-                        ),
-                      ),
-                      Text(
-                        category,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: isDark
-                              ? AppColors.slate[400]
-                              : AppColors.slate[500],
-                        ),
-                      ),
-                      if (!isPersonal) ...[
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Text(
@@ -133,30 +155,36 @@ class ExpenseCard extends StatelessWidget {
                             style: TextStyle(color: AppColors.slate[400]),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
+                        Text(
+                          category,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                             color: isDark
-                                ? AppColors.primary[900]!.withOpacity(0.2)
-                                : AppColors.primary[50],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            groupName ?? 'Group',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? AppColors.primary[400]
-                                  : AppColors.primary[600],
-                            ),
+                                ? AppColors.slate[400]
+                                : AppColors.slate[500],
                           ),
                         ),
+                        if (!isPersonal) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              '•',
+                              style: TextStyle(color: AppColors.slate[400]),
+                            ),
+                          ),
+                          Text(
+                            isPayer ? "You paid" : "$payerName paid",
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).textTheme.bodySmall?.color,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -165,28 +193,42 @@ class ExpenseCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  '${isPayer ? "+" : "-"} ₹${amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isPayer
-                        ? (isDark
-                              ? const Color(0xFF34d399)
-                              : const Color(0xFF059669))
-                        : (isDark
-                              ? const Color(0xFFfb7185)
-                              : const Color(0xFFf43f5e)), // Rose
+                if (!isPersonal && !isInvolved)
+                  Text(
+                    involvementLabel,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: involvementColor,
+                    ),
+                  )
+                else
+                  Text(
+                    '₹${involvementAmount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: involvementColor,
+                    ),
                   ),
-                ),
-                Text(
-                  isPayer ? "You paid" : "You owe",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? AppColors.slate[500] : AppColors.slate[400],
+                if (involvementLabel != "Not involved" &&
+                    involvementLabel != "Personal")
+                  Text(
+                    involvementLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: involvementColor.withOpacity(0.8),
+                    ),
                   ),
-                ),
+                if (!isPersonal)
+                  Text(
+                    'Total ₹${amount.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark ? Colors.white24 : Colors.black26,
+                    ),
+                  ),
               ],
             ),
           ],

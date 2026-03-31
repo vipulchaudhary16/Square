@@ -62,6 +62,8 @@ class GroupMember {
 
   String get displayName =>
       firstName != null ? '$firstName $lastName' : username;
+
+  String get shortName => firstName ?? username;
 }
 
 class Debt {

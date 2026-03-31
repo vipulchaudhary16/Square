@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -32,6 +33,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         title: const Text('Dashboard'),
         automaticallyImplyLeading: false, // No back button on main tabs
         backgroundColor: Colors.transparent,
@@ -42,12 +44,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: InkWell(
               onTap: () => context.go('/profile'),
               child: CircleAvatar(
-                backgroundColor: AppColors.primary[100],
+                backgroundColor: Theme.of(context).colorScheme.primary,
                 radius: 16,
                 child: Text(
                   'V',
                   style: TextStyle(
-                    color: AppColors.primary[700],
+                    color: Theme.of(context).colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -81,18 +83,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       margin: const EdgeInsets.only(right: 16),
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.primary[600]!,
-                            AppColors.primary[800]!,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary[600]!.withOpacity(0.3),
+                            color: Theme.of(context).shadowColor.withOpacity(0.3),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -107,20 +102,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   LucideIcons.wallet,
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onPrimary,
                                   size: 20,
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              const Text(
+                              Text(
                                 'Net Balance',
                                 style: TextStyle(
-                                  color: Color(0xFFede9fe), // Primary-100
+                                  color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -128,10 +123,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                           Text(
                             '₹${netBalance.toStringAsFixed(2)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onPrimary,
                             ),
                           ),
                           Row(
@@ -141,8 +136,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 child: Text(
                                   'Inc: ₹${data.totalIncome.toStringAsFixed(0)}',
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0xFFddd6fe),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.6),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -152,8 +147,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 child: Text(
                                   'Exp: ₹${data.totalExpenses.toStringAsFixed(0)}',
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Color(0xFFddd6fe),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.6),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -262,12 +257,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   )
                                   .toList(),
                               isCurved: true,
-                              color: const Color(0xFF8884d8),
+                              color: Theme.of(context).colorScheme.primary,
                               barWidth: 3,
                               dotData: FlDotData(show: false),
                               belowBarData: BarAreaData(
                                 show: true,
-                                color: const Color(0xFF8884d8).withOpacity(0.2),
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                               ),
                             ),
                             // Last Month Line
@@ -279,12 +274,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   )
                                   .toList(),
                               isCurved: true,
-                              color: const Color(0xFF82ca9d),
+                              color: Theme.of(context).colorScheme.secondary,
                               barWidth: 3,
                               dotData: FlDotData(show: false),
                               belowBarData: BarAreaData(
                                 show: true,
-                                color: const Color(0xFF82ca9d).withOpacity(0.2),
+                                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
                               ),
                             ),
                           ],
@@ -306,14 +301,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppColors.slate[800],
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   TextButton(
                     onPressed: () => context.go('/transactions'),
                     child: Text(
                       'View All',
-                      style: TextStyle(color: AppColors.primary[600]),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                 ],
@@ -354,8 +349,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required MaterialColor color,
     required String subtext,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+    // We shouldn't use MaterialColor directly, so let's default to primary
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 16),
@@ -370,16 +364,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color[500]!.withOpacity(0.1),
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: color[500], size: 18),
+                  child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 18),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   title,
                   style: TextStyle(
-                    color: isDark ? AppColors.slate[400] : AppColors.slate[500],
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -391,14 +385,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.slate[800],
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             Text(
               subtext,
               style: TextStyle(
                 fontSize: 10,
-                color: isDark ? AppColors.slate[500] : AppColors.slate[400],
+                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
               ),
             ),
           ],

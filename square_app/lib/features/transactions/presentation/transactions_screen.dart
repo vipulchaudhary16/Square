@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../expense/data/expense_model.dart';
 import '../data/income_model.dart';
 import '../data/investment_model.dart';
 import '../data/loan_model.dart';
 import '../presentation/transactions_provider.dart';
+import '../../../../shared/widgets/add_entry_bottom_sheet.dart';
 import 'widgets/premium_transaction_card.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
@@ -21,46 +22,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        setState(() {}); // Rebuild FAB when tab settles
-      }
-    });
   }
 
-  String _getFabLabel(int index) {
-    switch (index) {
-      case 0:
-        return 'Add Expense';
-      case 1:
-        return 'Add Income';
-      case 2:
-        return 'Add Investment';
-      case 3:
-        return 'Add Loan';
-      default:
-        return 'Add';
-    }
-  }
 
-  IconData _getFabIcon(int index) {
-    switch (index) {
-      case 0:
-        return LucideIcons.receipt;
-      case 1:
-        return LucideIcons.dollarSign;
-      case 2:
-        return LucideIcons.trendingUp;
-      case 3:
-        return LucideIcons.arrowLeftRight;
-      default:
-        return LucideIcons.plus;
-    }
-  }
 
   @override
   void dispose() {
@@ -70,35 +37,22 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          switch (_tabController.index) {
-            case 0:
-              context.push('/transactions/add-expense');
-              break;
-            case 1:
-              context.push('/transactions/add-income');
-              break;
-            case 2:
-              context.push('/transactions/add-investment');
-              break;
-            case 3:
-              context.push('/transactions/add-loan');
-              break;
-          }
-        },
-        label: Text(_getFabLabel(_tabController.index)),
-        icon: Icon(_getFabIcon(_tabController.index)),
-        backgroundColor: AppColors.primary[600],
+        onPressed: () => AddEntryBottomSheet.show(context),
+        label: const Text('Add Entry'),
+        icon: const Icon(LucideIcons.plus),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
       appBar: AppBar(
+        systemOverlayStyle: Theme.of(context).brightness == Brightness.dark 
+            ? SystemUiOverlayStyle.light 
+            : SystemUiOverlayStyle.dark,
         title: Text(
           'Transactions',
           style: TextStyle(
-            color: isDark ? Colors.white : AppColors.slate[900],
+            color: Theme.of(context).textTheme.titleLarge?.color,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -112,9 +66,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
             height: 50,
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.slate[800]!.withOpacity(0.5)
-                  : AppColors.slate[200]!.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(25),
             ),
             child: TabBar(
@@ -122,19 +74,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
               isScrollable: false,
               indicator: BoxDecoration(
                 borderRadius: BorderRadius.circular(25),
-                color: AppColors.primary[600],
+                color: Theme.of(context).colorScheme.primary,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary[600]!.withOpacity(0.3),
+                    color: Theme.of(context).shadowColor.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              labelColor: Colors.white,
-              unselectedLabelColor: isDark
-                  ? AppColors.slate[400]
-                  : AppColors.slate[600],
+              labelColor: Theme.of(context).colorScheme.onPrimary,
+              unselectedLabelColor: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
               labelStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,

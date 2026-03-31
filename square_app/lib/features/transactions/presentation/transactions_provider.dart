@@ -41,16 +41,13 @@ class TransactionState<T> {
 }
 
 // Generic Notifier
-class GenericTransactionNotifier<T> extends AsyncNotifier<TransactionState<T>> {
-  final Future<Map<String, dynamic>> Function(
-    String token, {
-    int page,
-    int limit,
-  })
-  _fetchFunction;
+abstract class GenericTransactionNotifier<T> extends AsyncNotifier<TransactionState<T>> {
   final T Function(Map<String, dynamic> json) _fromJson;
 
-  GenericTransactionNotifier(this._fetchFunction, this._fromJson);
+  GenericTransactionNotifier(this._fromJson);
+
+  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10});
+  Future<void> createItem(String token, Map<String, dynamic> data);
 
   @override
   Future<TransactionState<T>> build() async {
@@ -60,11 +57,6 @@ class GenericTransactionNotifier<T> extends AsyncNotifier<TransactionState<T>> {
   Future<void> loadMore() async {
     final currentState = state.value;
     if (currentState == null || !currentState.hasMore) return;
-
-    // We don't set loading state here to avoid rebuilding everything.
-    // Instead we just append data.
-    // If we wanted a loading spinner at the bottom, we might need a separate 'isLoadingMore' state or handle it in UI.
-    // For now, let's just fetch and update.
 
     try {
       final newState = await _fetchData(
@@ -99,9 +91,7 @@ class GenericTransactionNotifier<T> extends AsyncNotifier<TransactionState<T>> {
       throw Exception('User not authenticated');
     }
 
-    // The repo is accessed via ref inside the lambda passed to constructor, so we don't need it here.
-
-    final result = await _fetchFunction(token, page: page, limit: 10);
+    final result = await fetchPage(token, page: page, limit: 10);
 
     final List<T> newData = (result['data'] as List)
         .map((e) => _fromJson(e))
@@ -121,98 +111,71 @@ class GenericTransactionNotifier<T> extends AsyncNotifier<TransactionState<T>> {
     );
   }
 
-  // Create method for the specific type
   Future<void> create(Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     if (token == null) return;
 
-    // Use a separate create function defined by subclass or passed in
-    await _createFunction(token, data);
-
-    // Refresh list after creation
+    await createItem(token, data);
     await refresh();
   }
-
-  // Abstract getter for create function
-  Future<void> Function(String token, Map<String, dynamic> data)
-  get _createFunction => (t, d) async {};
 }
 
 // Concrete implementations to allow Riverpod to instantiate them
 class ExpensesNotifier extends GenericTransactionNotifier<Expense> {
-  ExpensesNotifier()
-    : super(
-        (token, {page = 1, limit = 10}) => TransactionRepository().getExpenses(
-          token,
-          page: page,
-          limit: limit,
-        ),
-        Expense.fromJson,
-      );
+  ExpensesNotifier() : super(Expense.fromJson);
 
   @override
-  Future<Map<String, dynamic>> Function(String, {int page, int limit})
-  get _fetchFunction =>
-      (token, {page = 1, limit = 10}) => ref
-          .read(transactionRepositoryProvider)
-          .getExpenses(token, page: page, limit: limit);
+  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10}) {
+    return ref.read(transactionRepositoryProvider).getExpenses(token, page: page, limit: limit);
+  }
 
   @override
-  Future<void> Function(String, Map<String, dynamic>) get _createFunction =>
-      (token, data) =>
-          ref.read(transactionRepositoryProvider).createExpense(token, data);
+  Future<void> createItem(String token, Map<String, dynamic> data) {
+    return ref.read(transactionRepositoryProvider).createExpense(token, data);
+  }
 }
 
 class IncomesNotifier extends GenericTransactionNotifier<Income> {
-  IncomesNotifier()
-    : super((t, {page = 1, limit = 10}) async => {}, Income.fromJson);
+  IncomesNotifier() : super(Income.fromJson);
 
   @override
-  Future<Map<String, dynamic>> Function(String, {int page, int limit})
-  get _fetchFunction =>
-      (token, {page = 1, limit = 10}) => ref
-          .read(transactionRepositoryProvider)
-          .getIncomes(token, page: page, limit: limit);
+  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10}) {
+    return ref.read(transactionRepositoryProvider).getIncomes(token, page: page, limit: limit);
+  }
 
   @override
-  Future<void> Function(String, Map<String, dynamic>) get _createFunction =>
-      (token, data) =>
-          ref.read(transactionRepositoryProvider).createIncome(token, data);
+  Future<void> createItem(String token, Map<String, dynamic> data) {
+    return ref.read(transactionRepositoryProvider).createIncome(token, data);
+  }
 }
 
 class InvestmentsNotifier extends GenericTransactionNotifier<Investment> {
-  InvestmentsNotifier()
-    : super((t, {page = 1, limit = 10}) async => {}, Investment.fromJson);
+  InvestmentsNotifier() : super(Investment.fromJson);
 
   @override
-  Future<Map<String, dynamic>> Function(String, {int page, int limit})
-  get _fetchFunction =>
-      (token, {page = 1, limit = 10}) => ref
-          .read(transactionRepositoryProvider)
-          .getInvestments(token, page: page, limit: limit);
+  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10}) {
+    return ref.read(transactionRepositoryProvider).getInvestments(token, page: page, limit: limit);
+  }
 
   @override
-  Future<void> Function(String, Map<String, dynamic>) get _createFunction =>
-      (token, data) =>
-          ref.read(transactionRepositoryProvider).createInvestment(token, data);
+  Future<void> createItem(String token, Map<String, dynamic> data) {
+    return ref.read(transactionRepositoryProvider).createInvestment(token, data);
+  }
 }
 
 class LoansNotifier extends GenericTransactionNotifier<Loan> {
-  LoansNotifier()
-    : super((t, {page = 1, limit = 10}) async => {}, Loan.fromJson);
+  LoansNotifier() : super(Loan.fromJson);
 
   @override
-  Future<Map<String, dynamic>> Function(String, {int page, int limit})
-  get _fetchFunction =>
-      (token, {page = 1, limit = 10}) => ref
-          .read(transactionRepositoryProvider)
-          .getLoans(token, page: page, limit: limit);
+  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10}) {
+    return ref.read(transactionRepositoryProvider).getLoans(token, page: page, limit: limit);
+  }
 
   @override
-  Future<void> Function(String, Map<String, dynamic>) get _createFunction =>
-      (token, data) =>
-          ref.read(transactionRepositoryProvider).createLoan(token, data);
+  Future<void> createItem(String token, Map<String, dynamic> data) {
+    return ref.read(transactionRepositoryProvider).createLoan(token, data);
+  }
 }
 
 final transactionsExpensesProvider =

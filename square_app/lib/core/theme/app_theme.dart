@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
@@ -7,29 +8,33 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      primaryColor: AppColors.primaryBrand,
-      primarySwatch: AppColors.primaryMaterial,
-      scaffoldBackgroundColor: AppColors.backgroundLight,
-      colorScheme: ColorScheme.fromSwatch(
-        primarySwatch: AppColors.primaryMaterial,
-        backgroundColor: AppColors.backgroundLight,
-        brightness: Brightness.light,
-        errorColor: AppColors.error,
+      primaryColor: AppColors.black,
+      scaffoldBackgroundColor: AppColors.white,
+      colorScheme: const ColorScheme.light(
+        primary: Colors.black,
+        onPrimary: Colors.white,
+        secondary: Color(0xFF525252),
+        onSecondary: Colors.white,
+        surface: Colors.white,
+        onSurface: Colors.black,
+        error: Color(0xFFDC2626),
+        onError: Colors.white,
       ),
       fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
       textTheme:
           GoogleFonts.plusJakartaSansTextTheme(
             ThemeData.light().textTheme,
           ).apply(
-            bodyColor: AppColors.slate[900],
-            displayColor: AppColors.slate[900],
+            bodyColor: Colors.black,
+            displayColor: Colors.black,
           ),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: AppColors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: AppColors.slate[900]),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        iconTheme: const IconThemeData(color: Colors.black),
         titleTextStyle: GoogleFonts.plusJakartaSans(
-          color: AppColors.slate[900],
+          color: Colors.black,
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
@@ -39,7 +44,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.slate[100]!),
+          side: BorderSide(color: AppColors.slate[200]!),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -47,21 +52,23 @@ class AppTheme {
         fillColor: AppColors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.slate[200]!),
+          borderSide: BorderSide(color: AppColors.slate[300]!),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.slate[200]!),
+          borderSide: BorderSide(color: AppColors.slate[300]!),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary[500]!, width: 2),
+          borderSide: const BorderSide(color: Colors.black, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
       ),
+      dividerColor: AppColors.slate[200],
+      iconTheme: const IconThemeData(color: Colors.black),
     );
   }
 
@@ -69,23 +76,27 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      primaryColor: AppColors.primaryBrand,
-      primarySwatch: AppColors.primaryMaterial,
-      scaffoldBackgroundColor: AppColors.backgroundDark,
-      colorScheme: ColorScheme.fromSwatch(
-        primarySwatch: AppColors.primaryMaterial,
-        backgroundColor: AppColors.backgroundDark,
-        brightness: Brightness.dark,
-        errorColor: AppColors.error,
+      primaryColor: AppColors.white,
+      scaffoldBackgroundColor: AppColors.black,
+      colorScheme: const ColorScheme.dark(
+        primary: Colors.white,
+        onPrimary: Colors.black,
+        secondary: Color(0xFFA3A3A3),
+        onSecondary: Colors.black,
+        surface: Colors.black,
+        onSurface: Colors.white,
+        error: Color(0xFFDC2626),
+        onError: Colors.white,
       ),
       fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
       textTheme: GoogleFonts.plusJakartaSansTextTheme(
         ThemeData.dark().textTheme,
       ).apply(bodyColor: AppColors.white, displayColor: AppColors.white),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.backgroundDark,
+        backgroundColor: AppColors.black,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.white),
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: GoogleFonts.plusJakartaSans(
           color: AppColors.white,
           fontSize: 20,
@@ -93,16 +104,16 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.slate[800],
+        color: AppColors.cardDark,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.slate[700]!),
+          side: BorderSide(color: AppColors.slate[800]!),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.slate[900],
+        fillColor: AppColors.surfaceDark,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: AppColors.slate[700]!),
@@ -113,13 +124,15 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary[500]!, width: 2),
+          borderSide: const BorderSide(color: Colors.white, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
       ),
+      dividerColor: AppColors.slate[800],
+      iconTheme: const IconThemeData(color: Colors.white),
     );
   }
 }
