@@ -7,6 +7,7 @@ class Expense {
   final String? groupId;
   final String? groupName;
   final String payerId;
+  final String? payerName;
   final List<String> participants;
 
   final String? splitType;
@@ -21,6 +22,7 @@ class Expense {
     this.groupId,
     this.groupName,
     required this.payerId,
+    this.payerName,
     required this.participants,
     this.splitType,
     this.splits,
@@ -36,6 +38,7 @@ class Expense {
       groupId: json['group_id'],
       groupName: json['group_name'],
       payerId: json['payer_id'] ?? '',
+      payerName: json['payer_name'],
       participants: List<String>.from(json['participants'] ?? []),
       splitType: json['split_type'],
       splits: (json['splits'] as Map<String, dynamic>?)?.map(

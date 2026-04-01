@@ -67,18 +67,22 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentUser = ref.watch(authProvider).value;
-    final isPayer = widget.expense.payerId == currentUser?.id;
 
-    String payerName = isPayer ? "You" : "Other";
-    if (!isPayer && widget.expense.groupId != null) {
-      final groupDetails = ref.watch(groupDetailsProvider(widget.expense.groupId!)).value;
-      if (groupDetails != null) {
-        final member = groupDetails.members.where((m) => m.id == widget.expense.payerId).firstOrNull;
-        if (member != null) {
-          payerName = member.displayName;
+    final expensesAsync = ref.watch(expenseProvider);
+    final expense = expensesAsync.maybeWhen(
+      data: (list) {
+        try {
+          return list.firstWhere((e) => e.id == widget.expense.id);
+        } catch (_) {
+          return widget.expense;
         }
-      }
-    }
+      },
+      orElse: () => widget.expense,
+    );
+
+    final isPayer = expense.payerId == currentUser?.id;
+
+    String payerName = isPayer ? "You" : (expense.payerName ?? "Other");
 
     return Scaffold(
       appBar: AppBar(
@@ -97,7 +101,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
             icon: const Icon(LucideIcons.edit),
             color: isDark ? Colors.white : Colors.black,
             onPressed: () {
-              context.push('/transactions/edit', extra: widget.expense);
+              context.push('/transactions/edit', extra: expense);
             },
           ),
           IconButton(
@@ -139,7 +143,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    widget.expense.description,
+                    expense.description,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
@@ -149,7 +153,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '₹${widget.expense.amount.toStringAsFixed(2)}',
+                    '₹${expense.amount.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -164,25 +168,21 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                   _buildDetailRow(
                     context,
                     'Date',
-                    DateFormat('MMM dd, yyyy').format(widget.expense.date),
+                    DateFormat('MMM dd, yyyy').format(expense.date),
                   ),
-                  _buildDetailRow(context, 'Category', widget.expense.category),
+                  _buildDetailRow(context, 'Category', expense.category),
                   _buildDetailRow(
                     context,
                     'Group',
-                    widget.expense.groupName ?? 'Personal',
+                    expense.groupName ?? 'Personal',
                   ),
-                  _buildDetailRow(
-                    context,
-                    'Paid By',
-                    payerName,
-                  ),
+                  _buildDetailRow(context, 'Paid By', payerName),
                 ],
               ),
             ),
-            if (widget.expense.groupId != null) ...[
+            if (expense.groupId != null) ...[
               const SizedBox(height: 24),
-              _buildSplitBreakdown(context, isDark),
+              _buildSplitBreakdown(context, isDark, expense),
             ],
           ],
         ),
@@ -190,15 +190,19 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     );
   }
 
-  Widget _buildSplitBreakdown(BuildContext context, bool isDark) {
-    final groupDetails = widget.expense.groupId != null
-        ? ref.watch(groupDetailsProvider(widget.expense.groupId!)).value
+  Widget _buildSplitBreakdown(
+    BuildContext context,
+    bool isDark,
+    Expense expense,
+  ) {
+    final groupDetails = expense.groupId != null
+        ? ref.watch(groupDetailsProvider(expense.groupId!)).value
         : null;
 
-    final participants = widget.expense.participants;
-    final splits = widget.expense.splits;
-    final totalAmount = widget.expense.amount;
-    final payerId = widget.expense.payerId;
+    final participants = expense.participants;
+    final splits = expense.splits;
+    final totalAmount = expense.amount;
+    final payerId = expense.payerId;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -218,11 +222,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
         children: [
           Row(
             children: [
-              Icon(
-                LucideIcons.users,
-                size: 20,
-                color: AppColors.primary[600],
-              ),
+              Icon(LucideIcons.users, size: 20, color: AppColors.primary[600]),
               const SizedBox(width: 8),
               Text(
                 'Split Details',
@@ -245,7 +245,8 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
               double share = 0;
               if (splits != null && splits.containsKey(member.id)) {
                 share = splits[member.id]!;
-              } else if (isParticipant) {
+              } else if (isParticipant &&
+                  (expense.splitType == 'EQUAL' || expense.splitType == null)) {
                 share = totalAmount / participants.length.toDouble();
               }
 
@@ -282,7 +283,9 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white : AppColors.slate[900],
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.slate[900],
                                   ),
                                 ),
                                 if (isPayer)
@@ -313,9 +316,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
               );
             })
           else
-            const Center(
-              child: Text('Loading split details...'),
-            ),
+            const Center(child: Text('Loading split details...')),
         ],
       ),
     );

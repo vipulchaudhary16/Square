@@ -105,11 +105,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
         setState(() {
           _selectedGroupId = groupId;
           _selectedGroupDetails = details;
-          // If not editing, select everyone by default
-          if (widget.expense == null) {
+          if (widget.expense == null || widget.expense!.groupId != groupId) {
             _selectedParticipants = details.members.map((m) => m.id).toList();
+            _splits = {};
           }
-          _splits = {};
         });
       }
     } catch (e) {
@@ -127,6 +126,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
     final amountText = _amountController.text.trim();
     final amount = double.tryParse(amountText) ?? 0.0;
+    if (amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid amount')),
+      );
+      return;
+    }
 
     if (_isGroupExpense) {
       if (_selectedGroupId == null) {
@@ -154,6 +159,19 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
           );
           return;
         }
+
+        for (var pId in _selectedParticipants) {
+          if ((_splits[pId] ?? 0.0) <= 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'All selected participants must have a share amount greater than ₹0',
+                ),
+              ),
+            );
+            return;
+          }
+        }
       }
 
       if (_splitType == 'PERCENT') {
@@ -166,6 +184,19 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
             const SnackBar(content: Text('Total percentage must equal 100%')),
           );
           return;
+        }
+
+        for (var pId in _selectedParticipants) {
+          if ((_splits[pId] ?? 0.0) <= 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'All selected participants must have a share percentage greater than 0%',
+                ),
+              ),
+            );
+            return;
+          }
         }
       }
     }
@@ -186,7 +217,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
         'participants': _isGroupExpense ? _selectedParticipants : [],
         if (_isGroupExpense) 'group_id': _selectedGroupId,
         if (_isGroupExpense) 'split_type': _splitType,
-        if (_isGroupExpense) 'splits': _splits,
+        if (_isGroupExpense)
+          'splits': Map.fromEntries(
+            _splits.entries.where(
+              (element) => _selectedParticipants.contains(element.key),
+            ),
+          ),
         if (_isGroupExpense) 'add_to_personal': _addToPersonal,
       };
 
@@ -490,10 +526,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                 return InkWell(
                                   onTap: () {
                                     setState(() {
-                                      if (isSelected)
+                                      if (isSelected) {
                                         _selectedParticipants.remove(member.id);
-                                      else
+                                        _splits.remove(member.id);
+                                      } else {
                                         _selectedParticipants.add(member.id);
+                                      }
                                     });
                                   },
                                   child: Padding(
