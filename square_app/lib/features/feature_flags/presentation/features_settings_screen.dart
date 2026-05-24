@@ -72,8 +72,17 @@ class FeaturesSettingsScreen extends ConsumerWidget {
                     ),
                     value: flag.value,
                     activeThumbColor: Theme.of(context).colorScheme.primary,
-                    onChanged: (val) =>
-                        ref.read(featureFlagsProvider.notifier).toggle(flag.id, val),
+                    onChanged: (val) async {
+                      try {
+                        await ref.read(featureFlagsProvider.notifier).toggle(flag.id, val);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to update feature. Please try again.')),
+                          );
+                        }
+                      }
+                    },
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
                 ),
