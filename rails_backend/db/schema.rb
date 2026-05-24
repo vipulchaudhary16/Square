@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_24_143441) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_24_154741) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -60,6 +60,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_143441) do
     t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
     t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable_type_and_commentable_id"
     t.index ["user_id"], name: "index_comments_on_user_id"
+  end
+
+  create_table "contacts", force: :cascade do |t|
+    t.bigint "owner_user_id", null: false
+    t.bigint "linked_user_id"
+    t.string "name", null: false
+    t.string "phone"
+    t.string "email"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["linked_user_id"], name: "index_contacts_on_linked_user_id"
+    t.index ["owner_user_id"], name: "index_contacts_on_owner_user_id"
   end
 
   create_table "expense_participants", force: :cascade do |t|
@@ -172,9 +184,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_143441) do
   end
 
   create_table "loans", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.string "counterparty_name", null: false
-    t.string "loan_type", null: false
     t.decimal "amount", precision: 12, scale: 2, null: false
     t.datetime "date", null: false
     t.datetime "due_date"
@@ -183,9 +192,19 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_143441) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "category_id"
+    t.bigint "lender_user_id", null: false
+    t.bigint "borrower_user_id"
+    t.bigint "contact_id", null: false
+    t.string "confirmation_status", default: "pending", null: false
+    t.datetime "confirmed_at"
+    t.string "interest_mode", default: "none", null: false
+    t.decimal "interest_rate", precision: 8, scale: 6
+    t.string "interest_period"
+    t.string "interest_basis"
+    t.index ["borrower_user_id"], name: "index_loans_on_borrower_user_id"
     t.index ["category_id"], name: "index_loans_on_category_id"
-    t.index ["user_id", "status"], name: "index_loans_on_user_id_and_status"
-    t.index ["user_id"], name: "index_loans_on_user_id"
+    t.index ["contact_id"], name: "index_loans_on_contact_id"
+    t.index ["lender_user_id"], name: "index_loans_on_lender_user_id"
   end
 
   create_table "user_feature_flags", force: :cascade do |t|
@@ -222,6 +241,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_143441) do
   add_foreign_key "budgets", "users"
   add_foreign_key "categories", "users"
   add_foreign_key "comments", "users"
+  add_foreign_key "contacts", "users", column: "linked_user_id"
+  add_foreign_key "contacts", "users", column: "owner_user_id"
   add_foreign_key "expense_participants", "expenses"
   add_foreign_key "expense_participants", "users"
   add_foreign_key "expense_splits", "expenses"
@@ -238,7 +259,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_143441) do
   add_foreign_key "investments", "categories"
   add_foreign_key "investments", "users"
   add_foreign_key "loans", "categories"
-  add_foreign_key "loans", "users"
+  add_foreign_key "loans", "contacts"
+  add_foreign_key "loans", "users", column: "borrower_user_id"
+  add_foreign_key "loans", "users", column: "lender_user_id"
   add_foreign_key "user_feature_flags", "feature_flag_registries"
   add_foreign_key "user_feature_flags", "users"
 end
