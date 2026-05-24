@@ -55,7 +55,7 @@ const IncomePage: React.FC = () => {
                                             {new Date(income.date).toLocaleDateString()}
                                         </span>
                                         <span className="bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs truncate max-w-[100px]">
-                                            {income.category}
+                                            {income.category_name}
                                         </span>
                                     </div>
                                 </div>

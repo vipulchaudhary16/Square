@@ -170,7 +170,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                     'Date',
                     DateFormat('MMM dd, yyyy').format(expense.date),
                   ),
-                  _buildDetailRow(context, 'Category', expense.category),
+                  _buildDetailRow(context, 'Category', expense.categoryName),
                   _buildDetailRow(
                     context,
                     'Group',

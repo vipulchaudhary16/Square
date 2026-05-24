@@ -107,6 +107,12 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   _buildProfileOption(
                     context,
+                    icon: LucideIcons.tag,
+                    title: 'Categories',
+                    onTap: () => context.push('/profile/categories'),
+                  ),
+                  _buildProfileOption(
+                    context,
                     icon: LucideIcons.bell,
                     title: 'Notifications',
                     onTap: () {},

@@ -349,7 +349,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ...data.recentExpenses.map(
                   (e) => PremiumTransactionCard(
                     title: e.description.isNotEmpty ? e.description : 'Expense',
-                    subtitle: e.category,
+                    subtitle: e.categoryName,
                     amount: e.amount,
                     date: e.date,
                     type: TransactionType.expense,

@@ -7,6 +7,8 @@ class Loan {
   final DateTime date;
   final String userId;
   final String? description;
+  final String categoryId;
+  final String categoryName;
 
   Loan({
     required this.id,
@@ -17,6 +19,8 @@ class Loan {
     required this.date,
     required this.userId,
     this.description,
+    this.categoryId = '',
+    this.categoryName = '',
   });
 
   factory Loan.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class Loan {
       date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
       userId: json['user_id'] ?? '',
       description: json['description'],
+      categoryId: json['category_id'] ?? '',
+      categoryName: json['category_name'] ?? '',
     );
   }
 
@@ -41,6 +47,7 @@ class Loan {
       'date': date.toIso8601String(),
       'user_id': userId,
       if (description != null) 'description': description,
+      'category_id': categoryId,
     };
   }
 }

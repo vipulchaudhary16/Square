@@ -35,7 +35,8 @@ export interface Expense {
     id: string;
     description: string;
     amount: number;
-    category: string;
+    category_id: string;
+    category_name: string;
     date: string;
     payer_id: string;
     group_id?: string;

@@ -19,7 +19,8 @@ export interface Income {
     id: string;
     source: string;
     amount: number;
-    category: string;
+    category_id: string;
+    category_name: string;
     date: string;
     description: string;
 }
