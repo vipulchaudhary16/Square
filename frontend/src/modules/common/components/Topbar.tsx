@@ -14,6 +14,7 @@ import {
     Wallet,
     Table2,
     Plus,
+    Settings,
 } from 'lucide-react';
 import { useSession } from '../../../hooks/useSession';
 
@@ -169,6 +170,14 @@ export const Topbar: React.FC = () => {
                                             </p>
                                         </div>
                                         <div className="p-1">
+                                            <Link
+                                                to="/settings/categories"
+                                                onClick={() => setIsProfileOpen(false)}
+                                                className="w-full text-left px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl flex items-center gap-2 transition-colors"
+                                            >
+                                                <Settings className="w-4 h-4" />
+                                                Categories
+                                            </Link>
                                             <button
                                                 onClick={handleLogout}
                                                 className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl flex items-center gap-2 transition-colors"
