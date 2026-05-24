@@ -8,6 +8,7 @@ import '../../data/expense_model.dart';
 import '../expense_provider.dart';
 import '../../../groups/presentation/groups_provider.dart';
 import '../../../groups/data/group_model.dart';
+import '../../../categories/presentation/categories_provider.dart';
 
 class AddEditExpenseScreen extends ConsumerStatefulWidget {
   final Expense? expense;
@@ -30,7 +31,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   // Basic Fields
   late TextEditingController _descriptionController;
   late TextEditingController _amountController;
-  late TextEditingController _categoryController;
+  String? _selectedCategoryId;
+  String _selectedCategoryName = 'General';
   late DateTime _selectedDate;
 
   // Group Logic
@@ -55,9 +57,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     _amountController = TextEditingController(
       text: widget.expense?.amount.toString() ?? '',
     );
-    _categoryController = TextEditingController(
-      text: widget.expense?.category ?? '',
-    );
+    _selectedCategoryId = widget.expense?.categoryId;
+    _selectedCategoryName = widget.expense?.categoryName ?? 'General';
     _selectedDate = widget.expense?.date ?? DateTime.now();
 
     // Initialize Group State if editing
@@ -79,7 +80,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   void dispose() {
     _descriptionController.dispose();
     _amountController.dispose();
-    _categoryController.dispose();
     super.dispose();
   }
 
@@ -206,9 +206,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       final expenseData = {
         'description': _descriptionController.text.trim(),
         'amount': amount,
-        'category': _categoryController.text.trim().isEmpty
-            ? 'General'
-            : _categoryController.text.trim(),
+        'category_id': _selectedCategoryId ?? '',
         'date': DateTime.utc(
           _selectedDate.year,
           _selectedDate.month,
@@ -779,9 +777,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 ),
                 _buildDockItem(
                   LucideIcons.tag,
-                  _categoryController.text.isEmpty
-                      ? "General"
-                      : _categoryController.text,
+                  _selectedCategoryName,
                   isDark,
                   _showCategoryPicker,
                 ),
@@ -852,28 +848,53 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   }
 
   void _showCategoryPicker() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.slate[900]
-          : Colors.white,
+      backgroundColor: isDark ? AppColors.slate[900] : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: ['Food', 'Transport', 'Utilities', 'Entertainment', 'General']
-            .map(
-              (c) => ListTile(
-                title: Text(c),
-                onTap: () {
-                  setState(() => _categoryController.text = c);
-                  Navigator.pop(ctx);
-                },
+      builder: (ctx) {
+        final catsAsync = ref.read(categoriesProvider);
+        final cats = catsAsync.value
+                ?.where((c) => c.appliesTo.contains('expense'))
+                .toList() ??
+            [];
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Select Category',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            )
-            .toList(),
-      ),
+            ),
+            if (cats.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('No categories available'),
+              )
+            else
+              ...cats.map(
+                (cat) => ListTile(
+                  title: Text(cat.name),
+                  trailing: _selectedCategoryId == cat.id
+                      ? const Icon(Icons.check)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      _selectedCategoryId = cat.id;
+                      _selectedCategoryName = cat.name;
+                    });
+                    Navigator.pop(ctx);
+                  },
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 

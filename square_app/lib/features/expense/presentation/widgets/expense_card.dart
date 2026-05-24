@@ -24,7 +24,7 @@ class ExpenseCard extends ConsumerWidget {
     final description = expense.description;
     final amount = expense.amount;
     final date = expense.date;
-    final category = expense.category;
+    final category = expense.categoryName;
     final payerId = expense.payerId;
     final groupId = expense.groupId;
 
