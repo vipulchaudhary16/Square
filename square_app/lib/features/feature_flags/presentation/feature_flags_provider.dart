@@ -27,6 +27,7 @@ class FeatureFlagsNotifier extends AsyncNotifier<List<FeatureFlag>> {
 
   /// Optimistically toggles a flag, rolling back on API error.
   Future<void> toggle(String id, bool value) async {
+    if (state.value == null) return;
     final previous = state;
     state = AsyncData(
       state.value!.map((f) => f.id == id ? f.copyWith(value: value) : f).toList(),
