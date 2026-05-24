@@ -7,6 +7,7 @@ import {
     updateIncome,
     IncomeDetails,
 } from '../../../api/finance';
+import { getCategories, Category } from '../../../api/categories';
 import useApiCall from '../../../hooks/useApiCall';
 import {
     Loader2,
@@ -30,11 +31,12 @@ const IncomeDetailsPage: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [activeTab, setActiveTab] = useState<'comments' | 'activity'>('comments');
+    const [categories, setCategories] = useState<Category[]>([]);
 
     const [formData, setFormData] = useState({
         source: '',
         amount: '',
-        category: '',
+        category_id: '',
         date: '',
         description: '',
     });
@@ -68,7 +70,7 @@ const IncomeDetailsPage: React.FC = () => {
             setFormData({
                 source: response.income.source,
                 amount: response.income.amount.toString(),
-                category: response.income.category,
+                category_id: response.income.category_id,
                 date: new Date(response.income.date).toISOString().split('T')[0],
                 description: response.income.description,
             });
@@ -80,6 +82,10 @@ const IncomeDetailsPage: React.FC = () => {
     useEffect(() => {
         if (id) loadData();
     }, [id]);
+
+    useEffect(() => {
+        getCategories('income').then(setCategories).catch(() => {});
+    }, []);
 
     const handleDelete = async () => {
         if (window.confirm('Are you sure you want to delete this income record?')) {
@@ -212,17 +218,17 @@ const IncomeDetailsPage: React.FC = () => {
                             </label>
                             <select
                                 className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 dark:bg-slate-700/50 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white transition-all focus:bg-white dark:focus:bg-slate-700"
-                                value={formData.category}
+                                value={formData.category_id}
                                 onChange={(e) =>
-                                    setFormData({ ...formData, category: e.target.value })
+                                    setFormData({ ...formData, category_id: e.target.value })
                                 }
                             >
-                                <option value="Salary">Salary</option>
-                                <option value="Freelance">Freelance</option>
-                                <option value="Business">Business</option>
-                                <option value="Investments">Investments</option>
-                                <option value="Gift">Gift</option>
-                                <option value="Other">Other</option>
+                                <option value="">Select category</option>
+                                {categories.map((cat) => (
+                                    <option key={cat.id} value={cat.id}>
+                                        {cat.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div>

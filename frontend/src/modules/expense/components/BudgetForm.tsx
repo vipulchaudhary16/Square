@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
+import { getCategories, Category } from '../../../api/categories';
 
 interface BudgetFormProps {
     onSuccess: () => void;
     initialData?: {
-        category: string;
+        category_id: string;
         amount: number;
         month: string;
     };
@@ -19,9 +20,15 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
     onSubmit,
     loading,
 }) => {
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    useEffect(() => {
+        getCategories('budget').then(setCategories).catch(() => {});
+    }, []);
+
     const { register, handleSubmit } = useForm({
         defaultValues: initialData || {
-            category: 'Food',
+            category_id: '',
             amount: 0,
             month: new Date().toISOString().slice(0, 7),
         },
@@ -39,22 +46,20 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
                     Category
                 </label>
                 <select
-                    {...register('category')}
+                    {...register('category_id')}
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     disabled={!!initialData}
                 >
-                    {initialData?.category === 'OVERALL' ? (
+                    {initialData?.category_id === 'OVERALL' ? (
                         <option value="OVERALL">Overall Monthly Budget</option>
                     ) : (
                         <>
-                            <option value="Food">Food</option>
-                            <option value="Transport">Transport</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Health">Health</option>
-                            <option value="Travel">Travel</option>
-                            <option value="Other">Other</option>
+                            <option value="">Select category</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </option>
+                            ))}
                         </>
                     )}
                 </select>

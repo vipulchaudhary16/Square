@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createIncome } from '../../../api/finance';
+import { getCategories, Category } from '../../../api/categories';
 
 interface IncomeFormProps {
     onSuccess: () => void;
@@ -7,13 +8,18 @@ interface IncomeFormProps {
 }
 
 export const IncomeForm: React.FC<IncomeFormProps> = ({ onSuccess }) => {
+    const [categories, setCategories] = useState<Category[]>([]);
     const [formData, setFormData] = useState({
         source: '',
         amount: '',
-        category: '',
+        category_id: '',
         date: new Date().toISOString().split('T')[0],
         description: '',
     });
+
+    useEffect(() => {
+        getCategories('income').then(setCategories).catch(() => {});
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -66,13 +72,18 @@ export const IncomeForm: React.FC<IncomeFormProps> = ({ onSuccess }) => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                     Category
                 </label>
-                <input
-                    type="text"
+                <select
                     className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="e.g. Primary Job, Side Hustle"
-                />
+                    value={formData.category_id}
+                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                >
+                    <option value="">Select category</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                        </option>
+                    ))}
+                </select>
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">

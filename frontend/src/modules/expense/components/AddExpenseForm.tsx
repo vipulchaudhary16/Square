@@ -4,6 +4,7 @@ import { cn } from './ExpenseCard';
 import useApiCall from '../../../hooks/useApiCall';
 import { createExpense, updateExpense, Expense } from '../../../api/expenses';
 import { getUserGroups, getGroupDetails, Group } from '../../../api/groups';
+import { getCategories, Category } from '../../../api/categories';
 import { Loader2, Users, ChevronRight, X } from 'lucide-react';
 import { Drawer } from '../../common/components/ui/Drawer';
 import { AmountInput } from '../../common/components/ui/AmountInput';
@@ -11,7 +12,7 @@ import { AmountInput } from '../../common/components/ui/AmountInput';
 interface ExpenseFormInputs {
     description: string;
     amount: number;
-    category: string;
+    category_id: string;
     date: string;
     group_id?: string;
     add_to_personal?: boolean;
@@ -45,6 +46,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
 }) => {
     const [mode, setMode] = useState<'personal' | 'group'>('personal');
     const [groups, setGroups] = useState<Group[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [selectedGroupId, setSelectedGroupId] = useState<string>('');
     const [groupMembers, setGroupMembers] = useState<Member[]>([]);
     const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
@@ -78,7 +80,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
         if (initialData) {
             setValue('description', initialData.description);
             setValue('amount', initialData.amount);
-            setValue('category', initialData.category);
+            setValue('category_id', initialData.category_id);
             setValue('date', new Date(initialData.date).toISOString().slice(0, 16));
 
             if (initialData.group_id) {
@@ -96,7 +98,7 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
                 setMode('group');
                 setSelectedGroupId(defaultGroupId);
             }
-            setValue('category', 'Other');
+            setValue('category_id', '');
         }
     }, [initialData, setValue, defaultGroupId]);
 
@@ -113,6 +115,10 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
             }
         };
         fetchGroups();
+    }, []);
+
+    useEffect(() => {
+        getCategories('expense').then(setCategories).catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -630,14 +636,15 @@ export const AddExpenseForm: React.FC<AddExpenseFormProps> = ({
                             Category
                         </label>
                         <select
-                            {...register('category')}
+                            {...register('category_id')}
                             className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                         >
-                            <option value="Food">Food</option>
-                            <option value="Transport">Transport</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Other">Other</option>
+                            <option value="">Select category</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div className="min-w-0">
