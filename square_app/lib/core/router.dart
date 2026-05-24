@@ -13,6 +13,7 @@ import '../../features/transactions/presentation/screens/add_edit_loan_screen.da
 import '../../features/expense/data/expense_model.dart';
 import '../../features/auth/presentation/auth_provider.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/feature_flags/presentation/features_settings_screen.dart';
 import '../../features/groups/presentation/screens/groups_screen.dart';
 import '../../features/groups/presentation/screens/create_group_screen.dart';
 import '../../features/groups/presentation/screens/group_details_screen.dart';
@@ -125,6 +126,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
+            routes: [
+              GoRoute(
+                path: 'features',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) => const FeaturesSettingsScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: '/expenses/:id',
