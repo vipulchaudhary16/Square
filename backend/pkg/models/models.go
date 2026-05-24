@@ -15,8 +15,9 @@ type User struct {
 	Password  string             `json:"-" bson:"password,omitempty"`
 	OTP       string             `json:"-" bson:"otp,omitempty"`
 	OTPExpiry time.Time          `json:"-" bson:"otp_expiry,omitempty"`
-	ResetToken       string    `json:"-" bson:"reset_token,omitempty"`
-	ResetTokenExpiry time.Time `json:"-" bson:"reset_token_expiry,omitempty"`
+	ResetToken       string          `json:"-" bson:"reset_token,omitempty"`
+	ResetTokenExpiry time.Time       `json:"-" bson:"reset_token_expiry,omitempty"`
+	FeatureFlags     map[string]bool `json:"-" bson:"feature_flags,omitempty"`
 }
 
 type Group struct {
@@ -87,6 +88,24 @@ type Budget struct {
 	UserID    primitive.ObjectID `json:"user_id" bson:"user_id"`
 	Category  string             `json:"category" bson:"category"`
 	Amount    float64            `json:"amount" bson:"amount"`
-	Month     string             `json:"month" bson:"month"` 
+	Month     string             `json:"month" bson:"month"`
 	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+}
+
+type FlagRegistryEntry struct {
+	ID             primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Key            string             `json:"key" bson:"key"`
+	Description    string             `json:"description" bson:"description"`
+	Category       string             `json:"category" bson:"category"`
+	UserToggleable bool               `json:"user_toggleable" bson:"user_toggleable"`
+	DefaultValue   bool               `json:"default_value" bson:"default_value"`
+}
+
+type ResolvedFlag struct {
+	ID             string `json:"id"`
+	Key            string `json:"key"`
+	Description    string `json:"description"`
+	Category       string `json:"category"`
+	UserToggleable bool   `json:"user_toggleable"`
+	Value          bool   `json:"value"`
 }
