@@ -7,7 +7,7 @@ module Api
 
       def search
         query = params[:q].to_s.strip
-        return render json: [] if query.length < 2
+        return render json: { contacts: [], platform_users: [] } if query.length < 2
 
         result = Contact.search_for(current_user.id, query)
         render json: {
@@ -17,14 +17,9 @@ module Api
       end
 
       def create
-        contact = current_user.owned_contacts.create!(
-          name:           params[:name],
-          phone:          params[:phone],
-          email:          params[:email],
-          linked_user_id: params[:linked_user_id]
-        )
+        contact = current_user.owned_contacts.create!(contact_params)
         render json: serialize(contact), status: :created
-      rescue ActiveRecord::RecordInvalid => e
+      rescue ActiveRecord::RecordInvalid, ActiveRecord::InvalidForeignKey => e
         render json: { error: e.message }, status: :bad_request
       end
 
@@ -35,16 +30,22 @@ module Api
                       .includes(:contact, :category)
                       .order(date: :desc)
 
+        active_loans = loans.reject { |l| l.status == "PAID" }
+
         render json: {
           contact:     serialize(contact),
           loans:       loans.map { |l| serialize_loan(l) },
-          net_balance: net_balance(loans)
+          net_balance: net_balance(active_loans)
         }
       rescue ActiveRecord::RecordNotFound
         render json: { error: "Contact not found" }, status: :not_found
       end
 
       private
+
+      def contact_params
+        params.permit(:name, :phone, :email, :linked_user_id)
+      end
 
       def serialize(c)
         {

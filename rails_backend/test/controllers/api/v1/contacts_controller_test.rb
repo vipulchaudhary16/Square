@@ -30,7 +30,9 @@ class Api::V1::ContactsControllerTest < ActionDispatch::IntegrationTest
   test "GET /api/contacts/search returns empty for short query" do
     get "/api/contacts/search", params: { q: "a" }, headers: @headers
     assert_response :ok
-    assert_equal [], JSON.parse(response.body)
+    body = JSON.parse(response.body)
+    assert_equal [], body["contacts"]
+    assert_equal [], body["platform_users"]
   end
 
   test "POST /api/contacts creates off-platform contact" do
@@ -70,5 +72,15 @@ class Api::V1::ContactsControllerTest < ActionDispatch::IntegrationTest
 
     get "/api/contacts/#{contact.id}/loans", headers: @headers
     assert_response :not_found
+  end
+
+  test "POST /api/contacts returns 400 when name is missing" do
+    post "/api/contacts", params: { phone: "9876543210" }.to_json, headers: @headers
+    assert_response :bad_request
+  end
+
+  test "GET /api/contacts returns 401 without auth" do
+    get "/api/contacts"
+    assert_response :unauthorized
   end
 end
