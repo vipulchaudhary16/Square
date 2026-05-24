@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../feature_flags/presentation/feature_flags_provider.dart';
+import '../../../../shared/widgets/amount_text.dart';
 import '../../../../shared/widgets/glass_container.dart';
 import '../../transactions/presentation/widgets/premium_transaction_card.dart';
 import 'dashboard_provider.dart';
@@ -137,8 +139,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                             ],
                           ),
-                          Text(
-                            '₹${netBalance.toStringAsFixed(2)}',
+                          AmountText(
+                            amount: netBalance,
+                            showPaise: true,
+                            tooltipBgColor: Theme.of(context).colorScheme.onPrimary,
+                            tooltipTextColor: Theme.of(context).colorScheme.primary,
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -150,7 +155,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Inc: ₹${data.totalIncome.toStringAsFixed(0)}',
+                                  'Inc: ${formatInr(data.totalIncome)}',
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: Theme.of(
@@ -163,7 +168,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
-                                  'Exp: ₹${data.totalExpenses.toStringAsFixed(0)}',
+                                  'Exp: ${formatInr(data.totalExpenses)}',
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: Theme.of(
@@ -415,8 +420,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ],
             ),
-            Text(
-              '₹${amount.toStringAsFixed(2)}',
+            AmountText(
+              amount: amount,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
