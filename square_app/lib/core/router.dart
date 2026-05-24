@@ -18,6 +18,9 @@ import '../../features/categories/presentation/categories_settings_screen.dart';
 import '../../features/groups/presentation/screens/groups_screen.dart';
 import '../../features/groups/presentation/screens/create_group_screen.dart';
 import '../../features/groups/presentation/screens/group_details_screen.dart';
+import '../../features/contacts/presentation/screens/contacts_screen.dart';
+import '../../features/contacts/presentation/screens/add_contact_screen.dart';
+import '../../features/contacts/presentation/screens/contact_detail_screen.dart';
 
 // Keys for navigation
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -146,6 +149,29 @@ final routerProvider = Provider<GoRouter>((ref) {
               final expense = state.extra as Expense;
               return ExpenseDetailScreen(expense: expense);
             },
+          ),
+          GoRoute(
+            path: '/contacts',
+            builder: (context, state) => const ContactsScreen(),
+          ),
+          GoRoute(
+            path: '/contacts/add',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const AddContactScreen(),
+          ),
+          GoRoute(
+            path: '/contacts/:id',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) =>
+                ContactDetailScreen(contactId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/loans/:id',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => Scaffold(
+              appBar: AppBar(title: const Text('Loan Detail')),
+              body: Center(child: Text('Loan ${state.pathParameters['id']}')),
+            ),
           ),
         ],
       ),

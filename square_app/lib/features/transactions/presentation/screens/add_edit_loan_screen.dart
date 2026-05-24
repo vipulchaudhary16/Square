@@ -5,7 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/category_picker_sheet.dart';
-import '../../../transactions/presentation/transactions_provider.dart';
+import '../../../contacts/data/contact_model.dart';
+import '../transactions_provider.dart';
 
 class AddEditLoanScreen extends ConsumerStatefulWidget {
   const AddEditLoanScreen({super.key});
@@ -16,42 +17,53 @@ class AddEditLoanScreen extends ConsumerStatefulWidget {
 
 class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _counterpartyController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String _type = 'LENT';
+
+  Contact? _selectedContact;
+  String _interestMode = 'none';
   DateTime _selectedDate = DateTime.now();
+  DateTime? _dueDate;
   bool _isLoading = false;
   String? _selectedCategoryId;
   String _selectedCategoryName = 'Category';
 
   @override
   void dispose() {
-    _counterpartyController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
+  Future<void> _pickContact() async {
+    final result = await context.push<Contact>('/contacts/add');
+    if (result != null) setState(() => _selectedContact = result);
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedContact == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a contact')),
+      );
+      return;
+    }
     setState(() => _isLoading = true);
     try {
-      final amount = double.parse(_amountController.text);
       final data = {
-        'type': _type,
-        'amount': amount,
-        'counterparty_name': _counterpartyController.text,
-        'status': 'PENDING',
+        'contact_id': _selectedContact!.id,
+        'amount': double.parse(_amountController.text),
         'date': _selectedDate.toUtc().toIso8601String(),
+        'interest_mode': _interestMode,
         'description': _descriptionController.text,
         'category_id': _selectedCategoryId ?? '',
+        if (_dueDate != null) 'due_date': _dueDate!.toUtc().toIso8601String(),
       };
       await ref.read(loansProvider.notifier).create(data);
       if (mounted) {
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Loan added successfully')),
+          const SnackBar(content: Text('Loan added')),
         );
       }
     } catch (e) {
@@ -65,32 +77,6 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
     }
   }
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null) setState(() => _selectedDate = picked);
-  }
-
-  void _showCategoryPicker() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => CategoryPickerSheet(
-        selectedId: _selectedCategoryId,
-        appliesTo: 'loan',
-        onSelected: (id, name) => setState(() {
-          _selectedCategoryId = id;
-          _selectedCategoryName = name;
-        }),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -98,21 +84,16 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.slate[950] : Colors.white,
       appBar: AppBar(
-        title: Text(
-          'Add Loan / Debt',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text('Add Loan',
+            style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(
-            LucideIcons.x,
-            color: isDark ? Colors.white70 : Colors.black54,
-          ),
+          icon: Icon(LucideIcons.x,
+              color: isDark ? Colors.white70 : Colors.black54),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -122,239 +103,173 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    'Save',
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : Text('Save',
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black)),
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: Stack(
-        children: [
-          SafeArea(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Form(
+            key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 16),
-                          // Pill toggle
-                          Center(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? AppColors.slate[900]
-                                    : AppColors.slate[50],
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              padding: const EdgeInsets.all(4),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildTypeOption(
-                                    'LENT',
-                                    'I Lent',
-                                    LucideIcons.arrowUpRight,
-                                    isDark,
-                                  ),
-                                  _buildTypeOption(
-                                    'BORROWED',
-                                    'I Borrowed',
-                                    LucideIcons.arrowDownLeft,
-                                    isDark,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          _buildFieldRow(
-                            icon: LucideIcons.user,
-                            iconColor: isDark
-                                ? Colors.white54
-                                : Colors.black38,
-                            isDark: isDark,
-                            child: TextFormField(
-                              controller: _counterpartyController,
-                              style: TextStyle(
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: _pickContact,
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.slate[900]
+                          : AppColors.slate[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: isDark
+                              ? Colors.white12
+                              : Colors.black.withOpacity(0.06)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.user,
+                            size: 20,
+                            color: isDark ? Colors.white54 : Colors.black38),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _selectedContact?.name ?? 'Select contact',
+                            style: TextStyle(
                                 fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    isDark ? Colors.white : Colors.black87,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Person name',
-                                hintStyle: TextStyle(
-                                  color: isDark
-                                      ? AppColors.slate[500]
-                                      : AppColors.slate[400],
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                              validator: (v) =>
-                                  v!.isEmpty ? 'Required' : null,
-                            ),
+                                fontWeight: _selectedContact != null
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                color: _selectedContact != null
+                                    ? (isDark ? Colors.white : Colors.black87)
+                                    : (isDark
+                                        ? AppColors.slate[500]
+                                        : AppColors.slate[400])),
                           ),
-                          const SizedBox(height: 12),
-                          Divider(
-                            color: isDark
-                                ? Colors.white10
-                                : Colors.black.withOpacity(0.05),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildFieldRow(
-                            icon: LucideIcons.indianRupee,
-                            iconColor: isDark
-                                ? AppColors.slate[400]!
-                                : AppColors.slate[600]!,
-                            isDark: isDark,
-                            child: TextFormField(
-                              controller: _amountController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                      decimal: true),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    isDark ? Colors.white : Colors.black87,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: '0.00',
-                                hintStyle: TextStyle(
-                                  color: isDark
-                                      ? AppColors.slate[500]
-                                      : AppColors.slate[400],
-                                ),
-                                border: InputBorder.none,
-                              ),
-                              validator: (v) =>
-                                  v!.isEmpty ? 'Required' : null,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Divider(
-                            color: isDark
-                                ? Colors.white10
-                                : Colors.black.withOpacity(0.05),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildFieldRow(
-                            icon: LucideIcons.fileText,
-                            iconColor: isDark
-                                ? Colors.white54
-                                : Colors.black38,
-                            isDark: isDark,
-                            child: TextFormField(
-                              controller: _descriptionController,
-                              maxLines: null,
-                              minLines: 3,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    isDark ? Colors.white : Colors.black87,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'Description (optional)',
-                                hintStyle: TextStyle(
-                                  color: isDark
-                                      ? AppColors.slate[500]
-                                      : AppColors.slate[400],
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 180),
-                        ],
-                      ),
+                        ),
+                        Icon(LucideIcons.chevronRight,
+                            size: 16,
+                            color: isDark ? Colors.white24 : Colors.black26),
+                      ],
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                _buildFieldRow(
+                  icon: LucideIcons.indianRupee,
+                  iconColor: isDark
+                      ? AppColors.slate[400]!
+                      : AppColors.slate[600]!,
+                  isDark: isDark,
+                  child: TextFormField(
+                    controller: _amountController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      hintText: '0.00',
+                      hintStyle: TextStyle(
+                          color: isDark
+                              ? AppColors.slate[500]
+                              : AppColors.slate[400]),
+                      border: InputBorder.none,
+                    ),
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Divider(
+                    color: isDark
+                        ? Colors.white10
+                        : Colors.black.withOpacity(0.05)),
+                const SizedBox(height: 12),
+                _buildInterestModeSelector(isDark),
+                const SizedBox(height: 12),
+                Divider(
+                    color: isDark
+                        ? Colors.white10
+                        : Colors.black.withOpacity(0.05)),
+                const SizedBox(height: 12),
+                _buildFieldRow(
+                  icon: LucideIcons.fileText,
+                  iconColor: isDark ? Colors.white54 : Colors.black38,
+                  isDark: isDark,
+                  child: TextFormField(
+                    controller: _descriptionController,
+                    maxLines: null,
+                    minLines: 2,
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      hintText: 'Description (optional)',
+                      hintStyle: TextStyle(
+                          color: isDark
+                              ? AppColors.slate[500]
+                              : AppColors.slate[400],
+                          fontWeight: FontWeight.w400),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 180),
               ],
             ),
           ),
-          _buildFloatingDock(isDark),
-        ],
+        ),
       ),
+      bottomSheet: _buildFloatingDock(isDark),
     );
   }
 
-  Widget _buildTypeOption(
-    String value,
-    String label,
-    IconData icon,
-    bool isDark,
-  ) {
-    final isSelected = _type == value;
-    return GestureDetector(
-      onTap: () => setState(() => _type = value),
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? Colors.white : Colors.black)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
+  Widget _buildInterestModeSelector(bool isDark) {
+    final modes = [
+      ('none', 'No interest'),
+      ('from_start', 'Interest from start'),
+      ('penalty', 'Penalty after due date'),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Interest',
+            style: TextStyle(
+                fontSize: 11,
+                color: isDark ? Colors.white38 : Colors.black38,
+                letterSpacing: 0.06)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: modes
+              .map((m) => ChoiceChip(
+                    label: Text(m.$2,
+                        style: const TextStyle(fontSize: 12)),
+                    selected: _interestMode == m.$1,
+                    onSelected: (_) =>
+                        setState(() => _interestMode = m.$1),
+                  ))
+              .toList(),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 15,
-              color: isSelected
-                  ? (isDark ? Colors.black : Colors.white)
-                  : (isDark ? Colors.white38 : Colors.black26),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: isSelected
-                    ? (isDark ? Colors.black : Colors.white)
-                    : (isDark ? Colors.white38 : Colors.black26),
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
-  Widget _buildFieldRow({
-    required IconData icon,
-    required Color iconColor,
-    required Widget child,
-    required bool isDark,
-  }) {
+  Widget _buildFieldRow(
+      {required IconData icon,
+      required Color iconColor,
+      required Widget child,
+      required bool isDark}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -375,49 +290,75 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
   }
 
   Widget _buildFloatingDock(bool isDark) {
-    return Positioned(
-      bottom: 5,
-      left: 20,
-      right: 20,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.slate[900] : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.slate[900] : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
               color: Colors.black.withOpacity(0.1),
               blurRadius: 20,
-              offset: const Offset(0, 10),
+              offset: const Offset(0, 10)),
+        ],
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          _buildDockItem(
+            LucideIcons.calendar,
+            DateFormat('MMM dd').format(_selectedDate),
+            isDark,
+            () async {
+              final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100));
+              if (picked != null) setState(() => _selectedDate = picked);
+            },
+          ),
+          _buildDockItem(
+            LucideIcons.calendarClock,
+            _dueDate != null
+                ? 'Due ${DateFormat('MMM dd').format(_dueDate!)}'
+                : 'Due date',
+            isDark,
+            () async {
+              final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _dueDate ??
+                      DateTime.now().add(const Duration(days: 30)),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime(2100));
+              if (picked != null) setState(() => _dueDate = picked);
+            },
+          ),
+          _buildDockItem(
+            LucideIcons.tag,
+            _selectedCategoryName,
+            isDark,
+            () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => CategoryPickerSheet(
+                selectedId: _selectedCategoryId,
+                appliesTo: 'loan',
+                onSelected: (id, name) => setState(() {
+                  _selectedCategoryId = id;
+                  _selectedCategoryName = name;
+                }),
+              ),
             ),
-          ],
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            _buildDockItem(
-              LucideIcons.calendar,
-              DateFormat('MMM dd').format(_selectedDate),
-              isDark,
-              _pickDate,
-            ),
-            _buildDockItem(
-              LucideIcons.tag,
-              _selectedCategoryName,
-              isDark,
-              _showCategoryPicker,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildDockItem(
-    IconData icon,
-    String label,
-    bool isDark,
-    VoidCallback onTap,
-  ) {
+      IconData icon, String label, bool isDark, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -433,19 +374,17 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isDark ? Colors.white54 : Colors.black54,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
+              Icon(icon,
+                  size: 16,
+                  color: isDark ? Colors.white54 : Colors.black54),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(label,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : Colors.black87)),
               ),
             ],
           ),
