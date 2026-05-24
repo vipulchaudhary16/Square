@@ -5,6 +5,8 @@ class Income {
   final String description;
   final DateTime date;
   final String userId;
+  final String categoryId;
+  final String categoryName;
 
   Income({
     required this.id,
@@ -13,6 +15,8 @@ class Income {
     required this.description,
     required this.date,
     required this.userId,
+    required this.categoryId,
+    required this.categoryName,
   });
 
   factory Income.fromJson(Map<String, dynamic> json) {
@@ -23,6 +27,8 @@ class Income {
       description: json['description'] ?? '',
       date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
       userId: json['user_id'] ?? '',
+      categoryId: json['category_id'] ?? '',
+      categoryName: json['category_name'] ?? 'General',
     );
   }
 
@@ -33,6 +39,7 @@ class Income {
       'description': description,
       'date': date.toIso8601String(),
       'user_id': userId,
+      'category_id': categoryId,
     };
   }
 }

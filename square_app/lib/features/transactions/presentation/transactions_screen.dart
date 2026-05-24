@@ -175,7 +175,7 @@ class TransactionListView<T> extends ConsumerWidget {
     if (item is Expense) {
       return PremiumTransactionCard(
         title: item.description.isNotEmpty ? item.description : 'Expense',
-        subtitle: item.category, // Tag on right
+        subtitle: item.categoryName, // Tag on right
         amount: item.amount,
         date: item.date,
         type: TransactionType.expense,

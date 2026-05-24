@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../categories/presentation/categories_provider.dart';
 import '../../../transactions/presentation/transactions_provider.dart';
 
 class AddEditIncomeScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class _AddEditIncomeScreenState extends ConsumerState<AddEditIncomeScreen> {
   final _descriptionController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
+  String? _selectedCategoryId;
 
   @override
   void dispose() {
@@ -43,6 +45,7 @@ class _AddEditIncomeScreenState extends ConsumerState<AddEditIncomeScreen> {
         'amount': amount,
         'description': _descriptionController.text,
         'date': _selectedDate.toUtc().toIso8601String(),
+        'category_id': _selectedCategoryId ?? '',
       };
 
       await ref.read(incomesProvider.notifier).create(data);
@@ -151,6 +154,31 @@ class _AddEditIncomeScreenState extends ConsumerState<AddEditIncomeScreen> {
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              Consumer(
+                builder: (context, ref, _) {
+                  final cats = ref.watch(categoriesProvider).value
+                          ?.where((c) => c.appliesTo.contains('income'))
+                          .toList() ??
+                      [];
+                  return DropdownButtonFormField<String>(
+                    initialValue: _selectedCategoryId,
+                    hint: const Text('Select category'),
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: cats
+                        .map((cat) => DropdownMenuItem(
+                              value: cat.id,
+                              child: Text(cat.name),
+                            ))
+                        .toList(),
+                    onChanged: (val) =>
+                        setState(() => _selectedCategoryId = val),
+                  );
+                },
               ),
               const SizedBox(height: 32),
               PrimaryButton(
