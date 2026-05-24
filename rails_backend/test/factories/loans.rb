@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :loan do
     association :lender, factory: :user
     borrower      { nil }
-    association :contact
+    contact       { association(:contact, owner: lender) }
     amount        { 5000.00 }
     date          { Time.current }
     due_date      { nil }

@@ -69,4 +69,28 @@ class LoanTest < ActiveSupport::TestCase
     loan = create(:loan, lender: lender, borrower: borrower, contact: contact)
     assert_not loan.lender_for?(borrower.id)
   end
+
+  test "for_user scope does not return loans for unrelated user" do
+    lender = create(:user)
+    contact = create(:contact, owner: lender)
+    create(:loan, lender: lender, contact: contact)
+    unrelated = create(:user)
+    assert_empty Loan.for_user(unrelated.id)
+  end
+
+  test "contact must belong to the lender" do
+    lender = create(:user)
+    other_user = create(:user)
+    wrong_contact = create(:contact, owner: other_user)
+    loan = Loan.new(
+      lender_user_id: lender.id,
+      contact_id: wrong_contact.id,
+      amount: 5000,
+      date: Time.current,
+      status: "PENDING",
+      interest_mode: "none"
+    )
+    assert_not loan.valid?
+    assert_includes loan.errors[:contact], "must belong to the lender"
+  end
 end

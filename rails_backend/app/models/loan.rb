@@ -19,7 +19,9 @@ class Loan < ApplicationRecord
   validates :interest_period,     inclusion: { in: INTEREST_PERIODS }, allow_nil: true
   validates :interest_basis,      inclusion: { in: INTEREST_BASES }, allow_nil: true
   validates :amount,              numericality: { greater_than: 0 }
+  validates :interest_rate,       numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :due_date,            presence: true, if: -> { interest_mode == "penalty" }
+  validate :contact_belongs_to_lender
 
   scope :for_user, ->(user_id) {
     where("lender_user_id = ? OR borrower_user_id = ?", user_id, user_id)
@@ -27,5 +29,12 @@ class Loan < ApplicationRecord
 
   def lender_for?(user_id)
     lender_user_id == user_id
+  end
+
+  private
+
+  def contact_belongs_to_lender
+    return unless contact && lender_user_id
+    errors.add(:contact, "must belong to the lender") unless contact.owner_user_id == lender_user_id
   end
 end
