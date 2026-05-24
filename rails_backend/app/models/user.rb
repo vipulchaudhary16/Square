@@ -9,7 +9,8 @@ class User < ApplicationRecord
   has_many :participated_expenses, through: :expense_participants, source: :expense
   has_many :incomes, dependent: :destroy
   has_many :investments, dependent: :destroy
-  has_many :loans, dependent: :destroy
+  has_many :lent_loans,     class_name: "Loan", foreign_key: :lender_user_id, dependent: :destroy
+  has_many :borrowed_loans, class_name: "Loan", foreign_key: :borrower_user_id, dependent: :nullify
   has_many :budgets, dependent: :destroy
   has_many :user_feature_flags, dependent: :destroy
   has_many :feature_flag_registries, through: :user_feature_flags
