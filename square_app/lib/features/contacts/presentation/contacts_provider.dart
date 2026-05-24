@@ -34,7 +34,9 @@ class ContactsNotifier extends AsyncNotifier<List<Contact>> {
           email: email,
           linkedUserId: linkedUserId,
         );
-    state = AsyncData([...state.value ?? [], contact]);
+    final current =
+        state is AsyncData<List<Contact>> ? state.requireValue : <Contact>[];
+    state = AsyncData([...current, contact]);
     return contact;
   }
 }

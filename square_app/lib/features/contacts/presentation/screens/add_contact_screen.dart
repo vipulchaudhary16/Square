@@ -33,6 +33,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
   }
 
   Future<void> _saveContact() async {
+    if (_isLoading) return;
     if (_nameController.text.isEmpty) return;
     setState(() => _isLoading = true);
     try {

@@ -32,9 +32,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/dashboard',
-    refreshListenable: authState.asData?.value != null
-        ? null
-        : null, // Helper if needed
     redirect: (context, state) {
       final isLoggedIn = authState.value != null;
       final isAuthRoute = state.uri.path == '/auth';

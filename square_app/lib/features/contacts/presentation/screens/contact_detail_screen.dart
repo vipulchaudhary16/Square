@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -232,7 +233,7 @@ class _LoanTile extends StatelessWidget {
       ),
       subtitle: Text(
         loan.dueDate != null
-            ? 'Due ${loan.dueDate!.day}/${loan.dueDate!.month}/${loan.dueDate!.year}'
+            ? 'Due ${DateFormat('dd/MM/yyyy').format(loan.dueDate!)}'
             : 'No due date',
         style: const TextStyle(fontSize: 11, color: Colors.grey),
       ),
