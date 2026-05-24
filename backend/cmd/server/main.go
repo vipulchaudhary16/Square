@@ -53,6 +53,8 @@ func main() {
 	api.Post("/groups/:id/settle", middleware.Protected(), handlers.SettleDebt)
 
 	api.Get("/users/search", middleware.Protected(), handlers.SearchUsers)
+	api.Get("/users/me/flags", middleware.Protected(), handlers.GetUserFlags)
+	api.Patch("/users/me/flags", middleware.Protected(), handlers.UpdateUserFlags)
 
 	api.Post("/incomes", middleware.Protected(), handlers.CreateIncome)
 	api.Get("/incomes", middleware.Protected(), handlers.GetIncomes)

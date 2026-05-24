@@ -90,65 +90,69 @@ func GetDashboardData(c *fiber.Ctx) error {
 		recentExpenses = []bson.M{}
 	}
 
-	now := time.Now()
-	currentYear, currentMonth, _ := now.Date()
-	currentLocation := now.Location()
-
-	startOfCurrentMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
-	startOfNextMonth := startOfCurrentMonth.AddDate(0, 1, 0)
-
-	startOfLastMonth := startOfCurrentMonth.AddDate(0, -1, 0)
-
-	getDailyExpenses := func(startDate, endDate time.Time) map[int]float64 {
-		filter := bson.M{
-			"$and": []bson.M{
-				expenseFilter,
-				{"date": bson.M{"$gte": startDate, "$lt": endDate}},
-			},
-		}
-
-		pipeline := []bson.M{
-			{"$match": filter},
-			{"$group": bson.M{
-				"_id":   bson.M{"$dayOfMonth": "$date"},
-				"total": bson.M{"$sum": "$amount"},
-			}},
-		}
-
-		cursor, err := db.DB.Collection("expenses").Aggregate(ctx, pipeline)
-		if err != nil {
-			return map[int]float64{}
-		}
-
-		var results []struct {
-			Day   int     `bson:"_id"`
-			Total float64 `bson:"total"`
-		}
-		if err = cursor.All(ctx, &results); err != nil {
-			return map[int]float64{}
-		}
-
-		dailyMap := make(map[int]float64)
-		for _, r := range results {
-			dailyMap[r.Day] = r.Total
-		}
-		return dailyMap
-	}
-
-	currentMonthExpenses := getDailyExpenses(startOfCurrentMonth, startOfNextMonth)
-	lastMonthExpenses := getDailyExpenses(startOfLastMonth, startOfCurrentMonth)
-
 	var graphData []map[string]interface{}
-	daysInMonth := 31
+	includeTrends := c.Query("include_trends") != "false"
 
-	for day := 1; day <= daysInMonth; day++ {
-		cmVal := currentMonthExpenses[day]
-		lmVal := lastMonthExpenses[day]
-		graphData = append(graphData, map[string]interface{}{
-			"day":           day,
-			"current_month": cmVal,
-			"last_month":    lmVal,
-		})
+	if includeTrends {
+		now := time.Now()
+		currentYear, currentMonth, _ := now.Date()
+		currentLocation := now.Location()
+
+		startOfCurrentMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+		startOfNextMonth := startOfCurrentMonth.AddDate(0, 1, 0)
+		startOfLastMonth := startOfCurrentMonth.AddDate(0, -1, 0)
+
+		getDailyExpenses := func(startDate, endDate time.Time) map[int]float64 {
+			filter := bson.M{
+				"$and": []bson.M{
+					expenseFilter,
+					{"date": bson.M{"$gte": startDate, "$lt": endDate}},
+				},
+			}
+
+			pipeline := []bson.M{
+				{"$match": filter},
+				{"$group": bson.M{
+					"_id":   bson.M{"$dayOfMonth": "$date"},
+					"total": bson.M{"$sum": "$amount"},
+				}},
+			}
+
+			cursor, err := db.DB.Collection("expenses").Aggregate(ctx, pipeline)
+			if err != nil {
+				return map[int]float64{}
+			}
+
+			var results []struct {
+				Day   int     `bson:"_id"`
+				Total float64 `bson:"total"`
+			}
+			if err = cursor.All(ctx, &results); err != nil {
+				return map[int]float64{}
+			}
+
+			dailyMap := make(map[int]float64)
+			for _, r := range results {
+				dailyMap[r.Day] = r.Total
+			}
+			return dailyMap
+		}
+
+		currentMonthExpenses := getDailyExpenses(startOfCurrentMonth, startOfNextMonth)
+		lastMonthExpenses := getDailyExpenses(startOfLastMonth, startOfCurrentMonth)
+
+		daysInMonth := 31
+		for day := 1; day <= daysInMonth; day++ {
+			cmVal := currentMonthExpenses[day]
+			lmVal := lastMonthExpenses[day]
+			graphData = append(graphData, map[string]interface{}{
+				"day":           day,
+				"current_month": cmVal,
+				"last_month":    lmVal,
+			})
+		}
+	} else {
+		graphData = []map[string]interface{}{}
 	}
 
 	return c.JSON(fiber.Map{

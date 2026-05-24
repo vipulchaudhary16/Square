@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -49,6 +50,15 @@ func Connect() {
 	Client = client
 	DB = client.Database("expense_tracker")
 	log.Println("Connected to MongoDB!")
+
+	// Ensure unique index on feature_flag_registry.key
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "key", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}
+	if _, err := DB.Collection("feature_flag_registry").Indexes().CreateOne(context.Background(), indexModel); err != nil {
+		log.Printf("Warning: could not create unique index on feature_flag_registry.key: %v", err)
+	}
 }
 
 func GetContext() (context.Context, context.CancelFunc) {

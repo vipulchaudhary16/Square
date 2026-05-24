@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../feature_flags/presentation/feature_flags_provider.dart';
 import '../../../../shared/widgets/glass_container.dart';
 import '../../transactions/presentation/widgets/premium_transaction_card.dart';
 import 'dashboard_provider.dart';
@@ -30,10 +31,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(dashboardProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final showTrends = ref
+        .watch(featureFlagsProvider)
+        .value
+        ?.any((f) => f.key == 'show_expense_trends_chart' && f.value) ??
+        false;
 
     return Scaffold(
       appBar: AppBar(
-        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         title: const Text('Dashboard'),
         automaticallyImplyLeading: false, // No back button on main tabs
         backgroundColor: Colors.transparent,
@@ -87,7 +95,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).shadowColor.withOpacity(0.3),
+                            color: Theme.of(
+                              context,
+                            ).shadowColor.withOpacity(0.3),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -102,12 +112,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.15),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   LucideIcons.wallet,
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
                                   size: 20,
                                 ),
                               ),
@@ -115,7 +129,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Text(
                                 'Net Balance',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary.withOpacity(0.7),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -137,7 +153,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   'Inc: ₹${data.totalIncome.toStringAsFixed(0)}',
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.6),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimary.withOpacity(0.6),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -148,7 +166,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   'Exp: ₹${data.totalExpenses.toStringAsFixed(0)}',
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.6),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimary.withOpacity(0.6),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -195,102 +215,107 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: 24),
 
               // Chart Section
-              GlassContainer(
-                width: double.infinity,
-                height: 350,
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Expense Trends',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppColors.slate[800],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: LineChart(
-                        // Switching to LineChart as easier to match "Area" look with fill
-                        LineChartData(
-                          gridData: FlGridData(show: false), // Clean look
-                          titlesData: FlTitlesData(
-                            leftTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            rightTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            topTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                getTitlesWidget: (value, meta) {
-                                  return Text(
-                                    value.toInt().toString(),
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? AppColors.slate[500]
-                                          : AppColors.slate[400],
-                                      fontSize: 10,
-                                    ),
-                                  );
-                                },
-                                interval: 5, // Show every 5th day
-                              ),
-                            ),
-                          ),
-                          borderData: FlBorderData(show: false),
-                          lineBarsData: [
-                            // Current Month Line
-                            LineChartBarData(
-                              spots: data.expenseGraph
-                                  .map(
-                                    (e) => FlSpot(
-                                      e.day.toDouble(),
-                                      e.currentMonth,
-                                    ),
-                                  )
-                                  .toList(),
-                              isCurved: true,
-                              color: Theme.of(context).colorScheme.primary,
-                              barWidth: 3,
-                              dotData: FlDotData(show: false),
-                              belowBarData: BarAreaData(
-                                show: true,
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              ),
-                            ),
-                            // Last Month Line
-                            LineChartBarData(
-                              spots: data.expenseGraph
-                                  .map(
-                                    (e) =>
-                                        FlSpot(e.day.toDouble(), e.lastMonth),
-                                  )
-                                  .toList(),
-                              isCurved: true,
-                              color: Theme.of(context).colorScheme.secondary,
-                              barWidth: 3,
-                              dotData: FlDotData(show: false),
-                              belowBarData: BarAreaData(
-                                show: true,
-                                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                              ),
-                            ),
-                          ],
+              if (showTrends) ...[
+                GlassContainer(
+                  width: double.infinity,
+                  height: 350,
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Expense Trends',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.slate[800],
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: LineChart(
+                          // Switching to LineChart as easier to match "Area" look with fill
+                          LineChartData(
+                            gridData: FlGridData(show: false), // Clean look
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              rightTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              topTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    return Text(
+                                      value.toInt().toString(),
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? AppColors.slate[500]
+                                            : AppColors.slate[400],
+                                        fontSize: 10,
+                                      ),
+                                    );
+                                  },
+                                  interval: 5, // Show every 5th day
+                                ),
+                              ),
+                            ),
+                            borderData: FlBorderData(show: false),
+                            lineBarsData: [
+                              // Current Month Line
+                              LineChartBarData(
+                                spots: data.expenseGraph
+                                    .map(
+                                      (e) => FlSpot(
+                                        e.day.toDouble(),
+                                        e.currentMonth,
+                                      ),
+                                    )
+                                    .toList(),
+                                isCurved: true,
+                                color: Theme.of(context).colorScheme.primary,
+                                barWidth: 3,
+                                dotData: FlDotData(show: false),
+                                belowBarData: BarAreaData(
+                                  show: true,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.1),
+                                ),
+                              ),
+                              // Last Month Line
+                              LineChartBarData(
+                                spots: data.expenseGraph
+                                    .map(
+                                      (e) =>
+                                          FlSpot(e.day.toDouble(), e.lastMonth),
+                                    )
+                                    .toList(),
+                                isCurved: true,
+                                color: Theme.of(context).colorScheme.secondary,
+                                barWidth: 3,
+                                dotData: FlDotData(show: false),
+                                belowBarData: BarAreaData(
+                                  show: true,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary.withOpacity(0.1),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
+              ],
 
               // Recent Transactions Header
               Row(
@@ -308,7 +333,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     onPressed: () => context.go('/transactions'),
                     child: Text(
                       'View All',
-                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                 ],
@@ -364,16 +391,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 18),
+                  child: Icon(
+                    icon,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   title,
                   style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withOpacity(0.7),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -392,7 +427,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               subtext,
               style: TextStyle(
                 fontSize: 10,
-                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6),
+                color: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.color?.withOpacity(0.6),
               ),
             ),
           ],
