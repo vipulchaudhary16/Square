@@ -46,7 +46,10 @@ Rails.application.routes.draw do
       member      { get :loans }
     end
     resources :loans, only: [:create, :index, :show, :update, :destroy] do
-      member { post :comments }
+      member do
+        post  :comments
+        patch :confirmation
+      end
     end
 
     # Budgets
