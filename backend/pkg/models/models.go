@@ -15,9 +15,9 @@ type User struct {
 	Password  string             `json:"-" bson:"password,omitempty"`
 	OTP       string             `json:"-" bson:"otp,omitempty"`
 	OTPExpiry time.Time          `json:"-" bson:"otp_expiry,omitempty"`
-	ResetToken       string          `json:"-" bson:"reset_token,omitempty"`
-	ResetTokenExpiry time.Time       `json:"-" bson:"reset_token_expiry,omitempty"`
-	FeatureFlags     map[string]bool `json:"-" bson:"feature_flags,omitempty"`
+	ResetToken       string             `json:"-" bson:"reset_token,omitempty"`
+	ResetTokenExpiry time.Time          `json:"-" bson:"reset_token_expiry,omitempty"`
+	FeatureFlags     map[string]bool    `json:"-" bson:"feature_flags,omitempty"`
 }
 
 type Group struct {
@@ -95,14 +95,14 @@ type Budget struct {
 type FlagRegistryEntry struct {
 	ID             primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Key            string             `json:"key" bson:"key"`
-	Description    string             `json:"description" bson:"description"`
-	Category       string             `json:"category" bson:"category"`
+	Description    string             `json:"description" bson:"description,omitempty"`
+	Category       string             `json:"category" bson:"category,omitempty"`
 	UserToggleable bool               `json:"user_toggleable" bson:"user_toggleable"`
 	DefaultValue   bool               `json:"default_value" bson:"default_value"`
 }
 
 type ResolvedFlag struct {
-	ID             string `json:"id"`
+	ID             string `json:"id"` // hex string, populated from FlagRegistryEntry.ID.Hex()
 	Key            string `json:"key"`
 	Description    string `json:"description"`
 	Category       string `json:"category"`
