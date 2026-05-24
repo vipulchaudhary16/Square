@@ -89,7 +89,8 @@ func GetUserFlags(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid user id"})
 	}
 
-	ctx := context.Background()
+	ctx, cancel := db.GetContext()
+	defer cancel()
 
 	registry, err := fetchRegistry(ctx)
 	if err != nil {
@@ -117,7 +118,8 @@ func UpdateUserFlags(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid request body"})
 	}
 
-	ctx := context.Background()
+	ctx, cancel := db.GetContext()
+	defer cancel()
 
 	registry, err := fetchRegistry(ctx)
 	if err != nil {
