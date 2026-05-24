@@ -16,6 +16,7 @@ class User < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :activity_logs, dependent: :destroy
   has_many :categories, dependent: :destroy
+  has_many :owned_contacts, class_name: "Contact", foreign_key: :owner_user_id, dependent: :destroy
 
   validates :email, presence: true, uniqueness: { case_sensitive: false },
             format: { with: URI::MailTo::EMAIL_REGEXP }
