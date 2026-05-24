@@ -1,8 +1,7 @@
 module Api
   module V1
     class LoansController < ApplicationController
-      before_action :set_loan,        only: [:show, :update, :destroy, :comments]
-      before_action :set_any_loan,    only: [:confirmation]
+      before_action :set_loan, only: [:show, :update, :destroy, :comments, :confirmation]
       before_action :require_lender,  only: [:update, :destroy]
       before_action :require_borrower, only: [:confirmation]
 
@@ -24,6 +23,7 @@ module Api
       end
 
       def create
+        return render json: { error: "contact_id is required" }, status: :bad_request unless params[:contact_id].present?
         contact = current_user.owned_contacts.find(params[:contact_id])
         loan    = Loan.create!(loan_params.merge(
           lender_user_id:   current_user.id,
@@ -65,22 +65,16 @@ module Api
         unless Loan::CONFIRMATION_STATUSES.include?(status)
           return render json: { error: "Invalid confirmation_status" }, status: :bad_request
         end
-        @loan.update!(
-          confirmation_status: status,
-          confirmed_at: status == "confirmed" ? Time.current : nil
-        )
-        render json: { message: "Confirmation updated", confirmation_status: @loan.confirmation_status }
+        if @loan.update(confirmation_status: status, confirmed_at: status == "confirmed" ? Time.current : nil)
+          render json: { message: "Confirmation updated", confirmation_status: @loan.confirmation_status }
+        else
+          render json: { error: @loan.errors.full_messages.first }, status: :bad_request
+        end
       end
 
       private
 
       def set_loan
-        @loan = Loan.for_user(current_user.id).find(params[:id])
-      rescue ActiveRecord::RecordNotFound
-        render json: { error: "Loan not found" }, status: :not_found
-      end
-
-      def set_any_loan
         @loan = Loan.for_user(current_user.id).find(params[:id])
       rescue ActiveRecord::RecordNotFound
         render json: { error: "Loan not found" }, status: :not_found
@@ -92,7 +86,7 @@ module Api
       end
 
       def require_borrower
-        return unless @loan.lender_for?(current_user.id)
+        return if @loan.borrower_user_id == current_user.id
         render json: { error: "Forbidden" }, status: :forbidden
       end
 
@@ -118,7 +112,7 @@ module Api
           lender_user_id:      l.lender_user_id.to_s,
           borrower_user_id:    l.borrower_user_id&.to_s,
           contact_id:          l.contact_id.to_s,
-          contact_name:        l.contact.name,
+          contact_name:        l.contact&.name || "",
           direction:           l.lender_for?(current_user.id) ? "lent" : "borrowed",
           amount:              l.amount.to_f,
           date:                l.date.iso8601,
