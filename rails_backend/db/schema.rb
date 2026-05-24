@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_24_154741) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_24_161248) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -260,7 +260,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_154741) do
   add_foreign_key "investments", "users"
   add_foreign_key "loans", "categories"
   add_foreign_key "loans", "contacts"
-  add_foreign_key "loans", "users", column: "borrower_user_id"
+  add_foreign_key "loans", "users", column: "borrower_user_id", on_delete: :nullify
   add_foreign_key "loans", "users", column: "lender_user_id"
   add_foreign_key "user_feature_flags", "feature_flag_registries"
   add_foreign_key "user_feature_flags", "users"

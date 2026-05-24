@@ -14,16 +14,13 @@ class RevampLoansForBilateral < ActiveRecord::Migration[7.2]
     # Step 2: copy user_id → lender_user_id
     execute "UPDATE loans SET lender_user_id = user_id"
 
-    # Step 3: create one contact per distinct (user_id, counterparty_name) pair
-    # ON CONFLICT DO NOTHING is safe here even without a unique constraint on contacts —
-    # it simply means "ignore any unique violation" and is valid PostgreSQL syntax.
-    # Since we SELECT DISTINCT, we produce at most one row per (user_id, counterparty_name) pair.
+    # Step 3: create one contact per distinct (user_id, counterparty_name) pair.
+    # SELECT DISTINCT guarantees no duplicates in the inserted set.
     execute <<~SQL
       INSERT INTO contacts (owner_user_id, name, created_at, updated_at)
       SELECT DISTINCT user_id, counterparty_name, NOW(), NOW()
       FROM loans
       WHERE counterparty_name IS NOT NULL
-      ON CONFLICT DO NOTHING
     SQL
 
     # Step 4: link each loan to its newly created contact
@@ -42,17 +39,10 @@ class RevampLoansForBilateral < ActiveRecord::Migration[7.2]
     execute "UPDATE loans SET confirmation_status = 'confirmed', confirmed_at = created_at"
 
     # Step 6: now enforce NOT NULL on required new columns
-    # lender_user_id is always populated (copied from user_id in step 2)
     change_column_null :loans, :lender_user_id, false
-    # contact_id: only enforce NOT NULL if all loans have counterparty_name set.
-    # Since counterparty_name was null: false, contact_id should be set for all rows.
-    # If any loan still has NULL contact_id (e.g. edge case), skip the constraint.
     null_contact_count = execute("SELECT COUNT(*) FROM loans WHERE contact_id IS NULL").first["count"].to_i
-    if null_contact_count == 0
-      change_column_null :loans, :contact_id, false
-    else
-      Rails.logger.warn "RevampLoansForBilateral: #{null_contact_count} loans have NULL contact_id — skipping NOT NULL constraint on contact_id"
-    end
+    raise "Data migration incomplete: #{null_contact_count} loans have no contact_id" if null_contact_count > 0
+    change_column_null :loans, :contact_id, false
 
     # Step 7: add indices and foreign keys
     add_index :loans, :lender_user_id
