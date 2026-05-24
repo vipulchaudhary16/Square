@@ -8,10 +8,14 @@ class DashboardRepository {
   DashboardRepository({Dio? dio})
     : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
 
-  Future<DashboardData> getDashboardData(String token) async {
+  Future<DashboardData> getDashboardData(
+    String token, {
+    bool includeTrends = true,
+  }) async {
     try {
       final response = await _dio.get(
         '/dashboard',
+        queryParameters: {'include_trends': includeTrends.toString()},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return DashboardData.fromJson(response.data);
