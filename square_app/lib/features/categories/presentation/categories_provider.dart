@@ -30,7 +30,7 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     await refresh();
   }
 
-  Future<void> update(String id, String name, List<String> appliesTo) async {
+  Future<void> updateCategory(String id, String name, List<String> appliesTo) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
     await ref.read(categoriesRepositoryProvider).updateCategory(token, id, name, appliesTo);
