@@ -35,8 +35,8 @@ class TransactionRepository {
         queryParameters: {'page': page, 'limit': limit},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      final List<dynamic> data = response.data['data'] ?? [];
-      final int total = response.data['total'] ?? 0;
+      final List<dynamic> data = response.data ?? [];
+      final int total = response.data.length ?? 0;
       return {'data': data, 'total': total};
     } catch (e) {
       throw Exception('Failed to fetch incomes: $e');
@@ -54,8 +54,8 @@ class TransactionRepository {
         queryParameters: {'page': page, 'limit': limit},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      final List<dynamic> data = response.data['data'] ?? [];
-      final int total = response.data['total'] ?? 0;
+      final List<dynamic> data = response.data ?? [];
+      final int total = response.data.length ?? 0;
       return {'data': data, 'total': total};
     } catch (e) {
       throw Exception('Failed to fetch investments: $e');
@@ -73,8 +73,8 @@ class TransactionRepository {
         queryParameters: {'page': page, 'limit': limit},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      final List<dynamic> data = response.data['data'] ?? [];
-      final int total = response.data['total'] ?? 0;
+      final List<dynamic> data = response.data ?? [];
+      final int total = response.data.length ?? 0;
       return {'data': data, 'total': total};
     } catch (e) {
       throw Exception('Failed to fetch loans: $e');
