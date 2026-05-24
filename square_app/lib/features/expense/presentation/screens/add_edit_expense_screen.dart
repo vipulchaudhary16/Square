@@ -877,19 +877,24 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 child: Text('No categories available'),
               )
             else
-              ...cats.map(
-                (cat) => ListTile(
-                  title: Text(cat.name),
-                  trailing: _selectedCategoryId == cat.id
-                      ? const Icon(Icons.check)
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      _selectedCategoryId = cat.id;
-                      _selectedCategoryName = cat.name;
-                    });
-                    Navigator.pop(ctx);
-                  },
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: cats.map(
+                    (cat) => ListTile(
+                      title: Text(cat.name),
+                      trailing: _selectedCategoryId == cat.id
+                          ? const Icon(Icons.check)
+                          : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedCategoryId = cat.id;
+                          _selectedCategoryName = cat.name;
+                        });
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  ).toList(),
                 ),
               ),
           ],
