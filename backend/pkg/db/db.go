@@ -56,7 +56,9 @@ func Connect() {
 		Keys:    bson.D{{Key: "key", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	}
-	DB.Collection("feature_flag_registry").Indexes().CreateOne(context.Background(), indexModel)
+	if _, err := DB.Collection("feature_flag_registry").Indexes().CreateOne(context.Background(), indexModel); err != nil {
+		log.Printf("Warning: could not create unique index on feature_flag_registry.key: %v", err)
+	}
 }
 
 func GetContext() (context.Context, context.CancelFunc) {
