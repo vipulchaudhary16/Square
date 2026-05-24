@@ -355,9 +355,9 @@ class TransactionListView<T> extends ConsumerWidget {
         onTap: () {},
       );
     } else if (item is Loan) {
-      final isLent = item.type == 'LENT';
+      final isLent = item.direction == 'lent';
       return PremiumTransactionCard(
-        title: item.counterpartyName,
+        title: item.contactName,
         subtitle: item.status,
         amount: item.amount,
         date: item.date,
