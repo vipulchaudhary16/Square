@@ -4,12 +4,11 @@ require "rails/test_help"
 require "factory_bot_rails"
 
 Shoulda::Matchers.configure do |config|
-  config.integrate { |with| with.test_framework(:minitest).library(:rails) }
+  config.integrate { |with| with.test_framework(:minitest) }
 end
 
 class ActiveSupport::TestCase
   include FactoryBot::Syntax::Methods
-  fixtures :none
 end
 
 class ActionDispatch::IntegrationTest
