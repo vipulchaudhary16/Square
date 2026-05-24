@@ -121,3 +121,5 @@ dist
 # Vite
 dist-ssr
 *.local
+
+.DS_Store

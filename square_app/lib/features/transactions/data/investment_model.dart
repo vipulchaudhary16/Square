@@ -6,6 +6,8 @@ class Investment {
   final String description;
   final DateTime date;
   final String userId;
+  final String categoryId;
+  final String categoryName;
 
   Investment({
     required this.id,
@@ -15,6 +17,8 @@ class Investment {
     required this.description,
     required this.date,
     required this.userId,
+    this.categoryId = '',
+    this.categoryName = '',
   });
 
   factory Investment.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,8 @@ class Investment {
       description: json['description'] ?? '',
       date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
       userId: json['user_id'] ?? '',
+      categoryId: json['category_id'] ?? '',
+      categoryName: json['category_name'] ?? '',
     );
   }
 
@@ -37,6 +43,7 @@ class Investment {
       'description': description,
       'date': date.toIso8601String(),
       'user_id': userId,
+      'category_id': categoryId,
     };
   }
 }

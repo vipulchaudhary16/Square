@@ -1014,7 +1014,6 @@ class _CategoryPickerSheetState extends ConsumerState<_CategoryPickerSheet> {
         maxHeight: MediaQuery.of(context).size.height * 0.6,
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 8),
           Container(
@@ -1055,7 +1054,7 @@ class _CategoryPickerSheetState extends ConsumerState<_CategoryPickerSheet> {
             ),
           ),
           const SizedBox(height: 4),
-          Flexible(
+          Expanded(
             child: catsAsync.isLoading
                 ? const Center(
                     child: Padding(
@@ -1082,7 +1081,6 @@ class _CategoryPickerSheetState extends ConsumerState<_CategoryPickerSheet> {
                             ),
                           )
                         : ListView.builder(
-                            shrinkWrap: true,
                             itemCount: filtered.length,
                             itemBuilder: (_, i) {
                               final cat = filtered[i];

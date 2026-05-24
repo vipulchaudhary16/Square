@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../core/theme/app_colors.dart';
 
 enum TransactionType { expense, income, investment, loan }
 
@@ -30,13 +30,13 @@ class PremiumTransactionCard extends StatelessWidget {
   Color get _typeColor {
     switch (type) {
       case TransactionType.expense:
-        return const Color(0xFFef4444); // Red
+        return const Color(0xFFef4444);
       case TransactionType.income:
-        return const Color(0xFF22c55e); // Green
+        return const Color(0xFF22c55e);
       case TransactionType.investment:
-        return const Color(0xFF8b5cf6); // Violet
+        return const Color(0xFF8b5cf6);
       case TransactionType.loan:
-        return const Color(0xFFf59e0b); // Amber
+        return const Color(0xFFf59e0b);
     }
   }
 
@@ -45,9 +45,9 @@ class PremiumTransactionCard extends StatelessWidget {
       case TransactionType.expense:
         return LucideIcons.receipt;
       case TransactionType.income:
-        return LucideIcons.dollarSign;
-      case TransactionType.investment:
         return LucideIcons.trendingUp;
+      case TransactionType.investment:
+        return LucideIcons.barChart2;
       case TransactionType.loan:
         return LucideIcons.arrowLeftRight;
     }
@@ -58,155 +58,160 @@ class PremiumTransactionCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final typeColor = _typeColor;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          // Gradient Background for depth
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [AppColors.cardDark, AppColors.surfaceDark]
-                : [Colors.white, AppColors.slate[50]!],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          // Subtle colored border/glow
-          border: Border.all(
-            color: isDark ? typeColor.withOpacity(0.3) : AppColors.slate[200]!,
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withOpacity(0.3)
-                  : Colors.grey.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    final amountColor = isPositive
+        ? const Color(0xFF22c55e)
+        : (type == TransactionType.expense
+            ? const Color(0xFFef4444)
+            : (isDark ? Colors.white : const Color(0xFF0A0A0A)));
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: isDark ? const Color(0xFF0F0F0F) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          splashColor: typeColor.withOpacity(0.06),
+          highlightColor: typeColor.withOpacity(0.03),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF1C1C1C)
+                    : const Color(0xFFEFEFEF),
+                width: 1,
+              ),
             ),
-            // Subtle inner glow for dark mode
-            if (isDark)
-              BoxShadow(
-                color: typeColor.withOpacity(0.05),
-                blurRadius: 0,
-                spreadRadius: 0,
-                offset: Offset.zero,
-              ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Icon Container
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: typeColor.withOpacity(isDark ? 0.2 : 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: typeColor.withOpacity(0.3),
-                    width: isDark ? 1 : 0,
+            child: Row(
+              children: [
+                // Icon
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: typeColor.withOpacity(isDark ? 0.15 : 0.08),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: Icon(_icon, color: typeColor, size: 20),
                 ),
-                child: Icon(_icon, color: typeColor, size: 24),
-              ),
-              const SizedBox(width: 16),
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : AppColors.slate[900],
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          DateFormat('MMM dd').format(date),
-                          style: TextStyle(
-                            color: isDark
-                                ? AppColors.slate[400]
-                                : AppColors.slate[500],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
+                const SizedBox(width: 13),
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : const Color(0xFF0A0A0A),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          letterSpacing: -0.2,
                         ),
-                        if (category != null) ...[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            child: Icon(
-                              Icons.circle,
-                              size: 4,
-                              color: AppColors.slate[600],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if (category != null && category!.isNotEmpty) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: typeColor
+                                    .withOpacity(isDark ? 0.18 : 0.10),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                category!,
+                                style: TextStyle(
+                                  color: typeColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 6),
+                          ],
                           Text(
-                            category!,
+                            _formatDate(date),
                             style: TextStyle(
                               color: isDark
-                                  ? AppColors.slate[400]
-                                  : AppColors.slate[500],
+                                  ? const Color(0xFF555555)
+                                  : const Color(0xFFAAAAAA),
                               fontSize: 12,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ],
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Amount + badge
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${isPositive ? '+' : '−'}₹${_formatAmount(amount)}',
+                      style: GoogleFonts.dmMono(
+                        color: amountColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF1A1A1A)
+                            : const Color(0xFFF3F3F3),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        subtitle.toUpperCase(),
+                        style: TextStyle(
+                          color: isDark
+                              ? const Color(0xFF4A4A4A)
+                              : const Color(0xFFAAAAAA),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              // Amount
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${isPositive ? '+' : '-'}₹${amount.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      color: isPositive
-                          ? const Color(0xFF22c55e)
-                          : (isDark ? Colors.white : AppColors.slate[900]),
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.slate[800]
-                          : AppColors.slate[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      subtitle, // "Lent" / "Details" etc
-                      style: TextStyle(
-                        color: isDark
-                            ? AppColors.slate[300]
-                            : AppColors.slate[600],
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime d) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(d.year, d.month, d.day);
+    if (day == today) return 'Today';
+    if (day == today.subtract(const Duration(days: 1))) return 'Yesterday';
+    if (now.year == d.year) return DateFormat('MMM d').format(d);
+    return DateFormat('MMM d, y').format(d);
+  }
+
+  String _formatAmount(double v) {
+    if (v >= 100000) return '${(v / 100000).toStringAsFixed(1)}L';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
+    return v.toStringAsFixed(0);
   }
 }

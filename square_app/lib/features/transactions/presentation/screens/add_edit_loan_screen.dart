@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/primary_button.dart';
+import '../../../../shared/widgets/category_picker_sheet.dart';
 import '../../../transactions/presentation/transactions_provider.dart';
 
 class AddEditLoanScreen extends ConsumerStatefulWidget {
@@ -19,10 +19,11 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
   final _counterpartyController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String _type = 'LENT'; // LENT or BORROWED
-  String _status = 'PENDING';
+  String _type = 'LENT';
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
+  String? _selectedCategoryId;
+  String _selectedCategoryName = 'Category';
 
   @override
   void dispose() {
@@ -34,20 +35,18 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
-
     try {
       final amount = double.parse(_amountController.text);
       final data = {
         'type': _type,
         'amount': amount,
         'counterparty_name': _counterpartyController.text,
-        'status': _status,
+        'status': 'PENDING',
         'date': _selectedDate.toUtc().toIso8601String(),
         'description': _descriptionController.text,
+        'category_id': _selectedCategoryId ?? '',
       };
-
       await ref.read(loansProvider.notifier).create(data);
       if (mounted) {
         context.pop();
@@ -73,9 +72,23 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  void _showCategoryPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CategoryPickerSheet(
+        selectedId: _selectedCategoryId,
+        appliesTo: 'loan',
+        onSelected: (id, name) => setState(() {
+          _selectedCategoryId = id;
+          _selectedCategoryName = name;
+        }),
+      ),
+    );
   }
 
   @override
@@ -83,156 +96,358 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? AppColors.slate[950] : Colors.white,
       appBar: AppBar(
-        title: const Text('Add Loan/Debt'),
+        title: Text(
+          'Add Loan / Debt',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: Icon(
-            LucideIcons.arrowLeft,
-            color: isDark ? Colors.white : Colors.black,
+            LucideIcons.x,
+            color: isDark ? Colors.white70 : Colors.black54,
           ),
           onPressed: () => context.pop(),
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Type Toggle
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.slate[800] : AppColors.slate[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.all(4),
-                child: Row(
-                  children: [
-                    Expanded(child: _buildTypeOption('LENT', 'I Lent')),
-                    Expanded(child: _buildTypeOption('BORROWED', 'I Borrowed')),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              _buildTextField(
-                controller: _counterpartyController,
-                label: 'Person Name',
-                icon: LucideIcons.user,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _amountController,
-                label: 'Amount',
-                icon: LucideIcons.dollarSign,
-                keyboardType: TextInputType.number,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description (Optional)',
-                icon: LucideIcons.fileText,
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: _pickDate,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: isDark
-                          ? AppColors.slate[700]!
-                          : AppColors.slate[300]!,
+        actions: [
+          TextButton(
+            onPressed: _isLoading ? null : _submit,
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    'Save',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.calendar,
-                        color: isDark
-                            ? AppColors.slate[400]
-                            : AppColors.slate[500],
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 16),
+                          // Pill toggle
+                          Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.slate[900]
+                                    : AppColors.slate[50],
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildTypeOption(
+                                    'LENT',
+                                    'I Lent',
+                                    LucideIcons.arrowUpRight,
+                                    isDark,
+                                  ),
+                                  _buildTypeOption(
+                                    'BORROWED',
+                                    'I Borrowed',
+                                    LucideIcons.arrowDownLeft,
+                                    isDark,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _buildFieldRow(
+                            icon: LucideIcons.user,
+                            iconColor: isDark
+                                ? Colors.white54
+                                : Colors.black38,
+                            isDark: isDark,
+                            child: TextFormField(
+                              controller: _counterpartyController,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isDark ? Colors.white : Colors.black87,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Person name',
+                                hintStyle: TextStyle(
+                                  color: isDark
+                                      ? AppColors.slate[500]
+                                      : AppColors.slate[400],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                border: InputBorder.none,
+                              ),
+                              validator: (v) =>
+                                  v!.isEmpty ? 'Required' : null,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Divider(
+                            color: isDark
+                                ? Colors.white10
+                                : Colors.black.withOpacity(0.05),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildFieldRow(
+                            icon: LucideIcons.indianRupee,
+                            iconColor: isDark
+                                ? AppColors.slate[400]!
+                                : AppColors.slate[600]!,
+                            isDark: isDark,
+                            child: TextFormField(
+                              controller: _amountController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    isDark ? Colors.white : Colors.black87,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '0.00',
+                                hintStyle: TextStyle(
+                                  color: isDark
+                                      ? AppColors.slate[500]
+                                      : AppColors.slate[400],
+                                ),
+                                border: InputBorder.none,
+                              ),
+                              validator: (v) =>
+                                  v!.isEmpty ? 'Required' : null,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Divider(
+                            color: isDark
+                                ? Colors.white10
+                                : Colors.black.withOpacity(0.05),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildFieldRow(
+                            icon: LucideIcons.fileText,
+                            iconColor: isDark
+                                ? Colors.white54
+                                : Colors.black38,
+                            isDark: isDark,
+                            child: TextFormField(
+                              controller: _descriptionController,
+                              maxLines: null,
+                              minLines: 3,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isDark ? Colors.white : Colors.black87,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Description (optional)',
+                                hintStyle: TextStyle(
+                                  color: isDark
+                                      ? AppColors.slate[500]
+                                      : AppColors.slate[400],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 180),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        DateFormat('MMM dd, yyyy').format(_selectedDate),
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              PrimaryButton(
-                text: 'Save Loan',
-                onPressed: _submit,
-                isLoading: _isLoading,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          _buildFloatingDock(isDark),
+        ],
       ),
     );
   }
 
-  Widget _buildTypeOption(String value, String label) {
+  Widget _buildTypeOption(
+    String value,
+    String label,
+    IconData icon,
+    bool isDark,
+  ) {
     final isSelected = _type == value;
     return GestureDetector(
       onTap: () => setState(() => _type = value),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected
+              ? (isDark ? Colors.white : Colors.black)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
           boxShadow: isSelected
-              ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)]
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
               : null,
         ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.black : Colors.grey,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 15,
+              color: isSelected
+                  ? (isDark ? Colors.black : Colors.white)
+                  : (isDark ? Colors.white38 : Colors.black26),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isSelected
+                    ? (isDark ? Colors.black : Colors.white)
+                    : (isDark ? Colors.white38 : Colors.black26),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
+  Widget _buildFieldRow({
     required IconData icon,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
+    required Color iconColor,
+    required Widget child,
+    required bool isDark,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(
-          icon,
-          color: isDark ? AppColors.slate[400] : AppColors.slate[500],
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.02),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDark ? AppColors.slate[700]! : AppColors.slate[300]!,
+        const SizedBox(width: 16),
+        Expanded(child: child),
+      ],
+    );
+  }
+
+  Widget _buildFloatingDock(bool isDark) {
+    return Positioned(
+      bottom: 5,
+      left: 20,
+      right: 20,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.slate[900] : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            _buildDockItem(
+              LucideIcons.calendar,
+              DateFormat('MMM dd').format(_selectedDate),
+              isDark,
+              _pickDate,
+            ),
+            _buildDockItem(
+              LucideIcons.tag,
+              _selectedCategoryName,
+              isDark,
+              _showCategoryPicker,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDockItem(
+    IconData icon,
+    String label,
+    bool isDark,
+    VoidCallback onTap,
+  ) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isDark ? Colors.white54 : Colors.black54,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+            ],
           ),
         ),
       ),

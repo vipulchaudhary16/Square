@@ -38,7 +38,7 @@ class AddEntryBottomSheet {
                   color: Colors.red,
                   onTap: () {
                     context.pop();
-                    context.push('/transactions/add-expense');
+                    context.pushReplacement('/transactions/add-expense');
                   },
                 ),
                 _buildOption(
@@ -49,7 +49,7 @@ class AddEntryBottomSheet {
                   color: Colors.green,
                   onTap: () {
                     context.pop();
-                    context.push('/transactions/add-income');
+                    context.pushReplacement('/transactions/add-income');
                   },
                 ),
                 _buildOption(
@@ -60,7 +60,7 @@ class AddEntryBottomSheet {
                   color: Colors.blue,
                   onTap: () {
                     context.pop();
-                    context.push('/transactions/add-investment');
+                    context.pushReplacement('/transactions/add-investment');
                   },
                 ),
                 _buildOption(
@@ -71,7 +71,7 @@ class AddEntryBottomSheet {
                   color: Colors.orange,
                   onTap: () {
                     context.pop();
-                    context.push('/transactions/add-loan');
+                    context.pushReplacement('/transactions/add-loan');
                   },
                 ),
               ],

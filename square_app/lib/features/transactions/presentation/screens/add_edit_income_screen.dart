@@ -4,8 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../categories/presentation/categories_provider.dart';
+import '../../../../shared/widgets/category_picker_sheet.dart';
 import '../../../transactions/presentation/transactions_provider.dart';
 
 class AddEditIncomeScreen extends ConsumerStatefulWidget {
@@ -18,16 +17,15 @@ class AddEditIncomeScreen extends ConsumerStatefulWidget {
 
 class _AddEditIncomeScreenState extends ConsumerState<AddEditIncomeScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _sourceController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
   String? _selectedCategoryId;
+  String _selectedCategoryName = 'Category';
 
   @override
   void dispose() {
-    _sourceController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -35,19 +33,16 @@ class _AddEditIncomeScreenState extends ConsumerState<AddEditIncomeScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
-
     try {
       final amount = double.parse(_amountController.text);
       final data = {
-        'source': _sourceController.text,
+        'source': '',
         'amount': amount,
         'description': _descriptionController.text,
         'date': _selectedDate.toUtc().toIso8601String(),
         'category_id': _selectedCategoryId ?? '',
       };
-
       await ref.read(incomesProvider.notifier).create(data);
       if (mounted) {
         context.pop();
@@ -73,9 +68,23 @@ class _AddEditIncomeScreenState extends ConsumerState<AddEditIncomeScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  void _showCategoryPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CategoryPickerSheet(
+        selectedId: _selectedCategoryId,
+        appliesTo: 'income',
+        onSelected: (id, name) => setState(() {
+          _selectedCategoryId = id;
+          _selectedCategoryName = name;
+        }),
+      ),
+    );
   }
 
   @override
@@ -83,140 +92,239 @@ class _AddEditIncomeScreenState extends ConsumerState<AddEditIncomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? AppColors.slate[950] : Colors.white,
       appBar: AppBar(
-        title: const Text('Add Income'),
+        title: Text(
+          'Add Income',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: Icon(
-            LucideIcons.arrowLeft,
-            color: isDark ? Colors.white : Colors.black,
+            LucideIcons.x,
+            color: isDark ? Colors.white70 : Colors.black54,
           ),
           onPressed: () => context.pop(),
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTextField(
-                controller: _sourceController,
-                label: 'Source',
-                icon: LucideIcons.briefcase,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _amountController,
-                label: 'Amount',
-                icon: LucideIcons.dollarSign,
-                keyboardType: TextInputType.number,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _descriptionController,
-                label: 'Description',
-                icon: LucideIcons.fileText,
-              ),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: _pickDate,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: isDark
-                          ? AppColors.slate[700]!
-                          : AppColors.slate[300]!,
+        actions: [
+          TextButton(
+            onPressed: _isLoading ? null : _submit,
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    'Save',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.calendar,
-                        color: isDark
-                            ? AppColors.slate[400]
-                            : AppColors.slate[500],
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12),
+                          _buildFieldRow(
+                            icon: LucideIcons.indianRupee,
+                            iconColor: isDark
+                                ? AppColors.slate[400]!
+                                : AppColors.slate[600]!,
+                            isDark: isDark,
+                            child: TextFormField(
+                              controller: _amountController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    isDark ? Colors.white : Colors.black87,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '0.00',
+                                hintStyle: TextStyle(
+                                  color: isDark
+                                      ? AppColors.slate[500]
+                                      : AppColors.slate[400],
+                                ),
+                                border: InputBorder.none,
+                              ),
+                              validator: (v) =>
+                                  v!.isEmpty ? 'Required' : null,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Divider(
+                            color: isDark
+                                ? Colors.white10
+                                : Colors.black.withOpacity(0.05),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildFieldRow(
+                            icon: LucideIcons.fileText,
+                            iconColor: isDark
+                                ? Colors.white54
+                                : Colors.black38,
+                            isDark: isDark,
+                            child: TextFormField(
+                              controller: _descriptionController,
+                              maxLines: null,
+                              minLines: 3,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isDark ? Colors.white : Colors.black87,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Description (optional)',
+                                hintStyle: TextStyle(
+                                  color: isDark
+                                      ? AppColors.slate[500]
+                                      : AppColors.slate[400],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 180),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        DateFormat('MMM dd, yyyy').format(_selectedDate),
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Consumer(
-                builder: (context, ref, _) {
-                  final cats = ref.watch(categoriesProvider).value
-                          ?.where((c) => c.appliesTo.contains('income'))
-                          .toList() ??
-                      [];
-                  return DropdownButtonFormField<String>(
-                    initialValue: _selectedCategoryId,
-                    hint: const Text('Select category'),
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: cats
-                        .map((cat) => DropdownMenuItem(
-                              value: cat.id,
-                              child: Text(cat.name),
-                            ))
-                        .toList(),
-                    onChanged: (val) =>
-                        setState(() => _selectedCategoryId = val),
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
-              PrimaryButton(
-                text: 'Save Income',
-                onPressed: _submit,
-                isLoading: _isLoading,
-              ),
-            ],
+              ],
+            ),
           ),
+          _buildFloatingDock(isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFieldRow({
+    required IconData icon,
+    required Color iconColor,
+    required Widget child,
+    required bool isDark,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.02),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        const SizedBox(width: 16),
+        Expanded(child: child),
+      ],
+    );
+  }
+
+  Widget _buildFloatingDock(bool isDark) {
+    return Positioned(
+      bottom: 5,
+      left: 20,
+      right: 20,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.slate[900] : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            _buildDockItem(
+              LucideIcons.calendar,
+              DateFormat('MMM dd').format(_selectedDate),
+              isDark,
+              _pickDate,
+            ),
+            _buildDockItem(
+              LucideIcons.tag,
+              _selectedCategoryName,
+              isDark,
+              _showCategoryPicker,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(
-          icon,
-          color: isDark ? AppColors.slate[400] : AppColors.slate[500],
-        ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDark ? AppColors.slate[700]! : AppColors.slate[300]!,
+  Widget _buildDockItem(
+    IconData icon,
+    String label,
+    bool isDark,
+    VoidCallback onTap,
+  ) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isDark ? Colors.white54 : Colors.black54,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+            ],
           ),
         ),
       ),
