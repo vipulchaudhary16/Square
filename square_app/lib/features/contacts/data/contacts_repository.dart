@@ -7,28 +7,38 @@ class ContactsRepository {
   final Dio _dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
 
   Future<List<Contact>> getContacts(String token) async {
-    final res = await _dio.get(
-      '/contacts',
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
-    return (res.data as List).map((j) => Contact.fromJson(j)).toList();
+    try {
+      final res = await _dio.get(
+        '/contacts',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return (res.data as List? ?? [])
+          .map((j) => Contact.fromJson(j as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch contacts: $e');
+    }
   }
 
   Future<ContactSearchResult> search(String token, String query) async {
-    final res = await _dio.get(
-      '/contacts/search',
-      queryParameters: {'q': query},
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
-    final data = res.data as Map<String, dynamic>;
-    return ContactSearchResult(
-      contacts: (data['contacts'] as List? ?? [])
-          .map((j) => Contact.fromJson(j))
-          .toList(),
-      platformUsers: (data['platform_users'] as List? ?? [])
-          .map((j) => PlatformUserResult.fromJson(j))
-          .toList(),
-    );
+    try {
+      final res = await _dio.get(
+        '/contacts/search',
+        queryParameters: {'q': query},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      final data = res.data as Map<String, dynamic>;
+      return ContactSearchResult(
+        contacts: (data['contacts'] as List? ?? [])
+            .map((j) => Contact.fromJson(j))
+            .toList(),
+        platformUsers: (data['platform_users'] as List? ?? [])
+            .map((j) => PlatformUserResult.fromJson(j))
+            .toList(),
+      );
+    } catch (e) {
+      throw Exception('Failed to search contacts: $e');
+    }
   }
 
   Future<Contact> createContact(
@@ -38,32 +48,40 @@ class ContactsRepository {
     String? email,
     String? linkedUserId,
   }) async {
-    final res = await _dio.post(
-      '/contacts',
-      data: {
-        'name': name,
-        if (phone != null) 'phone': phone,
-        if (email != null) 'email': email,
-        if (linkedUserId != null) 'linked_user_id': linkedUserId,
-      },
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
-    return Contact.fromJson(res.data);
+    try {
+      final res = await _dio.post(
+        '/contacts',
+        data: {
+          'name': name,
+          if (phone != null) 'phone': phone,
+          if (email != null) 'email': email,
+          if (linkedUserId != null) 'linked_user_id': linkedUserId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return Contact.fromJson(res.data);
+    } catch (e) {
+      throw Exception('Failed to create contact: $e');
+    }
   }
 
-  Future<Map<String, dynamic>> getContactLoans(
+  Future<ContactLoansResult> getContactLoans(
       String token, String contactId) async {
-    final res = await _dio.get(
-      '/contacts/$contactId/loans',
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
-    final data = res.data as Map<String, dynamic>;
-    return {
-      'contact': Contact.fromJson(data['contact']),
-      'loans': (data['loans'] as List)
-          .map((j) => Loan.fromJson(j))
-          .toList(),
-      'net_balance': data['net_balance'],
-    };
+    try {
+      final res = await _dio.get(
+        '/contacts/$contactId/loans',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      final data = res.data as Map<String, dynamic>;
+      return ContactLoansResult(
+        contact: Contact.fromJson(data['contact']),
+        loans: (data['loans'] as List? ?? [])
+            .map((j) => Loan.fromJson(j as Map<String, dynamic>))
+            .toList(),
+        netBalance: (data['net_balance'] as Map<String, dynamic>?) ?? {},
+      );
+    } catch (e) {
+      throw Exception('Failed to fetch contact loans: $e');
+    }
   }
 }

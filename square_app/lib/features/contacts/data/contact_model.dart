@@ -1,3 +1,5 @@
+import '../../transactions/data/loan_model.dart';
+
 class Contact {
   final String id;
   final String name;
@@ -65,4 +67,16 @@ class ContactSearchResult {
   final List<PlatformUserResult> platformUsers;
 
   ContactSearchResult({required this.contacts, required this.platformUsers});
+}
+
+class ContactLoansResult {
+  final Contact contact;
+  final List<Loan> loans;
+  final Map<String, dynamic> netBalance;
+
+  ContactLoansResult({
+    required this.contact,
+    required this.loans,
+    required this.netBalance,
+  });
 }
