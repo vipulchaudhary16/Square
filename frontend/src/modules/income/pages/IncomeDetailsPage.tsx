@@ -280,7 +280,7 @@ const IncomeDetailsPage: React.FC = () => {
                                 <div>
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800/50 uppercase tracking-wide">
-                                            {income.category}
+                                            {income.category_name}
                                         </span>
                                     </div>
                                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
