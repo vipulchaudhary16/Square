@@ -7,18 +7,21 @@ module Api
 
       def index
         loans = Loan.for_user(current_user.id)
-                    .includes(:contact, :category)
+                    .includes(:contact, :category, :loan_payments)
                     .order(date: :desc)
-        render json: loans.map { |l| serialize(l) }
+        render json: loans.map { |l| serialize(l, InterestCalculatorService.new(l).call) }
       end
 
       def show
+        calc     = InterestCalculatorService.new(@loan).call
         logs     = @loan.activity_logs.includes(:user).order(created_at: :desc)
         comments = @loan.comments.includes(:user).order(created_at: :asc)
         render json: {
-          loan:     serialize(@loan),
-          logs:     serialize_logs(logs),
-          comments: serialize_comments(comments)
+          loan:              serialize(@loan, calc),
+          payments:          serialize_payments(@loan.loan_payments.order(paid_at: :desc)),
+          interest_timeline: calc[:interest_timeline],
+          logs:              serialize_logs(logs),
+          comments:          serialize_comments(comments)
         }
       end
 
@@ -106,7 +109,8 @@ module Api
         end
       end
 
-      def serialize(l)
+      def serialize(l, calc = nil)
+        calc ||= InterestCalculatorService.new(l).call
         {
           id:                  l.id.to_s,
           lender_user_id:      l.lender_user_id.to_s,
@@ -115,6 +119,9 @@ module Api
           contact_name:        l.contact&.name || "",
           direction:           l.lender_for?(current_user.id) ? "lent" : "borrowed",
           amount:              l.amount.to_f,
+          outstanding:         calc[:outstanding],
+          accrued_interest:    calc[:accrued_interest],
+          total_due:           calc[:total_due],
           date:                l.date.iso8601,
           due_date:            l.due_date&.iso8601,
           status:              l.status,
@@ -140,6 +147,19 @@ module Api
 
       def serialize_comment(c)
         { id: c.id.to_s, user_id: c.user_id.to_s, text: c.text, created_at: c.created_at.iso8601 }
+      end
+
+      def serialize_payments(payments)
+        payments.map do |p|
+          {
+            id:         p.id.to_s,
+            loan_id:    p.loan_id.to_s,
+            amount:     p.amount.to_f,
+            paid_at:    p.paid_at.iso8601,
+            note:       p.note,
+            created_at: p.created_at.iso8601
+          }
+        end
       end
     end
   end

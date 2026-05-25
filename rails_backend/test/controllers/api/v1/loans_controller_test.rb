@@ -111,4 +111,36 @@ class Api::V1::LoansControllerTest < ActionDispatch::IntegrationTest
           headers: auth_header(@lender)
     assert_response :forbidden
   end
+
+  # --- interest fields in show ---
+
+  test "show includes outstanding, accrued_interest, total_due in loan object" do
+    get "/api/loans/#{@loan.id}", headers: auth_header(@lender)
+    assert_response :ok
+    loan_json = JSON.parse(response.body)["loan"]
+    assert loan_json.key?("outstanding")
+    assert loan_json.key?("accrued_interest")
+    assert loan_json.key?("total_due")
+    assert_equal @loan.amount.to_f, loan_json["outstanding"]
+    assert_equal 0.0, loan_json["accrued_interest"]
+  end
+
+  test "show includes payments array" do
+    create(:loan_payment, loan: @loan, amount: 1000)
+    get "/api/loans/#{@loan.id}", headers: auth_header(@lender)
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert body.key?("payments")
+    assert_equal 1, body["payments"].length
+    assert_equal 1000.0, body["payments"].first["amount"]
+  end
+
+  test "index includes outstanding in each loan" do
+    get "/api/loans", headers: auth_header(@lender)
+    assert_response :ok
+    first = JSON.parse(response.body).first
+    assert first.key?("outstanding")
+    assert first.key?("accrued_interest")
+    assert first.key?("total_due")
+  end
 end
