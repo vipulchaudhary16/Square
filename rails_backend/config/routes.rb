@@ -49,6 +49,8 @@ Rails.application.routes.draw do
       member do
         post  :comments
         patch :confirmation
+        get   'payments',  to: 'loan_payments#index'
+        post  'payments',  to: 'loan_payments#create'
       end
     end
 
