@@ -9,6 +9,7 @@ module Api
 
       def create
         return render json: { error: "Forbidden" }, status: :forbidden unless @loan.lender_for?(current_user.id)
+        return render json: { error: "Loan is already settled" }, status: :unprocessable_entity if @loan.status == "PAID"
 
         paid_at = params[:paid_at].present? ? Time.zone.parse(params[:paid_at]) : Time.current
         payment = @loan.loan_payments.create!(amount: params[:amount], paid_at: paid_at, note: params[:note])
@@ -46,15 +47,18 @@ module Api
         calc = InterestCalculatorService.new(@loan).call
         return unless calc[:accrued_interest] > 0
 
-        category = current_user.categories.find_or_create_by!(name: "Interest Income") do |c|
-          c.applies_to = ["income"]
-        end
-        current_user.incomes.create!(
-          source:      "Interest on loan: #{@loan.contact.name}",
+        contact_name = @loan.contact.name
+        category = current_user.categories.find_or_initialize_by(name: "Interest Income")
+        category.applies_to = ["income"]
+        category.save! if category.new_record?
+
+        income = current_user.incomes.find_or_initialize_by(source: "Interest on loan: #{contact_name}")
+        income.assign_attributes(
           amount:      calc[:accrued_interest],
           date:        Date.today,
           category_id: category.id
         )
+        income.save!
       end
 
       def serialize_payments(payments)

@@ -4,7 +4,7 @@ class InterestCalculatorService
   end
 
   def call
-    outstanding = (@loan.amount - @loan.loan_payments.sum(:amount)).to_f
+    outstanding = [(@loan.amount - @loan.loan_payments.sum(:amount)).to_f, 0.0].max
     return base_result(outstanding) if @loan.interest_mode == "none"
 
     daily_rate = normalize_rate
