@@ -47,7 +47,7 @@ class LoanDetailScreen extends ConsumerWidget {
   }
 }
 
-class _LoanDetailBody extends ConsumerWidget {
+class _LoanDetailBody extends ConsumerStatefulWidget {
   final LoanDetail detail;
   final String loanId;
   final bool isDark;
@@ -60,7 +60,20 @@ class _LoanDetailBody extends ConsumerWidget {
     required this.onRefresh,
   });
 
-  Future<String?> _currentUserId() async {
+  @override
+  ConsumerState<_LoanDetailBody> createState() => _LoanDetailBodyState();
+}
+
+class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
+  late final Future<String?> _userIdFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userIdFuture = _loadUserId();
+  }
+
+  Future<String?> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString('user');
     if (userData == null) return null;
@@ -68,13 +81,16 @@ class _LoanDetailBody extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final detail = widget.detail;
     final loan = detail.loan;
     final isLent = loan.direction == 'lent';
     final accentColor = isLent ? Colors.green[600]! : Colors.red[400]!;
+    final isDark = widget.isDark;
+    final onRefresh = widget.onRefresh;
 
     return FutureBuilder<String?>(
-      future: _currentUserId(),
+      future: _userIdFuture,
       builder: (context, snap) {
         final currentUserId = snap.data;
         final isLender = currentUserId != null &&
@@ -402,7 +418,7 @@ class _SectionHeader extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
-          color: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFCCCCCC),
+          color: isDark ? const Color(0xFFCCCCCC) : const Color(0xFF3A3A3A),
         ),
       ),
     );
