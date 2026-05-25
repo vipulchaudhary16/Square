@@ -18,6 +18,9 @@ class Loan {
   final String categoryId;
   final String categoryName;
   final DateTime createdAt;
+  final double outstanding;
+  final double accruedInterest;
+  final double totalDue;
 
   Loan({
     required this.id,
@@ -39,7 +42,12 @@ class Loan {
     this.categoryId = '',
     this.categoryName = '',
     required this.createdAt,
-  });
+    double? outstanding,
+    double? accruedInterest,
+    double? totalDue,
+  })  : outstanding = outstanding ?? amount,
+        accruedInterest = accruedInterest ?? 0.0,
+        totalDue = totalDue ?? amount;
 
   factory Loan.fromJson(Map<String, dynamic> json) => Loan(
         id: json['id'] ?? '',
@@ -65,6 +73,9 @@ class Loan {
         categoryName: json['category_name'] ?? '',
         createdAt: DateTime.parse(
             json['created_at'] ?? DateTime.now().toIso8601String()),
+        outstanding: (json['outstanding'] as num?)?.toDouble(),
+        accruedInterest: (json['accrued_interest'] as num?)?.toDouble(),
+        totalDue: (json['total_due'] as num?)?.toDouble(),
       );
 
   bool get isPending => status == 'PENDING';
