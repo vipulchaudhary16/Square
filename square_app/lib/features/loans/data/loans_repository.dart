@@ -76,7 +76,7 @@ class LoansRepository {
       await _dio.post(
         '/loans/$loanId/reminders',
         data: {
-          'remind_at':      remindAt.toIso8601String(),
+          'remind_at':      remindAt.toUtc().toIso8601String(),
           'nudge_borrower': nudgeBorrower,
           'via_push':       viaPush,
           'via_email':      viaEmail,

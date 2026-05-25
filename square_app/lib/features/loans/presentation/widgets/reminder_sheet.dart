@@ -51,7 +51,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null && mounted) setState(() => _selectedDate = picked);
   }
 
   Future<void> _submit() async {
@@ -173,7 +173,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
-          if (widget.loan.borrowerUserId != null) ...[
+          if (widget.loan.direction == 'lent' && widget.loan.borrowerUserId != null) ...[
             const SizedBox(height: 12),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
