@@ -11,6 +11,7 @@ class Loan < ApplicationRecord
   belongs_to :category, optional: true
   has_many :activity_logs, as: :loggable, dependent: :destroy
   has_many :comments,      as: :commentable, dependent: :destroy
+  has_many :loan_payments, dependent: :destroy
 
   validates :lender_user_id, :contact_id, :amount, :date, :status, presence: true
   validates :status,              inclusion: { in: STATUSES }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_24_161248) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_25_124915) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -183,6 +183,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_161248) do
     t.index ["user_id"], name: "index_investments_on_user_id"
   end
 
+  create_table "loan_payments", force: :cascade do |t|
+    t.bigint "loan_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.datetime "paid_at", null: false
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["loan_id"], name: "index_loan_payments_on_loan_id"
+  end
+
   create_table "loans", force: :cascade do |t|
     t.decimal "amount", precision: 12, scale: 2, null: false
     t.datetime "date", null: false
@@ -258,6 +268,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_24_161248) do
   add_foreign_key "incomes", "users"
   add_foreign_key "investments", "categories"
   add_foreign_key "investments", "users"
+  add_foreign_key "loan_payments", "loans"
   add_foreign_key "loans", "categories"
   add_foreign_key "loans", "contacts"
   add_foreign_key "loans", "users", column: "borrower_user_id", on_delete: :nullify
