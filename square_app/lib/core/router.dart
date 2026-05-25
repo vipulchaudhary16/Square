@@ -21,6 +21,7 @@ import '../../features/groups/presentation/screens/group_details_screen.dart';
 import '../../features/contacts/presentation/screens/contacts_screen.dart';
 import '../../features/contacts/presentation/screens/add_contact_screen.dart';
 import '../../features/contacts/presentation/screens/contact_detail_screen.dart';
+import '../../features/loans/presentation/loan_detail_screen.dart';
 
 // Keys for navigation
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -48,6 +49,39 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/auth', builder: (context, state) => const AuthScreen()),
+      // Full-screen routes that render above the shell (no bottom nav)
+      GoRoute(
+        path: '/groups/create',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CreateGroupScreen(),
+      ),
+      GoRoute(
+        path: '/profile/features',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const FeaturesSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile/categories',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CategoriesSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/contacts/add',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AddContactScreen(),
+      ),
+      GoRoute(
+        path: '/contacts/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            ContactDetailScreen(contactId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/loans/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            LoanDetailScreen(loanId: state.pathParameters['id']!),
+      ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
@@ -58,13 +92,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/dashboard',
             builder: (context, state) => const DashboardScreen(),
           ),
-          // Placeholders for other routes to prevent crashes if clicked in nav
           GoRoute(
-            path: '/transactions', // Changed from /expenses
+            path: '/transactions',
             builder: (context, state) => const TransactionsScreen(),
             routes: [
               GoRoute(
-                path: 'add-expense', // /transactions/add-expense
+                path: 'add-expense',
                 builder: (context, state) {
                   final extra = state.extra as Map<String, dynamic>? ?? {};
                   final groupId = extra['groupId'] as String?;
@@ -72,15 +105,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                 },
               ),
               GoRoute(
-                path: 'add-income', // /transactions/add-income
+                path: 'add-income',
                 builder: (context, state) => const AddEditIncomeScreen(),
               ),
               GoRoute(
-                path: 'add-investment', // /transactions/add-investment
+                path: 'add-investment',
                 builder: (context, state) => const AddEditInvestmentScreen(),
               ),
               GoRoute(
-                path: 'add-loan', // /transactions/add-loan
+                path: 'add-loan',
                 builder: (context, state) => const AddEditLoanScreen(),
               ),
               GoRoute(
@@ -91,8 +124,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 },
               ),
               GoRoute(
-                path:
-                    'expenses/:id', // Explicitly nested for clarity: /transactions/expenses/:id
+                path: 'expenses/:id',
                 builder: (context, state) {
                   final expense = state.extra as Expense;
                   return ExpenseDetailScreen(expense: expense);
@@ -111,11 +143,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const GroupsScreen(),
             routes: [
               GoRoute(
-                path: 'create',
-                parentNavigatorKey: _rootNavigatorKey, // Full screen for create
-                builder: (context, state) => const CreateGroupScreen(),
-              ),
-              GoRoute(
                 path: ':id',
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
@@ -127,18 +154,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
-            routes: [
-              GoRoute(
-                path: 'features',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const FeaturesSettingsScreen(),
-              ),
-              GoRoute(
-                path: 'categories',
-                parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => const CategoriesSettingsScreen(),
-              ),
-            ],
           ),
           GoRoute(
             path: '/expenses/:id',
@@ -150,25 +165,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/contacts',
             builder: (context, state) => const ContactsScreen(),
-          ),
-          GoRoute(
-            path: '/contacts/add',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) => const AddContactScreen(),
-          ),
-          GoRoute(
-            path: '/contacts/:id',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) =>
-                ContactDetailScreen(contactId: state.pathParameters['id']!),
-          ),
-          GoRoute(
-            path: '/loans/:id',
-            parentNavigatorKey: _rootNavigatorKey,
-            builder: (context, state) => Scaffold(
-              appBar: AppBar(title: const Text('Loan Detail')),
-              body: Center(child: Text('Loan ${state.pathParameters['id']}')),
-            ),
           ),
         ],
       ),

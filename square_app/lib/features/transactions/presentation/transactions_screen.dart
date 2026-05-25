@@ -12,6 +12,7 @@ import '../data/investment_model.dart';
 import '../data/loan_model.dart';
 import '../presentation/transactions_provider.dart';
 import '../../../../shared/widgets/add_entry_bottom_sheet.dart';
+import '../../../../shared/widgets/menu_button.dart';
 import 'widgets/premium_transaction_card.dart';
 
 class _TabInfo {
@@ -85,6 +86,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
             letterSpacing: -0.5,
           ),
         ),
+        actions: const [MenuButton()],
       ),
       body: Column(
         children: [
@@ -364,7 +366,7 @@ class TransactionListView<T> extends ConsumerWidget {
         type: TransactionType.loan,
         category: isLent ? 'Lent' : 'Borrowed',
         isPositive: isLent,
-        onTap: () {},
+        onTap: () => context.push('/loans/${item.id}'),
       );
     }
     return const SizedBox.shrink();
