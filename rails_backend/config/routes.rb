@@ -51,6 +51,7 @@ Rails.application.routes.draw do
         patch :confirmation
         get   'payments',  to: 'loan_payments#index'
         post  'payments',  to: 'loan_payments#create'
+        post  'reminders', to: 'loan_reminders#create'
       end
     end
 
