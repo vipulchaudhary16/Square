@@ -351,8 +351,7 @@ class TransactionListView<T> extends ConsumerWidget {
         type: TransactionType.expense,
         category: null,
         isPositive: false,
-        onTap: () =>
-            context.push('/transactions/expenses/${item.id}', extra: item),
+        onTap: () => context.push('/transactions/expenses/${item.id}'),
       );
     } else if (item is Income) {
       return PremiumTransactionCard(

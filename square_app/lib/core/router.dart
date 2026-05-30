@@ -12,6 +12,7 @@ import '../../features/transactions/presentation/screens/add_edit_investment_scr
 import '../../features/transactions/presentation/screens/add_edit_loan_screen.dart';
 import '../../features/expense/data/expense_model.dart';
 import '../../features/transactions/data/loan_model.dart';
+import '../../features/contacts/data/contact_model.dart';
 import '../../features/auth/presentation/auth_provider.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/feature_flags/presentation/features_settings_screen.dart';
@@ -70,6 +71,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/contacts/add',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AddContactScreen(),
+      ),
+      GoRoute(
+        path: '/contacts/:id/edit',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final contact = state.extra as Contact;
+          return AddContactScreen(contact: contact);
+        },
       ),
       GoRoute(
         path: '/contacts/:id',
@@ -134,10 +143,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: 'expenses/:id',
-                builder: (context, state) {
-                  final expense = state.extra as Expense;
-                  return ExpenseDetailScreen(expense: expense);
-                },
+                builder: (context, state) =>
+                    ExpenseDetailScreen(expenseId: state.pathParameters['id']!),
               ),
             ],
           ),
@@ -166,10 +173,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/expenses/:id',
-            builder: (context, state) {
-              final expense = state.extra as Expense;
-              return ExpenseDetailScreen(expense: expense);
-            },
+            builder: (context, state) =>
+                ExpenseDetailScreen(expenseId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: '/contacts',

@@ -62,7 +62,7 @@ class ExpenseListScreen extends ConsumerWidget {
                         expense: expense,
                         currentUserId: currentUser?.id ?? '',
                         onTap: () {
-                          context.go('/expenses/${expense.id}', extra: expense);
+                          context.go('/expenses/${expense.id}');
                         },
                       );
                     }, childCount: expenses.length),
