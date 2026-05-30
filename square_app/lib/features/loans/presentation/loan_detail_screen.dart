@@ -14,7 +14,7 @@ import 'widgets/interest_timeline_card.dart';
 import 'widgets/record_payment_sheet.dart';
 import 'widgets/reminder_sheet.dart';
 
-final _loanDetailProvider = FutureProvider.family<LoanDetail, String>(
+final _loanDetailProvider = FutureProvider.autoDispose.family<LoanDetail, String>(
   (ref, loanId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
@@ -172,40 +172,46 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
                       style: TextStyle(fontWeight: FontWeight.w600)),
                 )
               : null,
-          body: ListView(
-            padding: const EdgeInsets.only(bottom: 100),
-            children: [
-              _AmountCard(loan: loan, accentColor: accentColor, isDark: isDark),
-              if (loan.interestMode != 'none')
-                InterestTimelineCard(
-                  timeline: detail.interestTimeline,
-                  accruedInterest: loan.accruedInterest,
-                  isDark: isDark,
-                ),
-              if (isBorrower && loan.status != 'PAID')
-                FutureBuilder<String>(
-                  future: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    return prefs.getString('token') ?? '';
-                  }(),
-                  builder: (context, snap) {
-                    final token = snap.data ?? '';
-                    return _ConfirmationBar(
-                      loan: loan,
-                      token: token,
-                      repository: ref.read(loansRepositoryProvider),
-                      onUpdated: onRefresh,
-                    );
-                  },
-                ),
-              _SectionHeader(label: 'Payment History', isDark: isDark),
-              if (detail.payments.isEmpty)
-                _EmptyPayments(isDark: isDark)
-              else
-                ...detail.payments.map(
-                  (p) => _PaymentTile(payment: p, isDark: isDark),
-                ),
-            ],
+          body: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(_loanDetailProvider(widget.loanId));
+              await ref.read(_loanDetailProvider(widget.loanId).future);
+            },
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: 100),
+              children: [
+                _AmountCard(loan: loan, accentColor: accentColor, isDark: isDark),
+                if (loan.interestMode != 'none')
+                  InterestTimelineCard(
+                    timeline: detail.interestTimeline,
+                    accruedInterest: loan.accruedInterest,
+                    isDark: isDark,
+                  ),
+                if (isBorrower && loan.status != 'PAID')
+                  FutureBuilder<String>(
+                    future: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      return prefs.getString('token') ?? '';
+                    }(),
+                    builder: (context, snap) {
+                      final token = snap.data ?? '';
+                      return _ConfirmationBar(
+                        loan: loan,
+                        token: token,
+                        repository: ref.read(loansRepositoryProvider),
+                        onUpdated: onRefresh,
+                      );
+                    },
+                  ),
+                _SectionHeader(label: 'Payment History', isDark: isDark),
+                if (detail.payments.isEmpty)
+                  _EmptyPayments(isDark: isDark)
+                else
+                  ...detail.payments.map(
+                    (p) => _PaymentTile(payment: p, isDark: isDark),
+                  ),
+              ],
+            ),
           ),
         );
       },
