@@ -49,7 +49,23 @@ RefreshIndicator.onRefresh:
 | `contacts_screen.dart` | `contactsProvider` |
 | `expense_list_screen.dart` | `expenseProvider` |
 | `groups_screen.dart` | `groupsProvider` |
-| `transactions_screen.dart` | transactions provider |
+| `transactions_screen.dart` | 4 tab providers (see below) |
+
+### Transactions Screen — Tab Refresh
+
+The transactions screen has 4 tabs, each backed by its own `AsyncNotifierProvider`:
+
+| Tab | Provider |
+|---|---|
+| Expenses | `transactionsExpensesProvider` |
+| Income | `incomesProvider` |
+| Invest | `investmentsProvider` |
+| Loans | `loansProvider` |
+
+Two refresh triggers for transactions:
+
+1. **Pull-to-refresh per tab** — `TransactionListView` wraps its `ListView.builder` in a `RefreshIndicator`. `onRefresh` invalidates the relevant provider and awaits its future.
+2. **Tab switch refresh** — The `TabController` listener in `TransactionsScreen` calls `ref.invalidate(activeTabProvider)` when `_selectedIndex` changes, so switching to a tab always re-fetches its data.
 
 ## Navigation Changes
 
