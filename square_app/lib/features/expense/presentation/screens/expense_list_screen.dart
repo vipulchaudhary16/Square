@@ -52,6 +52,7 @@ class ExpenseListScreen extends ConsumerWidget {
               await ref.read(expenseProvider.future);
             },
             child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.all(16),

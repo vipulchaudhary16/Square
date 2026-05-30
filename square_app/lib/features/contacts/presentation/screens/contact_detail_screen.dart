@@ -4,10 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/currency_formatter.dart';
 import '../../data/contact_model.dart';
-import '../../data/contacts_repository.dart';
 import '../contacts_provider.dart';
 import '../../../../../features/transactions/data/loan_model.dart';
 
@@ -34,16 +32,11 @@ class ContactDetailScreen extends ConsumerWidget {
       body: data.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (result) => RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(_contactLoansProvider(contactId));
-            await ref.read(_contactLoansProvider(contactId).future);
-          },
-          child: _ContactDetailBody(
-            result: result,
-            isDark: isDark,
-            onPop: () => context.pop(),
-          ),
+        data: (result) => _ContactDetailBody(
+          result: result,
+          isDark: isDark,
+          onPop: () => context.pop(),
+          contactId: contactId,
         ),
       ),
     );
@@ -54,11 +47,13 @@ class _ContactDetailBody extends StatelessWidget {
   final ContactLoansResult result;
   final bool isDark;
   final VoidCallback onPop;
+  final String contactId;
 
   const _ContactDetailBody({
     required this.result,
     required this.isDark,
     required this.onPop,
+    required this.contactId,
   });
 
   @override
@@ -129,8 +124,8 @@ class _ContactDetailBody extends StatelessWidget {
         ],
         body: TabBarView(
           children: [
-            _LoanList(loans: activeLoans, isDark: isDark),
-            _LoanList(loans: settledLoans, isDark: isDark),
+            _LoanList(loans: activeLoans, isDark: isDark, contactId: contactId),
+            _LoanList(loans: settledLoans, isDark: isDark, contactId: contactId),
           ],
         ),
       ),
@@ -328,14 +323,15 @@ class _BalanceCard extends StatelessWidget {
   }
 }
 
-class _LoanList extends StatelessWidget {
+class _LoanList extends ConsumerWidget {
   final List<Loan> loans;
   final bool isDark;
+  final String contactId;
 
-  const _LoanList({required this.loans, required this.isDark});
+  const _LoanList({required this.loans, required this.isDark, required this.contactId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (loans.isEmpty) {
       return Center(
         child: Column(
@@ -356,10 +352,17 @@ class _LoanList extends StatelessWidget {
         ),
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      itemCount: loans.length,
-      itemBuilder: (_, i) => _LoanCard(loan: loans[i], isDark: isDark),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(_contactLoansProvider(contactId));
+        await ref.read(_contactLoansProvider(contactId).future);
+      },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        itemCount: loans.length,
+        itemBuilder: (_, i) => _LoanCard(loan: loans[i], isDark: isDark),
+      ),
     );
   }
 }

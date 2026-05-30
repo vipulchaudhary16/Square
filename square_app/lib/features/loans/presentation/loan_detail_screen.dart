@@ -178,6 +178,7 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
               await ref.read(_loanDetailProvider(widget.loanId).future);
             },
             child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(bottom: 100),
               children: [
                 _AmountCard(loan: loan, accentColor: accentColor, isDark: isDark),

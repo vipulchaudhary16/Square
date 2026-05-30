@@ -58,7 +58,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
-      if (_tabController.index != _selectedIndex) {
+      if (_tabController.index != _selectedIndex && !_tabController.indexIsChanging) {
         setState(() => _selectedIndex = _tabController.index);
         _invalidateActiveTab();
       }

@@ -632,7 +632,7 @@ class _ExpenseList extends ConsumerWidget {
                         expense: expense,
                         currentUserId: currentUser?.id ?? '',
                         onTap: () {
-                          context.push('/transactions/expenses/${expense.id}', extra: expense);
+                          context.push('/transactions/expenses/${expense.id}');
                         },
                       ),
                     );
