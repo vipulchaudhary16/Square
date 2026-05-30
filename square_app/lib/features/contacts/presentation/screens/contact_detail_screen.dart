@@ -15,7 +15,7 @@ final _contactLoansProvider =
     FutureProvider.family<ContactLoansResult, String>(
   (ref, contactId) async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token') ?? '';
+    final token = prefs.getString('token') ?? '';
     return ref.read(contactsRepositoryProvider).getContactLoans(token, contactId);
   },
 );

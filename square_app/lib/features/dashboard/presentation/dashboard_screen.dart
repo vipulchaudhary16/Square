@@ -10,6 +10,7 @@ import '../../feature_flags/presentation/feature_flags_provider.dart';
 import '../../../../shared/widgets/amount_text.dart';
 import '../../../../shared/widgets/glass_container.dart';
 import '../../transactions/presentation/widgets/premium_transaction_card.dart';
+import '../../../../shared/widgets/menu_button.dart';
 import 'dashboard_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -48,9 +49,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         automaticallyImplyLeading: false, // No back button on main tabs
         backgroundColor: Colors.transparent,
         actions: [
-          // Profile Icon moved here
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 4.0),
             child: InkWell(
               onTap: () => context.go('/profile'),
               child: CircleAvatar(
@@ -67,6 +67,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
           ),
+          const MenuButton(),
         ],
       ),
       body: dashboardState.when(

@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../contacts_provider.dart';
 import '../../data/contact_model.dart';
+import '../../../../../shared/widgets/menu_button.dart';
 
 class ContactsScreen extends ConsumerWidget {
   const ContactsScreen({super.key});
@@ -33,6 +34,7 @@ class ContactsScreen extends ConsumerWidget {
                 color: isDark ? Colors.white70 : Colors.black54),
             onPressed: () => context.push('/contacts/add'),
           ),
+          const MenuButton(),
         ],
       ),
       body: contacts.when(

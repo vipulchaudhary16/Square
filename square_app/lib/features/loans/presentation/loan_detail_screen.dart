@@ -119,7 +119,17 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
               ),
             ),
             actions: [
-              if (isLender)
+              if (isLender) ...[
+                IconButton(
+                  icon: Icon(LucideIcons.pencil,
+                      color: isDark ? Colors.white70 : Colors.black54),
+                  onPressed: () async {
+                    final refreshed = await context.push<bool>(
+                        '/loans/${loan.id}/edit',
+                        extra: loan);
+                    if (refreshed == true) onRefresh();
+                  },
+                ),
                 IconButton(
                   icon: Icon(LucideIcons.bell,
                       color: isDark ? Colors.white70 : Colors.black54),
@@ -136,6 +146,7 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
                     }
                   },
                 ),
+              ],
             ],
           ),
           floatingActionButton: isLender && loan.status != 'PAID'
@@ -332,6 +343,10 @@ class _AmountCard extends StatelessWidget {
                     highlight: true),
               ],
             ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            _InterestDetailsRow(loan: loan, isDark: isDark),
           ],
         ],
       ),
@@ -365,6 +380,78 @@ class _StatusChip extends StatelessWidget {
       child: Text(status,
           style: TextStyle(
               fontSize: 10, fontWeight: FontWeight.w700, color: color)),
+    );
+  }
+}
+
+class _InterestDetailsRow extends StatelessWidget {
+  final Loan loan;
+  final bool isDark;
+  const _InterestDetailsRow({required this.loan, required this.isDark});
+
+  String get _modeLabel {
+    switch (loan.interestMode) {
+      case 'from_start': return 'From start';
+      case 'penalty':    return 'Penalty';
+      default:           return loan.interestMode;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final chips = <(String, String)>[
+      if (loan.interestRate != null)
+        ('Rate', '${loan.interestRate!.toStringAsFixed(loan.interestRate! % 1 == 0 ? 0 : 2)}%'),
+      if (loan.interestPeriod != null)
+        ('Per', '${loan.interestPeriod![0].toUpperCase()}${loan.interestPeriod!.substring(1)}'),
+      if (loan.interestBasis != null)
+        ('Calc', loan.interestBasis == 'total' ? 'Compound' : 'Simple'),
+      ('Type', _modeLabel),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      children: chips.map((c) => _InterestChip(label: c.$1, value: c.$2, isDark: isDark)).toList(),
+    );
+  }
+}
+
+class _InterestChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isDark;
+  const _InterestChip({required this.label, required this.value, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: '$label  ',
+              style: TextStyle(
+                fontSize: 10,
+                color: isDark ? Colors.white38 : Colors.black38,
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white70 : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

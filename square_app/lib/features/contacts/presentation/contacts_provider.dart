@@ -15,7 +15,7 @@ class ContactsNotifier extends AsyncNotifier<List<Contact>> {
 
   Future<List<Contact>> _fetch() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token') ?? '';
+    final token = prefs.getString('token') ?? '';
     return ref.read(contactsRepositoryProvider).getContacts(token);
   }
 
@@ -26,7 +26,7 @@ class ContactsNotifier extends AsyncNotifier<List<Contact>> {
     String? linkedUserId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token') ?? '';
+    final token = prefs.getString('token') ?? '';
     final contact = await ref.read(contactsRepositoryProvider).createContact(
           token,
           name: name,
@@ -47,7 +47,7 @@ final contactSearchProvider = FutureProvider.family<ContactSearchResult, String>
       return ContactSearchResult(contacts: [], platformUsers: []);
     }
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token') ?? '';
+    final token = prefs.getString('token') ?? '';
     return ref.read(contactsRepositoryProvider).search(token, query);
   },
 );

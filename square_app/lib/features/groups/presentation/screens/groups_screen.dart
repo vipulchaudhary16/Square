@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../../shared/widgets/menu_button.dart';
 
 import '../groups_provider.dart';
 
@@ -28,6 +29,7 @@ class GroupsScreen extends ConsumerWidget {
             ),
             onPressed: () => context.push('/groups/create'),
           ),
+          const MenuButton(),
         ],
       ),
       body: groupsAsync.when(

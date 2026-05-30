@@ -176,6 +176,13 @@ class LoansNotifier extends GenericTransactionNotifier<Loan> {
   Future<void> createItem(String token, Map<String, dynamic> data) {
     return ref.read(transactionRepositoryProvider).createLoan(token, data);
   }
+
+  Future<void> updateLoan(String loanId, Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    await ref.read(transactionRepositoryProvider).updateLoan(token, loanId, data);
+    await refresh();
+  }
 }
 
 final transactionsExpensesProvider =

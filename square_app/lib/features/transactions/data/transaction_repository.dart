@@ -129,4 +129,16 @@ class TransactionRepository {
       throw Exception('Failed to create loan: $e');
     }
   }
+
+  Future<void> updateLoan(String token, String loanId, Map<String, dynamic> data) async {
+    try {
+      await _dio.patch(
+        '/loans/$loanId',
+        data: data,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+    } catch (e) {
+      throw Exception('Failed to update loan: $e');
+    }
+  }
 }

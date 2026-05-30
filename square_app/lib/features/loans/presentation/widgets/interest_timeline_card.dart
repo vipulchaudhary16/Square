@@ -23,8 +23,6 @@ class _InterestTimelineCardState extends State<InterestTimelineCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.timeline.isEmpty) return const SizedBox.shrink();
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -36,7 +34,9 @@ class _InterestTimelineCardState extends State<InterestTimelineCard> {
       child: Column(
         children: [
           InkWell(
-            onTap: () => setState(() => _expanded = !_expanded),
+            onTap: widget.timeline.isEmpty
+                ? null
+                : () => setState(() => _expanded = !_expanded),
             borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -68,12 +68,13 @@ class _InterestTimelineCardState extends State<InterestTimelineCard> {
                       ],
                     ),
                   ),
-                  Icon(
-                    _expanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: Colors.grey,
-                  ),
+                  if (widget.timeline.isNotEmpty)
+                    Icon(
+                      _expanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: Colors.grey,
+                    ),
                 ],
               ),
             ),
@@ -87,22 +88,34 @@ class _InterestTimelineCardState extends State<InterestTimelineCard> {
                 itemCount: widget.timeline.length,
                 itemBuilder: (_, i) {
                   final entry = widget.timeline[i];
-                  final date = DateTime.parse(entry['date'] as String);
+                  final isAggregated = entry.containsKey('period_interest');
+                  final label = isAggregated
+                      ? entry['date'] as String
+                      : DateFormat('dd MMM').format(
+                          DateTime.parse(entry['date'] as String));
+                  final interest = ((isAggregated
+                          ? entry['period_interest']
+                          : entry['daily_interest']) as num)
+                      .toDouble();
+                  final cumulative =
+                      (entry['cumulative'] as num).toDouble();
                   return Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 4),
                     child: Row(
                       children: [
                         Text(
-                          DateFormat('dd MMM').format(date),
+                          label,
                           style: TextStyle(
                             fontSize: 12,
-                            color: widget.isDark ? Colors.white60 : Colors.black45,
+                            color: widget.isDark
+                                ? Colors.white60
+                                : Colors.black45,
                           ),
                         ),
                         const Spacer(),
                         Text(
-                          '+${formatInr((entry['daily_interest'] as num).toDouble())}',
+                          '+${formatInr(interest)}',
                           style: const TextStyle(
                               fontSize: 12, color: Colors.orange),
                         ),
@@ -110,8 +123,7 @@ class _InterestTimelineCardState extends State<InterestTimelineCard> {
                         SizedBox(
                           width: 80,
                           child: Text(
-                            formatInr(
-                                (entry['cumulative'] as num).toDouble()),
+                            formatInr(cumulative),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,

@@ -11,6 +11,7 @@ import '../../features/transactions/presentation/screens/add_edit_income_screen.
 import '../../features/transactions/presentation/screens/add_edit_investment_screen.dart';
 import '../../features/transactions/presentation/screens/add_edit_loan_screen.dart';
 import '../../features/expense/data/expense_model.dart';
+import '../../features/transactions/data/loan_model.dart';
 import '../../features/auth/presentation/auth_provider.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/feature_flags/presentation/features_settings_screen.dart';
@@ -81,6 +82,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) =>
             LoanDetailScreen(loanId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/loans/:id/edit',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final loan = state.extra as Loan;
+          return AddEditLoanScreen(loan: loan);
+        },
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

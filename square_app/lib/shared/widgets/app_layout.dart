@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../core/utils/scaffold_key.dart';
 import 'add_entry_bottom_sheet.dart';
+import 'app_drawer.dart';
 
 class AppLayout extends StatelessWidget {
   final Widget child;
@@ -15,8 +17,9 @@ class AppLayout extends StatelessWidget {
         MediaQuery.of(context).size.width < 768; // Simple breakpoint
 
     return Scaffold(
-      extendBody: false, // Content sits above nav
-
+      key: appScaffoldKey,
+      extendBody: false,
+      endDrawer: const AppDrawer(),
       body: Stack(children: [child]),
       bottomNavigationBar: isMobile ? _buildMobileNav(context) : null,
     );
