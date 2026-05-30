@@ -46,24 +46,30 @@ class ExpenseListScreen extends ConsumerWidget {
             );
           }
 
-          return CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final expense = expenses[index];
-                    return ExpenseCard(
-                      expense: expense,
-                      currentUserId: currentUser?.id ?? '',
-                      onTap: () {
-                        context.go('/expenses/${expense.id}', extra: expense);
-                      },
-                    );
-                  }, childCount: expenses.length),
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(expenseProvider);
+              await ref.read(expenseProvider.future);
+            },
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final expense = expenses[index];
+                      return ExpenseCard(
+                        expense: expense,
+                        currentUserId: currentUser?.id ?? '',
+                        onTap: () {
+                          context.go('/expenses/${expense.id}', extra: expense);
+                        },
+                      );
+                    }, childCount: expenses.length),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
