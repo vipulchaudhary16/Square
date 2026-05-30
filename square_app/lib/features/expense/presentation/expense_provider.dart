@@ -71,3 +71,10 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
     });
   }
 }
+
+final expenseDetailProvider =
+    FutureProvider.autoDispose.family<Expense, String>((ref, id) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token') ?? '';
+  return ref.read(expenseRepositoryProvider).getExpenseById(token, id);
+});
