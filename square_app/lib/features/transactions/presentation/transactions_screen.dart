@@ -40,6 +40,19 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   late TabController _tabController;
   int _selectedIndex = 0;
 
+  void _invalidateActiveTab() {
+    switch (_tabController.index) {
+      case 0:
+        ref.invalidate(transactionsExpensesProvider);
+      case 1:
+        ref.invalidate(incomesProvider);
+      case 2:
+        ref.invalidate(investmentsProvider);
+      case 3:
+        ref.invalidate(loansProvider);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +60,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     _tabController.addListener(() {
       if (_tabController.index != _selectedIndex) {
         setState(() => _selectedIndex = _tabController.index);
+        _invalidateActiveTab();
       }
     });
   }
@@ -199,36 +213,43 @@ class TransactionListView<T> extends ConsumerWidget {
             }
             return true;
           },
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-            itemCount: flatList.length,
-            itemBuilder: (context, i) {
-              final item = flatList[i];
-              if (item == null) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-              if (item is String) return _buildDateHeader(context, item);
-              if (item is _IndexedItem<T>) {
-                return _buildTransactionCard(context, item.item)
-                    .animate(
-                      delay: Duration(
-                          milliseconds: min(item.index, 10) * 35),
-                    )
-                    .fadeIn(duration: 280.ms)
-                    .slideY(
-                      begin: 0.04,
-                      end: 0,
-                      duration: 280.ms,
-                      curve: Curves.easeOut,
-                    );
-              }
-              return const SizedBox.shrink();
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(provider);
+              await ref.read(provider.future);
             },
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+              itemCount: flatList.length,
+              itemBuilder: (context, i) {
+                final item = flatList[i];
+                if (item == null) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+                if (item is String) return _buildDateHeader(context, item);
+                if (item is _IndexedItem<T>) {
+                  return _buildTransactionCard(context, item.item)
+                      .animate(
+                        delay: Duration(
+                            milliseconds: min(item.index, 10) * 35),
+                      )
+                      .fadeIn(duration: 280.ms)
+                      .slideY(
+                        begin: 0.04,
+                        end: 0,
+                        duration: 280.ms,
+                        curve: Curves.easeOut,
+                      );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
           ),
         );
       },
