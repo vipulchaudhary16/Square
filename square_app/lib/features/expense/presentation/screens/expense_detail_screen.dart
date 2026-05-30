@@ -10,9 +10,9 @@ import '../../data/expense_model.dart';
 import '../expense_provider.dart';
 
 class ExpenseDetailScreen extends ConsumerStatefulWidget {
-  final Expense expense;
+  final String expenseId;
 
-  const ExpenseDetailScreen({super.key, required this.expense});
+  const ExpenseDetailScreen({super.key, required this.expenseId});
 
   @override
   ConsumerState<ExpenseDetailScreen> createState() =>
@@ -49,7 +49,7 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
       try {
         await ref
             .read(expenseProvider.notifier)
-            .deleteExpense(widget.expense.id);
+            .deleteExpense(widget.expenseId);
         if (mounted) context.pop(); // Go back to list
       } catch (e) {
         if (mounted) {
@@ -66,23 +66,9 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currentUser = ref.watch(authProvider).value;
-
-    final expensesAsync = ref.watch(expenseProvider);
-    final expense = expensesAsync.maybeWhen(
-      data: (list) {
-        try {
-          return list.firstWhere((e) => e.id == widget.expense.id);
-        } catch (_) {
-          return widget.expense;
-        }
-      },
-      orElse: () => widget.expense,
-    );
-
-    final isPayer = expense.payerId == currentUser?.id;
-
-    String payerName = isPayer ? "You" : (expense.payerName ?? "Other");
+    final currentUserId = ref.watch(authProvider).value?.id;
+    final dataAsync = ref.watch(expenseDetailProvider(widget.expenseId));
+    final expense = dataAsync.asData?.value;
 
     return Scaffold(
       appBar: AppBar(
@@ -97,94 +83,129 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.edit),
-            color: isDark ? Colors.white : Colors.black,
-            onPressed: () {
-              context.push('/transactions/edit', extra: expense);
-            },
-          ),
-          IconButton(
-            icon: _isDeleting
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(LucideIcons.trash2),
-            color: Colors.red,
-            onPressed: _deleteExpense,
-          ),
+          if (expense != null) ...[
+            IconButton(
+              icon: const Icon(LucideIcons.edit),
+              color: isDark ? Colors.white : Colors.black,
+              onPressed: () {
+                context.push('/transactions/edit', extra: expense);
+              },
+            ),
+            IconButton(
+              icon: _isDeleting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(LucideIcons.trash2),
+              color: Colors.red,
+              onPressed: _deleteExpense,
+            ),
+          ],
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.slate[800] : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+      body: dataAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Error: $e'),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () =>
+                    ref.invalidate(expenseDetailProvider(widget.expenseId)),
+                child: const Text('Retry'),
               ),
-              child: Column(
-                children: [
-                  Icon(
-                    LucideIcons.receipt,
-                    size: 48,
-                    color: AppColors.primary[600],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    expense.description,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppColors.slate[900],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '₹${expense.amount.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary[600],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Divider(
-                    color: isDark ? AppColors.slate[700] : AppColors.slate[200],
-                  ),
-                  const SizedBox(height: 24),
-                  _buildDetailRow(
-                    context,
-                    'Date',
-                    DateFormat('MMM dd, yyyy').format(expense.date),
-                  ),
-                  _buildDetailRow(context, 'Category', expense.categoryName),
-                  _buildDetailRow(
-                    context,
-                    'Group',
-                    expense.groupName ?? 'Personal',
-                  ),
-                  _buildDetailRow(context, 'Paid By', payerName),
-                ],
-              ),
-            ),
-            if (expense.groupId != null) ...[
-              const SizedBox(height: 24),
-              _buildSplitBreakdown(context, isDark, expense),
             ],
-          ],
+          ),
+        ),
+        data: (expense) => RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(expenseDetailProvider(widget.expenseId));
+            await ref.read(expenseDetailProvider(widget.expenseId).future);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.slate[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        LucideIcons.receipt,
+                        size: 48,
+                        color: AppColors.primary[600],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        expense.description,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.slate[900],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '₹${expense.amount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary[600],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Divider(
+                        color: isDark
+                            ? AppColors.slate[700]
+                            : AppColors.slate[200],
+                      ),
+                      const SizedBox(height: 24),
+                      _buildDetailRow(
+                        context,
+                        'Date',
+                        DateFormat('MMM dd, yyyy').format(expense.date),
+                      ),
+                      _buildDetailRow(
+                          context, 'Category', expense.categoryName),
+                      _buildDetailRow(
+                        context,
+                        'Group',
+                        expense.groupName ?? 'Personal',
+                      ),
+                      _buildDetailRow(
+                        context,
+                        'Paid By',
+                        expense.payerId == currentUserId
+                            ? 'You'
+                            : (expense.payerName ?? 'Other'),
+                      ),
+                    ],
+                  ),
+                ),
+                if (expense.groupId != null) ...[
+                  const SizedBox(height: 24),
+                  _buildSplitBreakdown(context, isDark, expense),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
