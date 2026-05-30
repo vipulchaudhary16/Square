@@ -12,7 +12,7 @@ import '../contacts_provider.dart';
 import '../../../../../features/transactions/data/loan_model.dart';
 
 final _contactLoansProvider =
-    FutureProvider.family<ContactLoansResult, String>(
+    FutureProvider.autoDispose.family<ContactLoansResult, String>(
   (ref, contactId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
@@ -22,7 +22,6 @@ final _contactLoansProvider =
 
 class ContactDetailScreen extends ConsumerWidget {
   final String contactId;
-
   const ContactDetailScreen({super.key, required this.contactId});
 
   @override
@@ -31,16 +30,39 @@ class ContactDetailScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.slate[950] : Colors.white,
+      backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5),
       body: data.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (result) => _buildBody(context, result, isDark),
+        data: (result) => RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(_contactLoansProvider(contactId));
+            await ref.read(_contactLoansProvider(contactId).future);
+          },
+          child: _ContactDetailBody(
+            result: result,
+            isDark: isDark,
+            onPop: () => context.pop(),
+          ),
+        ),
       ),
     );
   }
+}
 
-  Widget _buildBody(BuildContext context, ContactLoansResult result, bool isDark) {
+class _ContactDetailBody extends StatelessWidget {
+  final ContactLoansResult result;
+  final bool isDark;
+  final VoidCallback onPop;
+
+  const _ContactDetailBody({
+    required this.result,
+    required this.isDark,
+    required this.onPop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final contact = result.contact;
     final loans = result.loans;
     final net = result.netBalance;
@@ -52,25 +74,56 @@ class ContactDetailScreen extends ConsumerWidget {
       child: NestedScrollView(
         headerSliverBuilder: (_, __) => [
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 248,
             pinned: true,
-            backgroundColor: isDark ? AppColors.slate[950] : Colors.white,
+            elevation: 0,
+            backgroundColor: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5),
             leading: IconButton(
               icon: Icon(LucideIcons.arrowLeft,
                   color: isDark ? Colors.white : Colors.black),
-              onPressed: () => context.pop(),
+              onPressed: onPop,
             ),
+            actions: [
+              IconButton(
+                icon: Icon(LucideIcons.pencil,
+                    size: 18,
+                    color: isDark ? Colors.white70 : Colors.black54),
+                onPressed: () async {
+                  await context.push('/contacts/${contact.id}/edit',
+                      extra: contact);
+                },
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeader(contact, net, isDark),
+              background: _Header(
+                contact: contact,
+                net: net,
+                isDark: isDark,
+              ),
             ),
-            bottom: TabBar(
-              labelColor: isDark ? Colors.white : Colors.black,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: isDark ? Colors.white : Colors.black,
-              tabs: [
-                Tab(text: 'Active (${activeLoans.length})'),
-                Tab(text: 'Settled (${settledLoans.length})'),
-              ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(48),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDark ? Colors.white12 : Colors.black12,
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: TabBar(
+                  labelColor: isDark ? Colors.white : Colors.black,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: isDark ? Colors.white : Colors.black,
+                  indicatorWeight: 2,
+                  labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  tabs: [
+                    Tab(text: 'Active (${activeLoans.length})'),
+                    Tab(text: 'Settled (${settledLoans.length})'),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -83,72 +136,161 @@ class ContactDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildHeader(Contact contact, Map<String, dynamic> net, bool isDark) {
+class _Header extends StatelessWidget {
+  final Contact contact;
+  final Map<String, dynamic> net;
+  final bool isDark;
+
+  const _Header({required this.contact, required this.net, required this.isDark});
+
+  Color get _avatarColor {
+    final colors = [
+      const Color(0xFF6366F1), const Color(0xFF8B5CF6), const Color(0xFFEC4899),
+      const Color(0xFF0EA5E9), const Color(0xFF10B981), const Color(0xFFF59E0B),
+    ];
+    final idx = contact.name.codeUnitAt(0) % colors.length;
+    return colors[idx];
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isOwed = net['direction'] == 'owed_to_you';
     final amount = (net['amount'] as num? ?? 0).toDouble();
+    final color = _avatarColor;
+    final topPad = MediaQuery.paddingOf(context).top + kToolbarHeight;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 80, 20, 0),
+      padding: EdgeInsets.fromLTRB(20, topPad, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor:
-                    isDark ? AppColors.slate[700] : AppColors.slate[200],
-                child: Text(
-                  contact.initials,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+                ),
+                child: Center(
+                  child: Text(
+                    contact.initials,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: color,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(contact.name,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      contact.name,
                       style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: isDark ? Colors.white : Colors.black)),
-                  if (contact.phone != null)
-                    Text(contact.phone!,
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.grey)),
-                  if (contact.onPlatform)
-                    Container(
-                      margin: const EdgeInsets.only(top: 3),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
-                      child: const Text('On platform ✓',
-                          style: TextStyle(
-                              fontSize: 10, color: Colors.green)),
                     ),
-                ],
+                    if (contact.phone != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        contact.phone!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
+                    ],
+                    if (contact.onPlatform) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(LucideIcons.checkCircle,
+                              size: 11, color: Colors.green[500]),
+                          const SizedBox(width: 4),
+                          Text(
+                            'On platform',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.green[500],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+          _BalanceCard(
+            contact: contact,
+            amount: amount,
+            isOwed: isOwed,
+            isDark: isDark,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BalanceCard extends StatelessWidget {
+  final Contact contact;
+  final double amount;
+  final bool isOwed;
+  final bool isDark;
+
+  const _BalanceCard({
+    required this.contact,
+    required this.amount,
+    required this.isOwed,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isOwed ? Colors.green[600]! : Colors.red[400]!;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF111111) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: isOwed
-                  ? Colors.green.withOpacity(0.12)
-                  : Colors.red.withOpacity(0.10),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isOwed
-                    ? Colors.green.withOpacity(0.3)
-                    : Colors.red.withOpacity(0.3),
-              ),
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
             ),
+            child: Icon(
+              isOwed ? LucideIcons.trendingUp : LucideIcons.trendingDown,
+              size: 16,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -156,17 +298,28 @@ class ContactDetailScreen extends ConsumerWidget {
                   isOwed
                       ? '${contact.name} owes you'
                       : 'You owe ${contact.name}',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
                 ),
+                const SizedBox(height: 1),
                 Text(
                   formatInr(amount),
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: isOwed ? Colors.green[600] : Colors.red[400],
+                    color: color,
                   ),
                 ),
               ],
+            ),
+          ),
+          Text(
+            'net balance',
+            style: TextStyle(
+              fontSize: 10,
+              color: isDark ? Colors.white24 : Colors.black26,
             ),
           ),
         ],
@@ -185,96 +338,176 @@ class _LoanList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (loans.isEmpty) {
       return Center(
-        child: Text('None',
-            style: TextStyle(
-                color: isDark ? Colors.white38 : Colors.black38)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.fileX,
+                size: 32, color: isDark ? Colors.white24 : Colors.black26),
+            const SizedBox(height: 10),
+            Text(
+              'No loans here',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white38 : Colors.black38,
+              ),
+            ),
+          ],
+        ),
       );
     }
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       itemCount: loans.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
-      itemBuilder: (_, i) => _LoanTile(loan: loans[i], isDark: isDark),
+      itemBuilder: (_, i) => _LoanCard(loan: loans[i], isDark: isDark),
     );
   }
 }
 
-class _LoanTile extends StatelessWidget {
+class _LoanCard extends StatelessWidget {
   final Loan loan;
   final bool isDark;
 
-  const _LoanTile({required this.loan, required this.isDark});
+  const _LoanCard({required this.loan, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     final isLent = loan.direction == 'lent';
+    final accentColor = isLent ? Colors.green[600]! : Colors.red[400]!;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
-      leading: Container(
-        width: 8,
-        height: 8,
+    final title = (loan.description != null && loan.description!.isNotEmpty)
+        ? loan.description!
+        : '${isLent ? 'Lent' : 'Borrowed'} · ${DateFormat('dd MMM yyyy').format(loan.date)}';
+
+    final statusColor = loan.isOverdue
+        ? Colors.red[400]!
+        : loan.isPaid
+            ? Colors.green[600]!
+            : Colors.amber[600]!;
+    final statusLabel = loan.isOverdue ? 'Overdue' : loan.status;
+
+    return GestureDetector(
+      onTap: () => context.push('/loans/${loan.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: loan.isOverdue
-              ? Colors.red[400]
-              : loan.isPaid
-                  ? Colors.green[600]
-                  : Colors.amber[600],
+          color: isDark ? const Color(0xFF111111) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: loan.isOverdue
+              ? Border.all(color: Colors.red.withValues(alpha: 0.25))
+              : null,
         ),
-      ),
-      title: Text(
-        loan.description ?? (isLent ? 'Lent' : 'Borrowed'),
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white : Colors.black87,
-        ),
-      ),
-      subtitle: Text(
-        loan.dueDate != null
-            ? 'Due ${DateFormat('dd/MM/yyyy').format(loan.dueDate!)}'
-            : 'No due date',
-        style: const TextStyle(fontSize: 11, color: Colors.grey),
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            formatInr(loan.amount),
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              color: isLent ? Colors.green[600] : Colors.red[400],
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(top: 3),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-            decoration: BoxDecoration(
-              color: loan.isOverdue
-                  ? Colors.red.withOpacity(0.12)
-                  : loan.isPaid
-                      ? Colors.green.withOpacity(0.12)
-                      : Colors.amber.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              loan.isOverdue ? 'Overdue' : loan.status,
-              style: TextStyle(
-                fontSize: 9,
-                color: loan.isOverdue
-                    ? Colors.red[400]
-                    : loan.isPaid
-                        ? Colors.green[600]
-                        : Colors.amber[600],
+        child: Row(
+          children: [
+            // Direction indicator
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isLent ? LucideIcons.arrowUpRight : LucideIcons.arrowDownLeft,
+                size: 18,
+                color: accentColor,
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            // Title + meta
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          statusLabel,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                      if (loan.dueDate != null) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          'Due ${DateFormat('dd MMM').format(loan.dueDate!)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: loan.isOverdue
+                                ? Colors.red[400]
+                                : (isDark ? Colors.white38 : Colors.black38),
+                          ),
+                        ),
+                      ],
+                      if (loan.interestMode != 'none' &&
+                          loan.interestRate != null) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          '${loan.interestRate!.toStringAsFixed(loan.interestRate! % 1 == 0 ? 0 : 1)}%',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.orange[400],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Amount
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  formatInr(loan.amount),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: accentColor,
+                  ),
+                ),
+                if (loan.interestMode != 'none' && loan.totalDue != loan.amount)
+                  Text(
+                    formatInr(loan.totalDue),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.orange[400],
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 4),
+            Icon(LucideIcons.chevronRight,
+                size: 14,
+                color: isDark ? Colors.white24 : Colors.black26),
+          ],
+        ),
       ),
-      onTap: () => context.push('/loans/${loan.id}'),
     );
   }
 }
