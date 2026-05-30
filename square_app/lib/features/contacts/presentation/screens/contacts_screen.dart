@@ -42,10 +42,17 @@ class ContactsScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (list) => list.isEmpty
             ? _buildEmpty(context, isDark)
-            : ListView.builder(
-                itemCount: list.length,
-                itemBuilder: (_, i) =>
-                    _ContactTile(contact: list[i], isDark: isDark),
+            : RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(contactsProvider);
+                  await ref.read(contactsProvider.future);
+                },
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: list.length,
+                  itemBuilder: (_, i) =>
+                      _ContactTile(contact: list[i], isDark: isDark),
+                ),
               ),
       ),
     );
