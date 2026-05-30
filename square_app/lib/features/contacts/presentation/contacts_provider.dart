@@ -39,6 +39,29 @@ class ContactsNotifier extends AsyncNotifier<List<Contact>> {
     state = AsyncData([...current, contact]);
     return contact;
   }
+
+  Future<Contact> updateContact(
+    String contactId, {
+    required String name,
+    String? phone,
+    String? email,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    final updated = await ref.read(contactsRepositoryProvider).updateContact(
+          token,
+          contactId,
+          name: name,
+          phone: phone,
+          email: email,
+        );
+    final current =
+        state is AsyncData<List<Contact>> ? state.requireValue : <Contact>[];
+    state = AsyncData(
+      current.map((c) => c.id == contactId ? updated : c).toList(),
+    );
+    return updated;
+  }
 }
 
 final contactSearchProvider = FutureProvider.family<ContactSearchResult, String>(

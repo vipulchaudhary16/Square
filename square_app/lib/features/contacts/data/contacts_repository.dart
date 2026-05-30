@@ -41,6 +41,29 @@ class ContactsRepository {
     }
   }
 
+  Future<Contact> updateContact(
+    String token,
+    String contactId, {
+    required String name,
+    String? phone,
+    String? email,
+  }) async {
+    try {
+      final res = await _dio.patch(
+        '/contacts/$contactId',
+        data: {
+          'name': name,
+          if (phone != null && phone.isNotEmpty) 'phone': phone,
+          if (email != null && email.isNotEmpty) 'email': email,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return Contact.fromJson(res.data);
+    } catch (e) {
+      throw Exception('Failed to update contact: $e');
+    }
+  }
+
   Future<Contact> createContact(
     String token, {
     required String name,

@@ -41,7 +41,7 @@ Rails.application.routes.draw do
     resources :investments, only: [:create, :index, :show, :update, :destroy] do
       member { post :comments }
     end
-    resources :contacts, only: [:index, :create] do
+    resources :contacts, only: [:index, :create, :update] do
       collection { get :search }
       member      { get :loans }
     end

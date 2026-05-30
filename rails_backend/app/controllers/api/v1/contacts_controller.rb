@@ -23,6 +23,16 @@ module Api
         render json: { error: e.message }, status: :bad_request
       end
 
+      def update
+        contact = current_user.owned_contacts.find(params[:id])
+        contact.update!(contact_params)
+        render json: serialize(contact)
+      rescue ActiveRecord::RecordNotFound
+        render json: { error: "Contact not found" }, status: :not_found
+      rescue ActiveRecord::RecordInvalid => e
+        render json: { error: e.message }, status: :bad_request
+      end
+
       def loans
         contact = current_user.owned_contacts.find(params[:id])
         loans   = Loan.for_user(current_user.id)
