@@ -6,18 +6,12 @@ module Api
       def index
         budgets = current_user.budgets.includes(:category)
         budgets = budgets.where(month: params[:month]) if params[:month].present?
-        render json: budgets.joins(:category).order("categories.name").map { |b| serialize(b) }
+        render json: budgets.joins(:category).order("categories.name").map(&:api_json)
       end
 
       def create
-        category = current_user.categories.find_by(id: params[:category_id]) ||
-                   current_user.categories.find_by(name: "General")
-        budget = current_user.budgets.create!(
-          category_id: category.id,
-          amount:      params[:amount],
-          month:       params[:month]
-        )
-        render json: serialize(budget), status: :created
+        budget = Budget.create_for_user!(user: current_user, params: params)
+        render json: budget.api_json, status: :created
       rescue ActiveRecord::RecordInvalid => e
         if e.message.include?("already been taken")
           render json: { error: "Budget for this category and month already exists" }, status: :conflict
@@ -45,12 +39,6 @@ module Api
         @budget = current_user.budgets.find(params[:id])
       rescue ActiveRecord::RecordNotFound
         render json: { error: "Budget not found" }, status: :not_found
-      end
-
-      def serialize(b)
-        { id: b.id.to_s, user_id: b.user_id.to_s,
-          category_id: b.category_id.to_s, category_name: b.category&.name || "",
-          amount: b.amount.to_f, month: b.month, created_at: b.created_at.iso8601 }
       end
     end
   end

@@ -25,4 +25,28 @@ class Contact < ApplicationRecord
 
     { contacts: contacts, platform_users: platform_users }
   end
+
+  # Loans between this contact and its owner, plus the net balance across
+  # the still-open ones — used by the contact detail view.
+  def loans_for(current_user)
+    loans = Loan.for_user(current_user.id)
+                .where(contact_id: id)
+                .includes(:contact, :category)
+                .order(date: :desc)
+    active_loans = loans.reject { |l| l.status == "PAID" }
+
+    { loans: loans, net_balance: Loan.net_balance_for(active_loans, current_user.id) }
+  end
+
+  def api_json
+    {
+      id:             id.to_s,
+      name:           name,
+      phone:          phone,
+      email:          email,
+      linked_user_id: linked_user_id&.to_s,
+      on_platform:    on_platform?,
+      created_at:     created_at.iso8601
+    }
+  end
 end

@@ -29,9 +29,76 @@ class User < ApplicationRecord
     where("email ILIKE :q OR username ILIKE :q", q: "%#{sanitize_sql_like(q)}%").limit(10)
   }
 
+  def self.sign_up!(params)
+    user = new(
+      email:      params[:email],
+      first_name: params[:first_name] || "",
+      last_name:  params[:last_name]  || "",
+      username:   params[:username],
+      password:   params[:password]
+    )
+    CategorySeeder.seed(user) if user.save
+    user
+  end
+
+  def self.authenticate_login(email:, password:)
+    user = find_by("lower(email) = ?", email&.downcase)
+    user if user&.authenticate(password)
+  end
+
+  def self.reset_password!(token:, new_password:)
+    user = find_by(reset_token: token)
+    raise ActiveRecord::RecordNotFound if user.nil? || user.reset_token_expiry < Time.current
+    user.update!(password: new_password, reset_token: nil, reset_token_expiry: nil)
+    user
+  end
+
+  def initiate_password_reset!
+    token = SecureRandom.hex(32)
+    update!(reset_token: token, reset_token_expiry: 1.hour.from_now)
+    UserMailer.password_reset(self, token).deliver_later
+  end
+
+  def auth_token
+    JwtService.encode({ user_id: id.to_s })
+  end
+
+  def update_feature_flags!(parsed)
+    registry = FeatureFlagRegistry.all.index_by { |r| r.id.to_s }
+    parsed.each do |id_str, value|
+      entry = registry[id_str.to_s]
+      raise FeatureFlagRegistry::NotFoundError, "Flag not found: #{id_str}" unless entry
+      raise FeatureFlagRegistry::NotToggleableError, "Flag not user-toggleable: #{entry.key}" unless entry.user_toggleable
+
+      UserFeatureFlag.upsert(
+        { user_id: id, feature_flag_registry_id: entry.id, value: value },
+        unique_by: [:user_id, :feature_flag_registry_id],
+        update_only: [:value]
+      )
+    end
+  end
+
   def display_name
     name = "#{first_name} #{last_name}".strip
     name.blank? ? username : name
+  end
+
+  def self.display_name_map(user_ids)
+    where(id: user_ids.uniq.compact).each_with_object({}) { |u, h| h[u.id.to_s] = u.display_name }
+  end
+
+  def api_json
+    { id: id.to_s, username: username, email: email,
+      first_name: first_name, last_name: last_name, created_at: created_at.iso8601 }
+  end
+
+  def member_json
+    { id: id.to_s, username: username, email: email, first_name: first_name, last_name: last_name }
+  end
+
+  def platform_match_json
+    { id: id.to_s, username: username, name: display_name, email: email,
+      mobile_number: mobile_number, on_platform: true }
   end
 
   private

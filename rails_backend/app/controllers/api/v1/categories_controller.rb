@@ -6,7 +6,7 @@ module Api
       def index
         categories = current_user.categories
         categories = categories.where("? = ANY(applies_to)", params[:applies_to]) if params[:applies_to].present?
-        render json: categories.order(:name).map { |c| serialize(c) }
+        render json: categories.order(:name).map(&:api_json)
       end
 
       def create
@@ -15,49 +15,35 @@ module Api
           applies_to:  Array(params[:applies_to]),
           is_standard: false
         )
-        render json: serialize(category), status: :created
+        render json: category.api_json, status: :created
       rescue ActiveRecord::RecordInvalid => e
         render json: { error: e.message }, status: :bad_request
       end
 
       def update
         if @category.is_standard
-          render json: { error: "Standard categories cannot be renamed" }, status: :unprocessable_entity and return
+          return render json: { error: "Standard categories cannot be renamed" }, status: :unprocessable_entity
         end
 
         attrs = {}
         attrs[:name]       = params[:name]       if params[:name].present?
         attrs[:applies_to] = Array(params[:applies_to]) if params[:applies_to].present?
-
-        if attrs.empty?
-          render json: { error: "No fields provided to update" }, status: :bad_request and return
-        end
+        return render json: { error: "No fields provided to update" }, status: :bad_request if attrs.empty?
 
         if @category.update(attrs)
-          render json: serialize(@category)
+          render json: @category.api_json
         else
           render json: { error: @category.errors.full_messages.first }, status: :bad_request
         end
       end
 
       def destroy
-        if @category.is_standard
-          render json: { error: "Standard categories cannot be deleted" }, status: :unprocessable_entity and return
-        end
-
-        other = current_user.categories.find_by(name: "Other")
-        unless other
-          render json: { error: "Cannot delete category: fallback 'Other' category is missing" }, status: :unprocessable_entity and return
-        end
-
-        ActiveRecord::Base.transaction do
-          Expense.where(payer_id: current_user.id, category_id: @category.id).update_all(category_id: other.id)
-          Income.where(user_id: current_user.id, category_id: @category.id).update_all(category_id: other.id)
-          Budget.where(user_id: current_user.id, category_id: @category.id).update_all(category_id: other.id)
-          @category.destroy!
-        end
-
+        @category.destroy_with_reassignment!
         render json: { message: "Category deleted. Records moved to 'Other'." }
+      rescue Category::ProtectedError => e
+        render json: { error: e.message }, status: :unprocessable_entity
+      rescue Category::MissingFallbackError => e
+        render json: { error: e.message }, status: :unprocessable_entity
       end
 
       private
@@ -66,10 +52,6 @@ module Api
         @category = current_user.categories.find(params[:id])
       rescue ActiveRecord::RecordNotFound
         render json: { error: "Category not found" }, status: :not_found
-      end
-
-      def serialize(c)
-        { id: c.id.to_s, name: c.name, applies_to: c.applies_to, is_standard: c.is_standard }
       end
     end
   end

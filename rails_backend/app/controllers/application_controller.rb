@@ -24,14 +24,4 @@ class ApplicationController < ActionController::API
   def current_user
     @current_user
   end
-
-  def build_user_map(user_ids)
-    User.where(id: user_ids.uniq.compact).each_with_object({}) do |u, h|
-      h[u.id.to_s] = u.display_name
-    end
-  end
-
-  def log_activity(loggable:, action:, details: "")
-    ActivityLog.create!(loggable: loggable, user: current_user, action: action, details: details)
-  end
 end
