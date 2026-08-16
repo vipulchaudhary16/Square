@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/amount_input_field.dart';
+import '../../../../shared/widgets/app_bottom_sheet.dart';
+import '../../../../shared/widgets/app_chip.dart';
+import '../../../../shared/widgets/buttons/button_shell.dart';
+import '../../../../shared/widgets/category_picker_sheet.dart';
+import '../../../../shared/widgets/input_field.dart';
 import '../../data/expense_model.dart';
 import '../expense_provider.dart';
 import '../../../groups/presentation/groups_provider.dart';
 import '../../../groups/data/group_model.dart';
-import '../../../categories/presentation/categories_provider.dart';
 
 class AddEditExpenseScreen extends ConsumerStatefulWidget {
   final Expense? expense;
@@ -124,7 +130,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
   Future<void> _saveExpense() async {
     if (!_formKey.currentState!.validate()) return;
-    final amountText = _amountController.text.trim();
+    final amountText = _amountController.text.replaceAll(',', '').trim();
     final amount = double.tryParse(amountText) ?? 0.0;
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -239,10 +245,11 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
       if (mounted) context.pop();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -251,48 +258,36 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final groupsAsync = ref.watch(groupsProvider);
     final groups = groupsAsync.value ?? [];
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.slate[950] : Colors.white,
+      backgroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
       appBar: AppBar(
         title: Text(
           widget.expense != null ? 'Edit Expense' : 'Add Expense',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTypography.screenTitle.copyWith(color: ink, fontSize: 18),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(
-            LucideIcons.x,
-            color: isDark ? Colors.white70 : Colors.black54,
-          ),
+          icon: Icon(Icons.close, color: ink),
           onPressed: () => context.pop(),
         ),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveExpense,
             child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: ink),
                   )
-                : Text(
-                    'Save',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
+                : Text('Save', style: AppTypography.button.copyWith(color: ink)),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
         ],
       ),
       body: Stack(
@@ -300,16 +295,14 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
           SafeArea(
             child: Column(
               children: [
-                // 1. Context Switcher
+                // Context switcher: Personal vs Group
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   child: Center(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.slate[900]
-                            : AppColors.slate[50],
-                        borderRadius: BorderRadius.circular(30),
+                        color: isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken,
+                        borderRadius: BorderRadius.circular(999),
                       ),
                       padding: const EdgeInsets.all(4),
                       child: Row(
@@ -333,7 +326,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                 : "Group",
                             _isGroupExpense,
                             isDark,
-                            () => _showGroupPicker(context, groups, isDark),
+                            () => _showGroupPicker(context, groups),
                           ),
                         ],
                       ),
@@ -343,185 +336,72 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 12),
-                          // 2. Description
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? Colors.white.withOpacity(0.05)
-                                      : Colors.black.withOpacity(0.02),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  LucideIcons.fileText,
-                                  color: isDark
-                                      ? Colors.white54
-                                      : Colors.black38,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _descriptionController,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: "Enter description",
-                                    hintStyle: TextStyle(
-                                      color: isDark
-                                          ? Colors.white24
-                                          : Colors.black12,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                    border: InputBorder.none,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          const SizedBox(height: AppSpacing.md),
+                          InputField(
+                            label: 'DESCRIPTION',
+                            hint: 'What was this for?',
+                            controller: _descriptionController,
+                            prefixIcon: Icons.edit,
                           ),
+                          const SizedBox(height: AppSpacing.xl),
+                          AmountInputField(controller: _amountController),
+                          const SizedBox(height: AppSpacing.xl),
+                          Divider(color: isDark ? AppColors.lineDark : AppColors.line),
+                          const SizedBox(height: AppSpacing.lg),
 
-                          const SizedBox(height: 12),
-
-                          // 3. Amount
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? Colors.white.withOpacity(0.05)
-                                      : Colors.black.withOpacity(0.02),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  LucideIcons.indianRupee,
-                                  color: isDark
-                                      ? AppColors.primary[400]
-                                      : AppColors.primary[600],
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _amountController,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark
-                                        ? AppColors.primary[400]
-                                        : AppColors.primary[600],
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: "0.00",
-                                    hintStyle: TextStyle(
-                                      color: isDark
-                                          ? Colors.white10
-                                          : Colors.black.withOpacity(0.05),
-                                    ),
-                                    border: InputBorder.none,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 12),
-                          Divider(
-                            color: isDark
-                                ? Colors.white10
-                                : Colors.black.withOpacity(0.05),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // 4. Split Row
                           if (_isGroupExpense) ...[
                             Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 6,
+                              spacing: AppSpacing.sm,
+                              runSpacing: AppSpacing.sm,
                               children: [
                                 Text(
                                   "Paid by",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black87,
+                                  style: AppTypography.body.copyWith(
+                                    color: isDark ? AppColors.inkMutedDark : AppColors.inkMuted,
                                   ),
                                 ),
-                                _buildBadge(
-                                  "You",
-                                  LucideIcons.user,
-                                  isDark,
-                                  () {},
-                                ),
+                                _buildBadge("You", Icons.person_outline, isDark, () {}),
                                 Text(
                                   "and split",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : Colors.black87,
+                                  style: AppTypography.body.copyWith(
+                                    color: isDark ? AppColors.inkMutedDark : AppColors.inkMuted,
                                   ),
                                 ),
                                 _buildBadge(
                                   _splitType.toLowerCase(),
                                   _splitType == 'EQUAL'
-                                      ? LucideIcons.divide
+                                      ? Icons.list_alt_outlined
                                       : _splitType == 'PERCENT'
-                                      ? LucideIcons.percent
-                                      : LucideIcons.pencil,
+                                          ? Icons.percent
+                                          : Icons.edit,
                                   isDark,
-                                  () => _showSplitTypePicker(context, isDark),
+                                  () => _showSplitTypePicker(context),
                                 ),
                               ],
                             ),
-
-                            const SizedBox(height: 24),
-                            // 5. Participants Header
+                            const SizedBox(height: AppSpacing.xl),
                             Text(
                               "PARTICIPANTS",
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.5,
-                                color: isDark ? Colors.white24 : Colors.black26,
+                              style: AppTypography.label.copyWith(
+                                color: isDark ? AppColors.inkFaintDark : AppColors.inkFaint,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Container(
-                              height: 1,
-                              color: isDark
-                                  ? Colors.white10
-                                  : Colors.black.withOpacity(0.05),
-                            ),
-                            const SizedBox(height: 12),
-
-                            // 6. Participants List
+                            const SizedBox(height: AppSpacing.sm),
+                            Container(height: 1, color: isDark ? AppColors.lineDark : AppColors.line),
+                            const SizedBox(height: AppSpacing.md),
                             if (_selectedGroupDetails != null)
                               ..._selectedGroupDetails!.members.map((member) {
-                                final isSelected = _selectedParticipants
-                                    .contains(member.id);
-                                return InkWell(
+                                final isSelected = _selectedParticipants.contains(member.id);
+                                final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+                                return ButtonShell(
+                                  borderRadius: AppRadius.md,
                                   onTap: () {
                                     setState(() {
                                       if (isSelected) {
@@ -533,122 +413,76 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                     });
                                   },
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                                     child: Row(
                                       children: [
-                                        CircleAvatar(
-                                          radius: 18,
-                                          backgroundColor: isDark
-                                              ? Colors.white10
-                                              : Colors.black.withOpacity(0.05),
-                                          child: Text(
-                                            member.displayName[0].toUpperCase(),
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isDark
-                                                  ? Colors.white70
-                                                  : Colors.black54,
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(color: sunken, shape: BoxShape.circle),
+                                          child: Center(
+                                            child: Text(
+                                              member.displayName.isNotEmpty
+                                                  ? member.displayName[0].toUpperCase()
+                                                  : '?',
+                                              style: AppTypography.bodyMuted.copyWith(color: ink),
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 16),
+                                        const SizedBox(width: AppSpacing.md),
                                         Expanded(
                                           child: Text(
                                             member.displayName,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              color: isDark
-                                                  ? Colors.white
-                                                  : Colors.black87,
-                                            ),
+                                            style: AppTypography.body.copyWith(color: ink, fontWeight: FontWeight.w500),
                                           ),
                                         ),
-                                        if (isSelected &&
-                                            (_splitType == 'EXACT' ||
-                                                _splitType == 'PERCENT')) ...[
+                                        if (isSelected && (_splitType == 'EXACT' || _splitType == 'PERCENT')) ...[
                                           SizedBox(
-                                            width: 70,
-                                            height: 32,
+                                            width: 72,
+                                            height: 36,
                                             child: TextFormField(
-                                              keyboardType:
-                                                  const TextInputType.numberWithOptions(
-                                                    decimal: true,
-                                                  ),
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.bold,
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                              ),
+                                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                              style: AppTypography.bodyEmphasis.copyWith(color: ink),
                                               textAlign: TextAlign.end,
-                                              initialValue:
-                                                  _splits[member.id]
-                                                      ?.toString() ??
-                                                  '',
+                                              initialValue: _splits[member.id]?.toString() ?? '',
                                               onChanged: (v) {
-                                                final numVal =
-                                                    double.tryParse(v) ?? 0;
+                                                final numVal = double.tryParse(v) ?? 0;
                                                 _splits[member.id] = numVal;
                                               },
                                               decoration: InputDecoration(
-                                                hintText:
-                                                    _splitType == 'PERCENT'
-                                                    ? "0%"
-                                                    : "₹0",
-                                                hintStyle: TextStyle(
-                                                  fontSize: 11,
-                                                  color: isDark
-                                                      ? Colors.white24
-                                                      : Colors.black26,
+                                                hintText: _splitType == 'PERCENT' ? "0%" : "₹0",
+                                                hintStyle: AppTypography.bodyMuted.copyWith(
+                                                  color: isDark ? AppColors.inkFaintDark : AppColors.inkFaint,
                                                 ),
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 8,
-                                                    ),
+                                                contentPadding: const EdgeInsets.symmetric(
+                                                  horizontal: AppSpacing.sm,
+                                                  vertical: AppSpacing.sm,
+                                                ),
                                                 filled: true,
-                                                fillColor: isDark
-                                                    ? Colors.white.withOpacity(
-                                                        0.05,
-                                                      )
-                                                    : Colors.black.withOpacity(
-                                                        0.02,
-                                                      ),
+                                                fillColor: sunken,
                                                 border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
+                                                  borderRadius: BorderRadius.circular(AppRadius.sm),
                                                   borderSide: BorderSide.none,
                                                 ),
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 16),
+                                          const SizedBox(width: AppSpacing.md),
                                         ],
                                         Icon(
-                                          isSelected
-                                              ? LucideIcons.checkCircle2
-                                              : LucideIcons.circle,
+                                          isSelected ? Icons.check_circle : Icons.circle_outlined,
                                           color: isSelected
-                                              ? (isDark
-                                                    ? Colors.white
-                                                    : Colors.black)
-                                              : (isDark
-                                                    ? Colors.white10
-                                                    : Colors.black12),
+                                              ? ink
+                                              : (isDark ? AppColors.lineStrongDark : AppColors.lineStrong),
                                           size: 22,
                                         ),
                                       ],
                                     ),
                                   ),
                                 );
-                              }).toList(),
+                              }),
                           ],
-                          const SizedBox(
-                            height: 180,
-                          ), // Increased Dock clearance to ensure participants aren't blocked
+                          const SizedBox(height: 180), // Dock clearance
                         ],
                       ),
                     ),
@@ -657,140 +491,90 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               ],
             ),
           ),
-
-          // 7. Floating Action Dock
           _buildFloatingDock(context, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildToggleOption(
-    String label,
-    bool isSelected,
-    bool isDark,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
+  Widget _buildToggleOption(String label, bool isSelected, bool isDark, VoidCallback onTap) {
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final onInk = isDark ? AppColors.surfaceSunkenDark : AppColors.surface;
+    final faint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
+    return ButtonShell(
       onTap: onTap,
+      borderRadius: 999,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? Colors.white : Colors.black)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
+          color: isSelected ? ink : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: isSelected
-                ? (isDark ? Colors.black : Colors.white)
-                : (isDark ? Colors.white38 : Colors.black26),
+          style: AppTypography.bodyMuted.copyWith(
+            fontWeight: FontWeight.w600,
+            color: isSelected ? onInk : faint,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBadge(
-    String label,
-    IconData icon,
-    bool isDark,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.black.withOpacity(0.03),
-          border: Border.all(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 14,
-              color: isDark ? Colors.white54 : Colors.black45,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Widget _buildBadge(String label, IconData icon, bool isDark, VoidCallback onTap) {
+    return AppChip(label: label, icon: icon, onTap: onTap);
   }
 
   Widget _buildFloatingDock(BuildContext context, bool isDark) {
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final onInk = isDark ? AppColors.surfaceSunkenDark : AppColors.surface;
+    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+    final faint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
     return Positioned(
-      bottom: 5,
-      left: 20,
-      right: 20,
+      bottom: AppSpacing.sm,
+      left: AppSpacing.lg,
+      right: AppSpacing.lg,
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.slate[900] : Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          color: isDark ? AppColors.surfaceDark : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: isDark ? AppColors.lineDark : AppColors.line),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
+            BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08), blurRadius: 20, offset: const Offset(0, 10)),
           ],
         ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Row(
           children: [
-            Row(
-              children: [
-                _buildDockItem(
-                  LucideIcons.calendar,
-                  DateFormat('MMM dd').format(_selectedDate),
-                  isDark,
-                  () => _selectDate(context),
-                ),
-                _buildDockItem(
-                  LucideIcons.tag,
-                  _selectedCategoryName,
-                  isDark,
-                  _showCategoryPicker,
-                ),
-                _buildDockItem(
-                  _addToPersonal
-                      ? LucideIcons.checkCircle2
-                      : LucideIcons.circle,
-                  "Sync",
-                  isDark,
-                  () => setState(() => _addToPersonal = !_addToPersonal),
-                  active: _addToPersonal,
-                ),
-              ],
+            _buildDockItem(
+              Icons.calendar_month_outlined,
+              DateFormat('MMM dd').format(_selectedDate),
+              ink,
+              onInk,
+              sunken,
+              faint,
+              () => _selectDate(context),
+            ),
+            _buildDockItem(
+              Icons.label_outline,
+              _selectedCategoryName,
+              ink,
+              onInk,
+              sunken,
+              faint,
+              _showCategoryPicker,
+            ),
+            _buildDockItem(
+              _addToPersonal ? Icons.check_circle : Icons.circle_outlined,
+              "Sync",
+              ink,
+              onInk,
+              sunken,
+              faint,
+              () => setState(() => _addToPersonal = !_addToPersonal),
+              active: _addToPersonal,
             ),
           ],
         ),
@@ -801,43 +585,37 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   Widget _buildDockItem(
     IconData icon,
     String label,
-    bool isDark,
+    Color ink,
+    Color onInk,
+    Color sunken,
+    Color faint,
     VoidCallback onTap, {
     bool active = false,
   }) {
     return Expanded(
-      child: GestureDetector(
+      child: ButtonShell(
         onTap: onTap,
+        borderRadius: AppRadius.md,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           margin: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
-            color: active
-                ? (isDark ? Colors.white : Colors.black)
-                : (isDark
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.black.withOpacity(0.03)),
-            borderRadius: BorderRadius.circular(12),
+            color: active ? ink : sunken,
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: active
-                    ? (isDark ? Colors.black : Colors.white)
-                    : (isDark ? Colors.white54 : Colors.black54),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: active
-                      ? (isDark ? Colors.black : Colors.white)
-                      : (isDark ? Colors.white70 : Colors.black87),
+              Icon(icon, size: 16, color: active ? onInk : faint),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyMuted.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: active ? onInk : ink,
+                  ),
                 ),
               ),
             ],
@@ -848,81 +626,88 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   }
 
   void _showCategoryPicker() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _CategoryPickerSheet(
-        selectedId: _selectedCategoryId,
-        onSelected: (id, name) => setState(() {
-          _selectedCategoryId = id;
-          _selectedCategoryName = name;
-        }),
-      ),
+    CategoryPickerSheet.show(
+      context,
+      selectedId: _selectedCategoryId,
+      appliesTo: 'expense',
+      onSelected: (id, name) => setState(() {
+        _selectedCategoryId = id;
+        _selectedCategoryName = name;
+      }),
     );
   }
 
-  void _showSplitTypePicker(BuildContext context, bool isDark) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? AppColors.slate[900] : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (modalCtx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: ['EQUAL', 'EXACT', 'PERCENT']
-            .map(
-              (t) => ListTile(
-                title: Text(t),
-                trailing: _splitType == t
-                    ? const Icon(LucideIcons.check)
-                    : null,
-                onTap: () {
-                  setState(() => _splitType = t);
-                  Navigator.pop(modalCtx);
-                },
+  void _showSplitTypePicker(BuildContext context) {
+    AppBottomSheet.show(
+      context,
+      title: 'Split type',
+      builder: (modalCtx) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ['EQUAL', 'EXACT', 'PERCENT'].map((t) {
+            final isDark = Theme.of(modalCtx).brightness == Brightness.dark;
+            final ink = isDark ? AppColors.inkDark : AppColors.ink;
+            return ButtonShell(
+              borderRadius: AppRadius.md,
+              onTap: () {
+                setState(() => _splitType = t);
+                Navigator.pop(modalCtx);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(t, style: AppTypography.body.copyWith(color: ink))),
+                    if (_splitType == t) Icon(Icons.check, color: ink, size: 18),
+                  ],
+                ),
               ),
-            )
-            .toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
-  Future<void> _showGroupPicker(
-    BuildContext context,
-    List<Group> groups,
-    bool isDark,
-  ) async {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? AppColors.slate[900] : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+  Future<void> _showGroupPicker(BuildContext context, List<Group> groups) async {
+    AppBottomSheet.show(
+      context,
+      title: 'Select group',
       builder: (modalCtx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "Select Group",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              ListTile(
-                leading: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.primary[100],
-                  child: Icon(
-                    LucideIcons.user,
-                    color: AppColors.primary[600],
-                    size: 20,
+        final isDark = Theme.of(modalCtx).brightness == Brightness.dark;
+        final ink = isDark ? AppColors.inkDark : AppColors.ink;
+        final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+
+        Widget row({required IconData icon, required String title, required VoidCallback onTap}) {
+          return ButtonShell(
+            borderRadius: AppRadius.md,
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(color: sunken, shape: BoxShape.circle),
+                    child: Icon(icon, color: ink, size: 18),
                   ),
-                ),
-                title: const Text("Personal Space"),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: Text(title, style: AppTypography.body.copyWith(color: ink))),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return SizedBox(
+          height: MediaQuery.of(modalCtx).size.height * 0.5,
+          child: Column(
+            children: [
+              row(
+                icon: Icons.person_outline,
+                title: 'Personal Space',
                 onTap: () {
                   setState(() {
                     _isGroupExpense = false;
@@ -932,26 +717,15 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                   Navigator.pop(modalCtx);
                 },
               ),
-              const Divider(),
+              Divider(color: isDark ? AppColors.lineDark : AppColors.line),
               Expanded(
                 child: ListView.builder(
-                  shrinkWrap: true,
                   itemCount: groups.length,
                   itemBuilder: (context, index) {
                     final g = groups[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: isDark
-                            ? Colors.white10
-                            : Colors.black.withOpacity(0.05),
-                        child: Icon(
-                          LucideIcons.users,
-                          color: isDark ? Colors.white : Colors.black,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(g.name),
+                    return row(
+                      icon: Icons.people_outline,
+                      title: g.name,
                       onTap: () {
                         setState(() => _isGroupExpense = true);
                         _onGroupSelected(g.id);
@@ -965,144 +739,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _CategoryPickerSheet extends ConsumerStatefulWidget {
-  final String? selectedId;
-  final void Function(String id, String name) onSelected;
-
-  const _CategoryPickerSheet({required this.selectedId, required this.onSelected});
-
-  @override
-  ConsumerState<_CategoryPickerSheet> createState() => _CategoryPickerSheetState();
-}
-
-class _CategoryPickerSheetState extends ConsumerState<_CategoryPickerSheet> {
-  final _searchController = TextEditingController();
-  String _query = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final catsAsync = ref.watch(categoriesProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.slate[900]! : Colors.white;
-
-    final allCats = catsAsync.value
-            ?.where((c) => c.appliesTo.contains('expense'))
-            .toList() ??
-        [];
-    final filtered = _query.isEmpty
-        ? allCats
-        : allCats
-            .where((c) => c.name.toLowerCase().contains(_query.toLowerCase()))
-            .toList();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.6,
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.slate[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              'Select Category',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.slate[900],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: 'Search categories...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.slate[300]!),
-                ),
-              ),
-              onChanged: (v) => setState(() => _query = v),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: catsAsync.isLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                : catsAsync.hasError
-                    ? Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Failed to load categories',
-                          style: TextStyle(color: AppColors.slate[500]),
-                        ),
-                      )
-                    : filtered.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              _query.isEmpty
-                                  ? 'No categories available'
-                                  : 'No results for "$_query"',
-                              style: TextStyle(color: AppColors.slate[500]),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: filtered.length,
-                            itemBuilder: (_, i) {
-                              final cat = filtered[i];
-                              final selected = widget.selectedId == cat.id;
-                              return ListTile(
-                                title: Text(cat.name),
-                                trailing: selected
-                                    ? Icon(Icons.check,
-                                        color: Theme.of(context).colorScheme.primary)
-                                    : null,
-                                selected: selected,
-                                onTap: () {
-                                  widget.onSelected(cat.id, cat.name);
-                                  Navigator.pop(context);
-                                },
-                              );
-                            },
-                          ),
-          ),
-          SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 8),
-        ],
-      ),
     );
   }
 }

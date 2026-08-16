@@ -21,7 +21,7 @@ Rails.application.routes.draw do
       member do
         post :invite
         post :members
-        get  :expenses
+        get  :expenses, action: :group_expenses
         post :settle
       end
       collection { post :join }

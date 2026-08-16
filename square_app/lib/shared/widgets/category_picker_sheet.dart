@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
 import '../../features/categories/presentation/categories_provider.dart';
+import 'app_bottom_sheet.dart';
+import 'app_empty_state.dart';
+import 'app_error_state.dart';
+import 'buttons/button_shell.dart';
 
 class CategoryPickerSheet extends ConsumerStatefulWidget {
   final String? selectedId;
@@ -15,9 +21,27 @@ class CategoryPickerSheet extends ConsumerStatefulWidget {
     required this.onSelected,
   });
 
+  /// Convenience opener wired to [AppBottomSheet] so callers don't need to
+  /// reach for `showModalBottomSheet` directly.
+  static Future<void> show(
+    BuildContext context, {
+    required String? selectedId,
+    required String appliesTo,
+    required void Function(String id, String name) onSelected,
+  }) {
+    return AppBottomSheet.show(
+      context,
+      title: 'Select Category',
+      builder: (context) => CategoryPickerSheet(
+        selectedId: selectedId,
+        appliesTo: appliesTo,
+        onSelected: onSelected,
+      ),
+    );
+  }
+
   @override
-  ConsumerState<CategoryPickerSheet> createState() =>
-      _CategoryPickerSheetState();
+  ConsumerState<CategoryPickerSheet> createState() => _CategoryPickerSheetState();
 }
 
 class _CategoryPickerSheetState extends ConsumerState<CategoryPickerSheet> {
@@ -34,120 +58,91 @@ class _CategoryPickerSheetState extends ConsumerState<CategoryPickerSheet> {
   Widget build(BuildContext context) {
     final catsAsync = ref.watch(categoriesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.slate[900]! : Colors.white;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+    final line = isDark ? AppColors.lineDark : AppColors.line;
+    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
 
-    final allCats = catsAsync.value
-            ?.where((c) => c.appliesTo.contains(widget.appliesTo))
-            .toList() ??
-        [];
+    final allCats = catsAsync.value?.where((c) => c.appliesTo.contains(widget.appliesTo)).toList() ?? [];
     final filtered = _query.isEmpty
         ? allCats
-        : allCats
-            .where(
-                (c) => c.name.toLowerCase().contains(_query.toLowerCase()))
-            .toList();
+        : allCats.where((c) => c.name.toLowerCase().contains(_query.toLowerCase())).toList();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.6,
-      ),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.6,
       child: Column(
         children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.slate[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              'Select Category',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.slate[900],
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
+            child: Container(
+              decoration: BoxDecoration(
+                color: sunken,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: line),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: 'Search categories...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.slate[300]!),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: AppTypography.body.copyWith(color: ink),
+                decoration: InputDecoration(
+                  hintText: 'Search categories…',
+                  hintStyle: AppTypography.body.copyWith(color: inkFaint),
+                  prefixIcon: Icon(Icons.search, size: 18, color: inkFaint),
+                  isDense: true,
+                  filled: false,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 ),
+                onChanged: (v) => setState(() => _query = v),
               ),
-              onChanged: (v) => setState(() => _query = v),
             ),
           ),
-          const SizedBox(height: 4),
           Expanded(
             child: catsAsync.isLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
+                ? const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
                 : catsAsync.hasError
-                    ? Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Failed to load categories',
-                          style: TextStyle(color: AppColors.slate[500]),
-                        ),
-                      )
+                    ? AppErrorState(message: 'Failed to load categories')
                     : filtered.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              _query.isEmpty
-                                  ? 'No categories available'
-                                  : 'No results for "$_query"',
-                              style: TextStyle(color: AppColors.slate[500]),
-                            ),
+                        ? AppEmptyState(
+                            icon: Icons.label_outline,
+                            title: _query.isEmpty ? 'No categories available' : 'No results',
+                            message: _query.isEmpty ? null : 'Nothing matches "$_query"',
                           )
                         : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                             itemCount: filtered.length,
                             itemBuilder: (_, i) {
                               final cat = filtered[i];
                               final selected = widget.selectedId == cat.id;
-                              return ListTile(
-                                title: Text(cat.name),
-                                trailing: selected
-                                    ? Icon(
-                                        Icons.check,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      )
-                                    : null,
-                                selected: selected,
+                              final accent = AppColors.categoryAccent(cat.name);
+                              return ButtonShell(
                                 onTap: () {
                                   widget.onSelected(cat.id, cat.name);
                                   Navigator.pop(context);
                                 },
+                                borderRadius: AppRadius.md,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                                      ),
+                                      const SizedBox(width: AppSpacing.md),
+                                      Expanded(
+                                        child: Text(cat.name, style: AppTypography.body.copyWith(color: ink)),
+                                      ),
+                                      if (selected)
+                                        Icon(Icons.check, size: 18, color: ink),
+                                    ],
+                                  ),
+                                ),
                               );
                             },
                           ),
           ),
-          SizedBox(
-              height: MediaQuery.of(context).viewInsets.bottom + 8),
         ],
       ),
     );

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -9,27 +10,27 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final currentPath = GoRouterState.of(context).uri.path;
 
     return Drawer(
+      backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.slate[900],
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.xl, AppSpacing.lg, AppSpacing.sm),
+              child: Text('Menu', style: AppTypography.screenTitle.copyWith(color: ink)),
             ),
-            const Divider(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Divider(height: AppSpacing.xl, color: isDark ? AppColors.lineDark : AppColors.line),
+            ),
             _DrawerItem(
-              icon: LucideIcons.layoutGrid,
+              icon: Icons.grid_view_outlined,
               label: 'Dashboard',
               isSelected: currentPath == '/dashboard',
               onTap: () {
@@ -38,7 +39,7 @@ class AppDrawer extends StatelessWidget {
               },
             ),
             _DrawerItem(
-              icon: LucideIcons.receipt,
+              icon: Icons.receipt_long_outlined,
               label: 'Transactions',
               isSelected: currentPath == '/transactions',
               onTap: () {
@@ -47,7 +48,7 @@ class AppDrawer extends StatelessWidget {
               },
             ),
             _DrawerItem(
-              icon: LucideIcons.users,
+              icon: Icons.people_outline,
               label: 'Groups',
               isSelected: currentPath.startsWith('/groups'),
               onTap: () {
@@ -56,7 +57,7 @@ class AppDrawer extends StatelessWidget {
               },
             ),
             _DrawerItem(
-              icon: LucideIcons.contact2,
+              icon: Icons.contact_page_outlined,
               label: 'Contacts',
               isSelected: currentPath.startsWith('/contacts'),
               onTap: () {
@@ -64,9 +65,12 @@ class AppDrawer extends StatelessWidget {
                 context.go('/contacts');
               },
             ),
-            const Divider(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Divider(height: AppSpacing.xl, color: isDark ? AppColors.lineDark : AppColors.line),
+            ),
             _DrawerItem(
-              icon: LucideIcons.user,
+              icon: Icons.person_outline,
               label: 'Profile',
               isSelected: currentPath == '/profile',
               onTap: () {
@@ -97,32 +101,30 @@ class _DrawerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = isSelected
-        ? Theme.of(context).colorScheme.primary
-        : (isDark ? AppColors.slate[300]! : AppColors.slate[600]!);
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+    final color = isSelected ? ink : inkFaint;
 
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          color: isSelected ? sunken : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 14),
+            Icon(icon, size: 19, color: color),
+            const SizedBox(width: AppSpacing.md),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.w400,
+              style: AppTypography.body.copyWith(
                 color: color,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],

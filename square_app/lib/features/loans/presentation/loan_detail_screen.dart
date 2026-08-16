@@ -3,12 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../features/auth/data/user_model.dart';
 import '../../../features/transactions/data/loan_model.dart';
 import '../../../features/transactions/data/loan_payment_model.dart';
+import '../../../shared/widgets/amount_text.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_chip.dart';
+import '../../../shared/widgets/app_icon_button.dart';
+import '../../../shared/widgets/secondary_button.dart';
 import '../data/loans_repository.dart';
 import 'widgets/interest_timeline_card.dart';
 import 'widgets/record_payment_sheet.dart';
@@ -32,7 +39,7 @@ class LoanDetailScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : const Color(0xFFF7F7F7),
+      backgroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surfaceSunken,
       body: data.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
@@ -85,67 +92,44 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
     final detail = widget.detail;
     final loan = detail.loan;
     final isLent = loan.direction == 'lent';
-    final accentColor = isLent ? Colors.green[600]! : Colors.red[400]!;
     final isDark = widget.isDark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final onRefresh = widget.onRefresh;
 
     return FutureBuilder<String?>(
       future: _userIdFuture,
       builder: (context, snap) {
         final currentUserId = snap.data;
-        final isLender = currentUserId != null &&
-            loan.lenderUserId == currentUserId;
-        final isBorrower = currentUserId != null &&
-            loan.borrowerUserId == currentUserId;
+        final isLender = currentUserId != null && loan.lenderUserId == currentUserId;
+        final isBorrower = currentUserId != null && loan.borrowerUserId == currentUserId;
 
         return Scaffold(
-          backgroundColor:
-              isDark ? Colors.black : const Color(0xFFF7F7F7),
+          backgroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surfaceSunken,
           appBar: AppBar(
-            backgroundColor:
-                isDark ? Colors.black : const Color(0xFFF7F7F7),
+            backgroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surfaceSunken,
             elevation: 0,
-            leading: IconButton(
-              icon: Icon(LucideIcons.arrowLeft,
-                  color: isDark ? Colors.white : Colors.black),
-              onPressed: () => context.pop(),
-            ),
-            title: Text(
-              loan.contactName,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-              ),
-            ),
+            leading: AppIconButton(icon: Icons.arrow_back, onPressed: () => context.pop()),
+            title: Text(loan.contactName, style: AppTypography.screenTitle.copyWith(color: ink, fontSize: 18)),
             actions: [
               if (isLender) ...[
-                IconButton(
-                  icon: Icon(LucideIcons.pencil,
-                      color: isDark ? Colors.white70 : Colors.black54),
+                AppIconButton(
+                  icon: Icons.edit,
                   onPressed: () async {
-                    final refreshed = await context.push<bool>(
-                        '/loans/${loan.id}/edit',
-                        extra: loan);
+                    final refreshed = await context.push<bool>('/loans/${loan.id}/edit', extra: loan);
                     if (refreshed == true) onRefresh();
                   },
                 ),
-                IconButton(
-                  icon: Icon(LucideIcons.bell,
-                      color: isDark ? Colors.white70 : Colors.black54),
+                AppIconButton(
+                  icon: Icons.notifications_outlined,
                   onPressed: () async {
                     final prefs = await SharedPreferences.getInstance();
                     final token = prefs.getString('token') ?? '';
                     if (context.mounted) {
-                      ReminderSheet.show(
-                        context,
-                        loan: loan,
-                        token: token,
-                        repository: ref.read(loansRepositoryProvider),
-                      );
+                      ReminderSheet.show(context, loan: loan, token: token, repository: ref.read(loansRepositoryProvider));
                     }
                   },
                 ),
+                const SizedBox(width: AppSpacing.xs),
               ],
             ],
           ),
@@ -155,21 +139,15 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
                     final prefs = await SharedPreferences.getInstance();
                     final token = prefs.getString('token') ?? '';
                     if (context.mounted) {
-                      await RecordPaymentSheet.show(
-                        context,
-                        loan: loan,
-                        token: token,
-                        repository: ref.read(loansRepositoryProvider),
-                      );
+                      await RecordPaymentSheet.show(context, loan: loan, token: token, repository: ref.read(loansRepositoryProvider));
                       onRefresh();
                     }
                   },
-                  backgroundColor: Colors.green[600],
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.ink,
+                  foregroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
                   elevation: 0,
-                  icon: const Icon(LucideIcons.checkCircle, size: 18),
-                  label: const Text('Record Payment',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  icon: const Icon(Icons.check_circle, size: 18),
+                  label: Text('Record Payment', style: AppTypography.button.copyWith(color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface)),
                 )
               : null,
           body: RefreshIndicator(
@@ -181,7 +159,7 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(bottom: 100),
               children: [
-                _AmountCard(loan: loan, accentColor: accentColor, isDark: isDark),
+                _AmountCard(loan: loan, isLent: isLent, isDark: isDark),
                 if (loan.interestMode != 'none')
                   InterestTimelineCard(
                     timeline: detail.interestTimeline,
@@ -208,9 +186,7 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
                 if (detail.payments.isEmpty)
                   _EmptyPayments(isDark: isDark)
                 else
-                  ...detail.payments.map(
-                    (p) => _PaymentTile(payment: p, isDark: isDark),
-                  ),
+                  ...detail.payments.map((p) => _PaymentTile(payment: p, isDark: isDark)),
               ],
             ),
           ),
@@ -222,137 +198,72 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
 
 class _AmountCard extends StatelessWidget {
   final Loan loan;
-  final Color accentColor;
+  final bool isLent;
   final bool isDark;
 
-  const _AmountCard(
-      {required this.loan, required this.accentColor, required this.isDark});
+  const _AmountCard({required this.loan, required this.isLent, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF111111) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: isDark
-            ? []
-            : [
-                const BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 8,
-                    offset: Offset(0, 2))
-              ],
-      ),
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
+    return AppCard(
+      margin: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: loan.direction == 'lent'
-                      ? Colors.green.withOpacity(0.12)
-                      : Colors.red.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  loan.direction == 'lent' ? 'LENT' : 'BORROWED',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: accentColor),
-                ),
-              ),
-              const SizedBox(width: 8),
+              AppChip(label: isLent ? 'LENT' : 'BORROWED', status: isLent ? AppChipStatus.positive : AppChipStatus.negative),
+              const SizedBox(width: AppSpacing.xs),
               _StatusChip(status: loan.status),
-              if (loan.confirmationStatus == 'confirmed')
-                Container(
-                  margin: const EdgeInsets.only(left: 6),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text('Confirmed',
-                      style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue)),
-                ),
-              if (loan.confirmationStatus == 'disputed')
-                Container(
-                  margin: const EdgeInsets.only(left: 6),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text('Disputed',
-                      style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.orange)),
-                ),
+              if (loan.confirmationStatus == 'confirmed') ...[
+                const SizedBox(width: AppSpacing.xs),
+                const AppChip(label: 'Confirmed', status: AppChipStatus.positive),
+              ],
+              if (loan.confirmationStatus == 'disputed') ...[
+                const SizedBox(width: AppSpacing.xs),
+                const AppChip(label: 'Disputed', status: AppChipStatus.warning),
+              ],
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            formatInr(loan.amount),
-            style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: accentColor),
+          const SizedBox(height: AppSpacing.md),
+          AmountText(
+            amount: loan.amount,
+            sign: isLent ? AmountSign.positive : AmountSign.negative,
+            showSignPrefix: false,
+            style: AppTypography.displayAmount,
           ),
           if (loan.description != null && loan.description!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(loan.description!,
-                style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.white60 : Colors.black45)),
+            const SizedBox(height: AppSpacing.xs),
+            Text(loan.description!, style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              _InfoPair(
-                  label: 'Date',
-                  value: DateFormat('dd MMM y').format(loan.date),
-                  isDark: isDark),
+              _InfoPair(label: 'Date', value: DateFormat('dd MMM y').format(loan.date), ink: ink, inkFaint: inkFaint),
               if (loan.dueDate != null) ...[
-                const SizedBox(width: 24),
-                _InfoPair(
-                    label: 'Due',
-                    value: DateFormat('dd MMM y').format(loan.dueDate!),
-                    isDark: isDark),
+                const SizedBox(width: AppSpacing.xl),
+                _InfoPair(label: 'Due', value: DateFormat('dd MMM y').format(loan.dueDate!), ink: ink, inkFaint: inkFaint),
               ],
             ],
           ),
           if (loan.interestMode != 'none') ...[
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
+            Divider(height: 1, color: isDark ? AppColors.lineDark : AppColors.line),
+            const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                _InfoPair(
-                    label: 'Outstanding',
-                    value: formatInr(loan.outstanding),
-                    isDark: isDark),
-                const SizedBox(width: 24),
-                _InfoPair(
-                    label: 'Total Due',
-                    value: formatInr(loan.totalDue),
-                    isDark: isDark,
-                    highlight: true),
+                _InfoPair(label: 'Outstanding', value: formatInr(loan.outstanding), ink: ink, inkFaint: inkFaint),
+                const SizedBox(width: AppSpacing.xl),
+                _InfoPair(label: 'Total Due', value: formatInr(loan.totalDue), ink: ink, inkFaint: inkFaint, highlight: true),
               ],
             ),
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
+            Divider(height: 1, color: isDark ? AppColors.lineDark : AppColors.line),
+            const SizedBox(height: AppSpacing.md),
             _InterestDetailsRow(loan: loan, isDark: isDark),
           ],
         ],
@@ -367,27 +278,12 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color color;
-    switch (status) {
-      case 'PAID':
-        color = Colors.green[600]!;
-        break;
-      case 'PARTIAL':
-        color = Colors.blue[400]!;
-        break;
-      default:
-        color = Colors.amber[600]!;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(status,
-          style: TextStyle(
-              fontSize: 10, fontWeight: FontWeight.w700, color: color)),
-    );
+    final chipStatus = switch (status) {
+      'PAID' => AppChipStatus.positive,
+      'PARTIAL' => AppChipStatus.neutral,
+      _ => AppChipStatus.warning,
+    };
+    return AppChip(label: status, status: chipStatus);
   }
 }
 
@@ -398,9 +294,12 @@ class _InterestDetailsRow extends StatelessWidget {
 
   String get _modeLabel {
     switch (loan.interestMode) {
-      case 'from_start': return 'From start';
-      case 'penalty':    return 'Penalty';
-      default:           return loan.interestMode;
+      case 'from_start':
+        return 'From start';
+      case 'penalty':
+        return 'Penalty';
+      default:
+        return loan.interestMode;
     }
   }
 
@@ -417,8 +316,8 @@ class _InterestDetailsRow extends StatelessWidget {
     ];
 
     return Wrap(
-      spacing: 8,
-      runSpacing: 6,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
       children: chips.map((c) => _InterestChip(label: c.$1, value: c.$2, isDark: isDark)).toList(),
     );
   }
@@ -432,30 +331,19 @@ class _InterestChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(8),
+        color: isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: RichText(
         text: TextSpan(
           children: [
-            TextSpan(
-              text: '$label  ',
-              style: TextStyle(
-                fontSize: 10,
-                color: isDark ? Colors.white38 : Colors.black38,
-              ),
-            ),
-            TextSpan(
-              text: value,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white70 : Colors.black87,
-              ),
-            ),
+            TextSpan(text: '$label  ', style: AppTypography.caption.copyWith(color: inkFaint, fontSize: 10)),
+            TextSpan(text: value, style: AppTypography.caption.copyWith(color: ink, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -466,32 +354,31 @@ class _InterestChip extends StatelessWidget {
 class _InfoPair extends StatelessWidget {
   final String label;
   final String value;
-  final bool isDark;
+  final Color ink;
+  final Color inkFaint;
   final bool highlight;
 
-  const _InfoPair(
-      {required this.label,
-      required this.value,
-      required this.isDark,
-      this.highlight = false});
+  const _InfoPair({
+    required this.label,
+    required this.value,
+    required this.ink,
+    required this.inkFaint,
+    this.highlight = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: TextStyle(
-                fontSize: 10,
-                color: isDark ? Colors.white38 : Colors.black38)),
-        Text(value,
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight:
-                    highlight ? FontWeight.w700 : FontWeight.w500,
-                color: highlight
-                    ? Colors.orange[400]
-                    : (isDark ? Colors.white70 : Colors.black87))),
+        Text(label, style: AppTypography.caption.copyWith(color: inkFaint, fontSize: 10)),
+        Text(
+          value,
+          style: AppTypography.bodyMuted.copyWith(
+            fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
+            color: highlight ? AppColors.warning : ink,
+          ),
+        ),
       ],
     );
   }
@@ -504,17 +391,10 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        label.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
-          color: isDark ? const Color(0xFFCCCCCC) : const Color(0xFF3A3A3A),
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
+      child: Text(label.toUpperCase(), style: AppTypography.label.copyWith(color: inkFaint)),
     );
   }
 }
@@ -525,16 +405,10 @@ class _EmptyPayments extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: Text(
-          'No payments recorded yet',
-          style: TextStyle(
-              color: isDark ? Colors.white30 : Colors.black26,
-              fontSize: 13),
-        ),
-      ),
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Center(child: Text('No payments recorded yet', style: AppTypography.bodyMuted.copyWith(color: inkFaint))),
     );
   }
 }
@@ -546,52 +420,31 @@ class _PaymentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF111111) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
+    return AppCard(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
           Container(
             width: 34,
             height: 34,
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(LucideIcons.checkCircle,
-                size: 16, color: Colors.green[600]),
+            decoration: BoxDecoration(color: AppColors.positiveSoft, shape: BoxShape.circle),
+            child: const Icon(Icons.check_circle, size: 16, color: AppColors.positive),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  payment.note ?? 'Payment',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-                Text(
-                  DateFormat('dd MMM y').format(payment.paidAt),
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                ),
+                Text(payment.note ?? 'Payment', style: AppTypography.cardHeading.copyWith(color: ink, fontSize: 13)),
+                Text(DateFormat('dd MMM y').format(payment.paidAt), style: AppTypography.caption.copyWith(color: inkFaint)),
               ],
             ),
           ),
-          Text(
-            formatInr(payment.amount),
-            style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: Colors.green[600]),
-          ),
+          AmountText(amount: payment.amount, sign: AmountSign.positive, showSignPrefix: false, style: AppTypography.amountInline),
         ],
       ),
     );
@@ -614,50 +467,36 @@ class _ConfirmationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loan.confirmationStatus != 'pending') return const SizedBox.shrink();
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
-      ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+
+    return AppCard(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Confirm this loan?',
-              style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: Colors.blue)),
-          const SizedBox(height: 8),
+          Text('Confirm this loan?', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: SecondaryButton(
+                  text: 'Confirm',
                   onPressed: () async {
-                    await repository.updateConfirmation(
-                        token, loan.id, 'confirmed');
+                    await repository.updateConfirmation(token, loan.id, 'confirmed');
                     onUpdated();
                   },
-                  style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.green[600],
-                      side: BorderSide(color: Colors.green[600]!)),
-                  child: const Text('Confirm'),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: OutlinedButton(
+                child: SecondaryButton(
+                  text: 'Dispute',
                   onPressed: () async {
-                    await repository.updateConfirmation(
-                        token, loan.id, 'disputed');
+                    await repository.updateConfirmation(token, loan.id, 'disputed');
                     onUpdated();
                   },
-                  style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red[400],
-                      side: BorderSide(color: Colors.red[400]!)),
-                  child: const Text('Dispute'),
                 ),
               ),
             ],

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/utils/currency_formatter.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/currency_formatter.dart';
+import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/buttons/button_shell.dart';
 
 class InterestTimelineCard extends StatefulWidget {
   final List<Map<String, dynamic>> timeline;
@@ -23,114 +28,71 @@ class _InterestTimelineCardState extends State<InterestTimelineCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: widget.isDark
-            ? const Color(0xFF111111)
-            : const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(14),
-      ),
+    final isDark = widget.isDark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
+    return AppCard(
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
-          InkWell(
-            onTap: widget.timeline.isEmpty
-                ? null
-                : () => setState(() => _expanded = !_expanded),
-            borderRadius: BorderRadius.circular(14),
+          ButtonShell(
+            onTap: widget.timeline.isEmpty ? null : () => setState(() => _expanded = !_expanded),
+            borderRadius: AppRadius.lg,
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Row(
                 children: [
-                  Icon(Icons.trending_up,
-                      size: 18,
-                      color: Colors.orange[400]),
-                  const SizedBox(width: 8),
+                  Icon(Icons.trending_up, size: 18, color: AppColors.warning),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Accrued Interest',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: widget.isDark ? Colors.white70 : Colors.black54,
-                          ),
-                        ),
+                        Text('Accrued Interest', style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
                         Text(
                           formatInr(widget.accruedInterest),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.orange[400],
-                          ),
+                          style: AppTypography.amountInline.copyWith(color: AppColors.warning),
                         ),
                       ],
                     ),
                   ),
                   if (widget.timeline.isNotEmpty)
-                    Icon(
-                      _expanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: Colors.grey,
-                    ),
+                    Icon(_expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: inkFaint, size: 18),
                 ],
               ),
             ),
           ),
           if (_expanded) ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: isDark ? AppColors.lineDark : AppColors.line),
             SizedBox(
               height: 200,
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 itemCount: widget.timeline.length,
                 itemBuilder: (_, i) {
                   final entry = widget.timeline[i];
                   final isAggregated = entry.containsKey('period_interest');
                   final label = isAggregated
                       ? entry['date'] as String
-                      : DateFormat('dd MMM').format(
-                          DateTime.parse(entry['date'] as String));
-                  final interest = ((isAggregated
-                          ? entry['period_interest']
-                          : entry['daily_interest']) as num)
-                      .toDouble();
-                  final cumulative =
-                      (entry['cumulative'] as num).toDouble();
+                      : DateFormat('dd MMM').format(DateTime.parse(entry['date'] as String));
+                  final interest =
+                      ((isAggregated ? entry['period_interest'] : entry['daily_interest']) as num).toDouble();
+                  final cumulative = (entry['cumulative'] as num).toDouble();
                   return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
                     child: Row(
                       children: [
-                        Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: widget.isDark
-                                ? Colors.white60
-                                : Colors.black45,
-                          ),
-                        ),
+                        Text(label, style: AppTypography.caption.copyWith(color: inkFaint)),
                         const Spacer(),
-                        Text(
-                          '+${formatInr(interest)}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.orange),
-                        ),
-                        const SizedBox(width: 16),
+                        Text('+${formatInr(interest)}', style: AppTypography.caption.copyWith(color: AppColors.warning)),
+                        const SizedBox(width: AppSpacing.lg),
                         SizedBox(
-                          width: 80,
+                          width: 84,
                           child: Text(
                             formatInr(cumulative),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: widget.isDark
-                                  ? Colors.white70
-                                  : Colors.black87,
-                            ),
+                            style: AppTypography.caption.copyWith(color: ink, fontWeight: FontWeight.w600),
                             textAlign: TextAlign.right,
                           ),
                         ),

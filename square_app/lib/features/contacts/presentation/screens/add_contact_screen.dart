@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/app_icon_button.dart';
+import '../../../../shared/widgets/ghost_button.dart';
+import '../../../../shared/widgets/input_field.dart';
 import '../contacts_provider.dart';
 import '../../data/contact_model.dart';
 
@@ -15,14 +19,14 @@ class AddContactScreen extends ConsumerStatefulWidget {
 }
 
 class _AddContactScreenState extends ConsumerState<AddContactScreen> {
-  final _nameController    = TextEditingController();
-  final _phoneController   = TextEditingController();
-  final _emailController   = TextEditingController();
-  final _searchController  = TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _searchController = TextEditingController();
 
   String? _selectedLinkedUserId;
-  bool _isLoading   = false;
-  bool _showSearch  = false;
+  bool _isLoading = false;
+  bool _showSearch = false;
 
   bool get _isEditing => widget.contact != null;
 
@@ -30,7 +34,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
   void initState() {
     super.initState();
     if (_isEditing) {
-      _nameController.text  = widget.contact!.name;
+      _nameController.text = widget.contact!.name;
       _phoneController.text = widget.contact!.phone ?? '';
       _emailController.text = widget.contact!.email ?? '';
     }
@@ -53,15 +57,15 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
       if (_isEditing) {
         contact = await ref.read(contactsProvider.notifier).updateContact(
               widget.contact!.id,
-              name:  _nameController.text.trim(),
+              name: _nameController.text.trim(),
               phone: _phoneController.text.isEmpty ? null : _phoneController.text,
               email: _emailController.text.isEmpty ? null : _emailController.text,
             );
       } else {
         contact = await ref.read(contactsProvider.notifier).create(
-              name:         _nameController.text.trim(),
-              phone:        _phoneController.text.isEmpty ? null : _phoneController.text,
-              email:        _emailController.text.isEmpty ? null : _emailController.text,
+              name: _nameController.text.trim(),
+              phone: _phoneController.text.isEmpty ? null : _phoneController.text,
+              email: _emailController.text.isEmpty ? null : _emailController.text,
               linkedUserId: _selectedLinkedUserId,
             );
       }
@@ -69,7 +73,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.negative),
         );
       }
     } finally {
@@ -80,144 +84,100 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     final canSave = _nameController.text.trim().isNotEmpty;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.slate[950] : Colors.white,
       appBar: AppBar(
-        title: Text(
-          _isEditing ? 'Edit Contact' : 'New Contact',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: Text(_isEditing ? 'Edit Contact' : 'New Contact'),
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(LucideIcons.x, color: isDark ? Colors.white70 : Colors.black54),
-          onPressed: () => context.pop(),
-        ),
+        leading: AppIconButton(icon: Icons.close, onPressed: () => context.pop()),
         actions: [
-          TextButton(
-            onPressed: (canSave && !_isLoading) ? _save : null,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 18, height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(
-                    'Save',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: canSave
-                          ? (isDark ? Colors.white : Colors.black)
-                          : Colors.grey,
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 8),
+          _isLoading
+              ? const Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              : GhostButton(
+                  text: 'Save',
+                  compact: true,
+                  onPressed: canSave ? _save : null,
+                ),
+          const SizedBox(width: AppSpacing.sm),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  _field(_nameController, 'Name *', LucideIcons.user, isDark,
-                      autofocus: true),
-                  const SizedBox(height: 12),
-                  _field(_phoneController, 'Phone (optional)', LucideIcons.phone,
-                      isDark),
-                  const SizedBox(height: 12),
-                  _field(_emailController, 'Email (optional)', LucideIcons.mail,
-                      isDark),
-
-                  // Search existing — only for new contacts
-                  if (!_isEditing) ...[
-                    const SizedBox(height: 24),
-                    GestureDetector(
-                      onTap: () => setState(() => _showSearch = !_showSearch),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _showSearch
-                                ? LucideIcons.chevronUp
-                                : LucideIcons.search,
-                            size: 14,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _showSearch
-                                ? 'Hide search'
-                                : 'Search existing contacts',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark ? Colors.white54 : Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_showSearch) ...[
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search by name, phone, or email…',
-                          prefixIcon: const Icon(LucideIcons.search, size: 18),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          isDense: true,
-                        ),
-                        onChanged: (_) => setState(() {}),
-                      ),
-                      const SizedBox(height: 8),
-                      _SearchResults(
-                        query: _searchController.text,
-                        isDark: isDark,
-                        onSelect: (c) => context.pop(c),
-                        onLinkPlatformUser: (u) async {
-                          _nameController.text  = u.name;
-                          _emailController.text = u.email;
-                          _phoneController.text = u.mobileNumber ?? '';
-                          setState(() => _selectedLinkedUserId = u.id);
-                          await _save();
-                        },
-                      ),
-                    ],
-                  ],
-                  const SizedBox(height: 40),
-                ],
-              ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: AppSpacing.lg),
+            InputField(
+              label: 'Name',
+              hint: 'Full name',
+              controller: _nameController,
+              prefixIcon: Icons.person_outline,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _field(
-    TextEditingController ctrl,
-    String hint,
-    IconData icon,
-    bool isDark, {
-    bool autofocus = false,
-  }) {
-    return TextField(
-      controller: ctrl,
-      autofocus: autofocus,
-      onChanged: (_) => setState(() {}),
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(icon, size: 18),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        isDense: true,
+            const SizedBox(height: AppSpacing.lg),
+            InputField(
+              label: 'Phone (optional)',
+              hint: 'Phone number',
+              controller: _phoneController,
+              prefixIcon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            InputField(
+              label: 'Email (optional)',
+              hint: 'Email address',
+              controller: _emailController,
+              prefixIcon: Icons.mail_outline,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            if (!_isEditing) ...[
+              const SizedBox(height: AppSpacing.xl),
+              GestureDetector(
+                onTap: () => setState(() => _showSearch = !_showSearch),
+                child: Row(
+                  children: [
+                    Icon(
+                      _showSearch ? Icons.keyboard_arrow_up : Icons.search,
+                      size: 14,
+                      color: inkFaint,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      _showSearch ? 'Hide search' : 'Search existing contacts',
+                      style: AppTypography.bodyMuted.copyWith(color: inkFaint),
+                    ),
+                  ],
+                ),
+              ),
+              if (_showSearch) ...[
+                const SizedBox(height: AppSpacing.md),
+                InputField(
+                  label: 'Search',
+                  hint: 'Search by name, phone, or email…',
+                  controller: _searchController,
+                  prefixIcon: Icons.search,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _SearchResults(
+                  query: _searchController.text,
+                  onSelect: (c) => context.pop(c),
+                  onLinkPlatformUser: (u) async {
+                    _nameController.text = u.name;
+                    _emailController.text = u.email;
+                    _phoneController.text = u.mobileNumber ?? '';
+                    setState(() => _selectedLinkedUserId = u.id);
+                    await _save();
+                  },
+                ),
+              ],
+            ],
+            const SizedBox(height: AppSpacing.xxl),
+          ],
+        ),
       ),
     );
   }
@@ -225,68 +185,63 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
 
 class _SearchResults extends ConsumerWidget {
   final String query;
-  final bool isDark;
   final ValueChanged<Contact> onSelect;
   final ValueChanged<PlatformUserResult> onLinkPlatformUser;
 
   const _SearchResults({
     required this.query,
-    required this.isDark,
     required this.onSelect,
     required this.onLinkPlatformUser,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
     if (query.length < 2) {
       return Text(
         'Type at least 2 characters to search',
-        style: TextStyle(
-          fontSize: 12,
-          color: isDark ? Colors.white38 : Colors.black38,
-        ),
+        style: AppTypography.caption.copyWith(color: inkFaint),
       );
     }
     final result = ref.watch(contactSearchProvider(query));
     return result.when(
       loading: () => const Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (e, _) => Text('Error: $e'),
+      error: (e, _) => Text('Error: $e', style: AppTypography.caption.copyWith(color: AppColors.negative)),
       data: (data) {
         if (data.contacts.isEmpty && data.platformUsers.isEmpty) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              'No results for "$query"',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.white38 : Colors.black38,
-              ),
-            ),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            child: Text('No results for "$query"', style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
           );
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (data.contacts.isNotEmpty) ...[
-              _sectionLabel('YOUR CONTACTS', isDark),
+              _sectionLabel('YOUR CONTACTS', inkFaint),
               ...data.contacts.map((c) => _tile(
+                    ink,
+                    inkFaint,
                     c.name,
                     c.phone ?? c.email ?? '',
                     null,
-                    isDark,
                     onTap: () => onSelect(c),
                   )),
             ],
             if (data.platformUsers.isNotEmpty) ...[
-              _sectionLabel('ON PLATFORM', isDark),
+              _sectionLabel('ON PLATFORM', inkFaint),
               ...data.platformUsers.map((u) => _tile(
+                    ink,
+                    inkFaint,
                     u.name,
                     u.email,
-                    Colors.green[600],
-                    isDark,
+                    AppColors.positive,
                     onTap: () => onLinkPlatformUser(u),
                   )),
             ],
@@ -296,28 +251,29 @@ class _SearchResults extends ConsumerWidget {
     );
   }
 
-  Widget _sectionLabel(String label, bool isDark) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Text(label,
-            style: const TextStyle(fontSize: 11, color: Colors.grey)),
+  Widget _sectionLabel(String label, Color color) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Text(label, style: AppTypography.label.copyWith(color: color)),
       );
 
-  Widget _tile(String name, String sub, Color? subColor, bool isDark,
-      {required VoidCallback onTap}) {
+  Widget _tile(Color ink, Color inkFaint, String name, String sub, Color? subColor, {required VoidCallback onTap}) {
+    final accent = AppColors.categoryAccent(name);
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        radius: 18,
-        backgroundColor: isDark ? AppColors.slate[700] : AppColors.slate[200],
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : '?',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      leading: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(color: accent.withValues(alpha: 0.15), shape: BoxShape.circle),
+        child: Center(
+          child: Text(
+            name.isNotEmpty ? name[0].toUpperCase() : '?',
+            style: AppTypography.bodyEmphasis.copyWith(color: accent, fontSize: 13),
+          ),
         ),
       ),
-      title: Text(name, style: const TextStyle(fontSize: 13)),
-      subtitle: Text(sub,
-          style: TextStyle(fontSize: 11, color: subColor ?? Colors.grey)),
+      title: Text(name, style: AppTypography.bodyEmphasis.copyWith(color: ink, fontSize: 13)),
+      subtitle: Text(sub, style: AppTypography.caption.copyWith(color: subColor ?? inkFaint)),
       onTap: onTap,
     );
   }

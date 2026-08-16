@@ -47,11 +47,11 @@ module Dashboard
     end
 
     def lent_amount
-      @loan_model.where(user: @user, loan_type: "LENT", status: "PENDING").sum(:amount).to_f
+      @loan_model.where(lender_user_id: @user.id, status: "PENDING").sum(:amount).to_f
     end
 
     def borrowed_amount
-      @loan_model.where(user: @user, loan_type: "BORROWED", status: "PENDING").sum(:amount).to_f
+      @loan_model.where(borrower_user_id: @user.id, status: "PENDING").sum(:amount).to_f
     end
 
     def recent_expenses

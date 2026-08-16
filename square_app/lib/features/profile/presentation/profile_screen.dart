@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/glass_container.dart';
-import '../../../../shared/widgets/primary_button.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/buttons/button_shell.dart';
+import '../../../../shared/widgets/secondary_button.dart';
 import '../../auth/presentation/auth_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -15,172 +17,147 @@ class ProfileScreen extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final user = authState.value;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkMuted = isDark ? AppColors.inkMutedDark : AppColors.inkMuted;
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           children: [
-            const SizedBox(height: 48), // Spacing for top
-            Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary[400]!,
-                          AppColors.primary[600]!,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary[500]!.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        user?.firstName.isNotEmpty == true
-                            ? user!.firstName[0].toUpperCase()
-                            : 'U',
-                        style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+            const SizedBox(height: AppSpacing.xxl),
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: ink),
+              child: Center(
+                child: Text(
+                  user?.firstName.isNotEmpty == true ? user!.firstName[0].toUpperCase() : 'U',
+                  style: AppTypography.displayAmount.copyWith(
+                    color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
                   ),
-                ],
+                ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               user != null ? '${user.firstName} ${user.lastName}' : 'User',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.slate[900],
-              ),
+              style: AppTypography.screenTitle.copyWith(color: ink),
             ),
-            const SizedBox(height: 8),
-            Text(
-              user?.email ?? 'No email',
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? AppColors.slate[400] : AppColors.slate[500],
-              ),
-            ),
-            const SizedBox(height: 48),
+            const SizedBox(height: AppSpacing.xs),
+            Text(user?.email ?? 'No email', style: AppTypography.body.copyWith(color: inkMuted)),
+            const SizedBox(height: AppSpacing.xxl),
 
-            // Profile Options Section
-            GlassContainer(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
+            AppCard(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
               child: Column(
                 children: [
-                  _buildProfileOption(
-                    context,
-                    icon: LucideIcons.user,
+                  _ProfileOption(
+                    icon: Icons.person_outline,
                     title: 'Personal Information',
-                    onTap: () {},
+                    enabled: false,
                   ),
-                  _buildProfileOption(
-                    context,
-                    icon: LucideIcons.settings,
+                  _ProfileOption(
+                    icon: Icons.settings_outlined,
                     title: 'Settings',
-                    onTap: () {},
+                    enabled: false,
                   ),
-                  _buildProfileOption(
-                    context,
-                    icon: LucideIcons.toggleLeft,
+                  _ProfileOption(
+                    icon: Icons.add_circle_outline,
                     title: 'Features',
                     onTap: () => context.push('/profile/features'),
                   ),
-                  _buildProfileOption(
-                    context,
-                    icon: LucideIcons.tag,
+                  _ProfileOption(
+                    icon: Icons.label_outline,
                     title: 'Categories',
                     onTap: () => context.push('/profile/categories'),
                   ),
-                  _buildProfileOption(
-                    context,
-                    icon: LucideIcons.bell,
+                  _ProfileOption(
+                    icon: Icons.notifications_outlined,
                     title: 'Notifications',
-                    onTap: () {},
+                    enabled: false,
                   ),
-                  _buildProfileOption(
-                    context,
-                    icon: LucideIcons.shield,
+                  _ProfileOption(
+                    icon: Icons.shield_outlined,
                     title: 'Privacy & Security',
-                    onTap: () {},
+                    enabled: false,
+                    isLast: true,
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xl),
 
-            PrimaryButton(
-              text: 'Log Out',
-              icon: LucideIcons.logOut,
+            SecondaryButton(
+              text: 'Log out',
+              icon: Icons.logout,
               onPressed: () async {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) {
                   context.go('/auth');
                 }
               },
-              // Make it look like a danger/secondary action? For now use PrimaryButton
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildProfileOption(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
+class _ProfileOption extends StatelessWidget {
+  const _ProfileOption({
+    required this.icon,
+    required this.title,
+    this.onTap,
+    this.enabled = true,
+    this.isLast = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final VoidCallback? onTap;
+  final bool enabled;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+    final line = isDark ? AppColors.lineDark : AppColors.line;
+    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+    final fg = enabled ? ink : inkFaint;
 
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.slate[100],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: isDark ? Colors.white : AppColors.slate[700],
+    return Container(
+      decoration: BoxDecoration(
+        border: isLast ? null : Border(bottom: BorderSide(color: line)),
+      ),
+      child: ButtonShell(
+        onTap: enabled ? onTap : null,
+        borderRadius: 0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(color: sunken, borderRadius: BorderRadius.circular(AppRadius.sm)),
+                child: Icon(icon, size: 18, color: fg),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(title, style: AppTypography.body.copyWith(color: fg, fontWeight: FontWeight.w600)),
+              ),
+              if (enabled)
+                Icon(Icons.chevron_right, size: 18, color: inkFaint)
+              else
+                Text('Soon', style: AppTypography.caption.copyWith(color: inkFaint)),
+            ],
+          ),
         ),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white : AppColors.slate[800],
-        ),
-      ),
-      trailing: Icon(
-        LucideIcons.chevronRight,
-        size: 20,
-        color: isDark ? AppColors.slate[600] : AppColors.slate[400],
-      ),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     );
   }
 }

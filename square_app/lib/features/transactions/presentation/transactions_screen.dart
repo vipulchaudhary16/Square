@@ -5,7 +5,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_empty_state.dart';
+import '../../../shared/widgets/app_error_state.dart';
+import '../../../shared/widgets/app_skeleton.dart';
+import '../../../shared/widgets/buttons/button_shell.dart';
 import '../../expense/data/expense_model.dart';
 import '../data/income_model.dart';
 import '../data/investment_model.dart';
@@ -15,18 +21,7 @@ import '../../../../shared/widgets/add_entry_bottom_sheet.dart';
 import '../../../../shared/widgets/menu_button.dart';
 import 'widgets/premium_transaction_card.dart';
 
-class _TabInfo {
-  final String label;
-  final Color color;
-  const _TabInfo(this.label, this.color);
-}
-
-const _tabs = [
-  _TabInfo('Expenses', Color(0xFFef4444)),
-  _TabInfo('Income', Color(0xFF22c55e)),
-  _TabInfo('Invest', Color(0xFF8b5cf6)),
-  _TabInfo('Loans', Color(0xFFf59e0b)),
-];
+const _tabLabels = ['Expenses', 'Income', 'Invest', 'Loans'];
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -74,73 +69,55 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeColor = _tabs[_selectedIndex].color;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final onInk = isDark ? AppColors.surfaceSunkenDark : AppColors.surface;
+    final bg = isDark ? AppColors.surfaceSunkenDark : AppColors.surfaceSunken;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : const Color(0xFFF7F7F7),
+      backgroundColor: bg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => AddEntryBottomSheet.show(context),
-        backgroundColor: activeColor,
-        foregroundColor: Colors.white,
+        backgroundColor: ink,
+        foregroundColor: onInk,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(LucideIcons.plus, size: 22),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+        child: const Icon(Icons.add, size: 22),
       ),
       appBar: AppBar(
-        systemOverlayStyle:
-            isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-        backgroundColor: isDark ? Colors.black : const Color(0xFFF7F7F7),
+        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        backgroundColor: bg,
         elevation: 0,
-        title: Text(
-          'Transactions',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w700,
-            fontSize: 22,
-            letterSpacing: -0.5,
-          ),
-        ),
+        title: Text('Transactions', style: AppTypography.screenTitle.copyWith(color: ink)),
         actions: const [MenuButton()],
       ),
       body: Column(
         children: [
-          // Custom type-colored tab bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 0),
             child: Row(
               children: List.generate(4, (i) {
-                final tab = _tabs[i];
                 final isSelected = _selectedIndex == i;
                 return Expanded(
-                  child: GestureDetector(
+                  child: ButtonShell(
                     onTap: () => _tabController.animateTo(i),
-                    behavior: HitTestBehavior.opaque,
+                    borderRadius: AppRadius.sm,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeInOut,
                       margin: const EdgeInsets.symmetric(horizontal: 3),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? tab.color.withOpacity(isDark ? 0.18 : 0.10)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
+                        color: isSelected ? ink : Colors.transparent,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                       child: Center(
                         child: AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 200),
-                          style: TextStyle(
-                            color: isSelected
-                                ? tab.color
-                                : (isDark
-                                    ? const Color(0xFF444444)
-                                    : const Color(0xFFBBBBBB)),
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            fontSize: 12.5,
+                          style: AppTypography.bodyMuted.copyWith(
+                            color: isSelected ? onInk : (isDark ? AppColors.inkFaintDark : AppColors.inkFaint),
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                           ),
-                          child: Text(tab.label),
+                          child: Text(_tabLabels[i]),
                         ),
                       ),
                     ),
@@ -149,13 +126,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
               }),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                TransactionListView<Expense>(
-                    provider: transactionsExpensesProvider),
+                TransactionListView<Expense>(provider: transactionsExpensesProvider),
                 TransactionListView<Income>(provider: incomesProvider),
                 TransactionListView<Investment>(provider: investmentsProvider),
                 TransactionListView<Loan>(provider: loansProvider),
@@ -175,8 +151,7 @@ class _IndexedItem<T> {
 }
 
 class TransactionListView<T> extends ConsumerWidget {
-  final AsyncNotifierProvider<GenericTransactionNotifier<T>, TransactionState<T>>
-      provider;
+  final AsyncNotifierProvider<GenericTransactionNotifier<T>, TransactionState<T>> provider;
 
   const TransactionListView({super.key, required this.provider});
 
@@ -186,10 +161,16 @@ class TransactionListView<T> extends ConsumerWidget {
     final notifier = ref.read(provider.notifier);
 
     return stateAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text('Error: $err')),
+      loading: () => ListView.builder(
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, 100),
+        itemCount: 6,
+        itemBuilder: (_, _) => const AppSkeletonRow(),
+      ),
+      error: (err, stack) => AppErrorState(message: '$err', onRetry: () => ref.invalidate(provider)),
       data: (state) {
-        if (state.items.isEmpty) return _buildEmptyState(context);
+        if (state.items.isEmpty) {
+          return AppEmptyState(icon: Icons.inbox_outlined, title: 'No transactions yet');
+        }
 
         // Group by date with stable card indices for animation delay
         final grouped = _groupByDate(state.items);
@@ -206,9 +187,7 @@ class TransactionListView<T> extends ConsumerWidget {
 
         return NotificationListener<ScrollNotification>(
           onNotification: (scrollInfo) {
-            if (state.hasMore &&
-                scrollInfo.metrics.pixels >=
-                    scrollInfo.metrics.maxScrollExtent - 200) {
+            if (state.hasMore && scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
               notifier.loadMore();
             }
             return true;
@@ -220,32 +199,21 @@ class TransactionListView<T> extends ConsumerWidget {
             },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, 100),
               itemCount: flatList.length,
               itemBuilder: (context, i) {
                 final item = flatList[i];
                 if (item == null) {
                   return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Padding(padding: EdgeInsets.all(AppSpacing.lg), child: CircularProgressIndicator()),
                   );
                 }
                 if (item is String) return _buildDateHeader(context, item);
                 if (item is _IndexedItem<T>) {
                   return _buildTransactionCard(context, item.item)
-                      .animate(
-                        delay: Duration(
-                            milliseconds: min(item.index, 10) * 35),
-                      )
+                      .animate(delay: Duration(milliseconds: min(item.index, 10) * 35))
                       .fadeIn(duration: 280.ms)
-                      .slideY(
-                        begin: 0.04,
-                        end: 0,
-                        duration: 280.ms,
-                        curve: Curves.easeOut,
-                      );
+                      .slideY(begin: 0.04, end: 0, duration: 280.ms, curve: Curves.easeOut);
                 }
                 return const SizedBox.shrink();
               },
@@ -259,52 +227,10 @@ class TransactionListView<T> extends ConsumerWidget {
   Widget _buildDateHeader(BuildContext context, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 16, 4, 8),
+      padding: const EdgeInsets.fromLTRB(4, AppSpacing.lg, 4, AppSpacing.sm),
       child: Text(
         label.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
-          color: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFCCCCCC),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF111111)
-                  : const Color(0xFFF0F0F0),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              LucideIcons.inbox,
-              size: 30,
-              color:
-                  isDark ? const Color(0xFF333333) : const Color(0xFFCCCCCC),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No transactions yet',
-            style: TextStyle(
-              color:
-                  isDark ? const Color(0xFF444444) : const Color(0xFFBBBBBB),
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+        style: AppTypography.label.copyWith(color: isDark ? AppColors.inkFaintDark : AppColors.inkFaint),
       ),
     );
   }

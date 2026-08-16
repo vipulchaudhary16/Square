@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/amount_text.dart';
+import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/app_dialog.dart';
+import '../../../../shared/widgets/app_error_state.dart';
+import '../../../../shared/widgets/app_icon_button.dart';
 import '../../../auth/presentation/auth_provider.dart';
 import '../../../groups/presentation/groups_provider.dart';
 import '../../data/expense_model.dart';
@@ -23,39 +29,29 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   bool _isDeleting = false;
 
   Future<void> _deleteExpense() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Expense?'),
-        content: const Text(
-          'Are you sure you want to delete this expense? This action cannot be undone.',
+    var confirmed = false;
+    await AppDialog.show(
+      context,
+      title: 'Delete expense?',
+      message: 'Are you sure you want to delete this expense? This action cannot be undone.',
+      actions: [
+        AppDialogAction(label: 'Cancel', onPressed: () {}),
+        AppDialogAction(
+          label: 'Delete',
+          isDestructive: true,
+          onPressed: () => confirmed = true,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => context.pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => context.pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      ],
     );
 
-    if (confirmed == true) {
+    if (confirmed) {
       setState(() => _isDeleting = true);
       try {
-        await ref
-            .read(expenseProvider.notifier)
-            .deleteExpense(widget.expenseId);
-        if (mounted) context.pop(); // Go back to list
+        await ref.read(expenseProvider.notifier).deleteExpense(widget.expenseId);
+        if (mounted) context.pop();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
         }
       } finally {
         if (mounted) setState(() => _isDeleting = false);
@@ -66,60 +62,42 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final currentUserId = ref.watch(authProvider).value?.id;
     final dataAsync = ref.watch(expenseDetailProvider(widget.expenseId));
     final expense = dataAsync.asData?.value;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Expense Details'),
+        title: Text('Expense Details', style: AppTypography.screenTitle.copyWith(color: ink, fontSize: 18)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            LucideIcons.arrowLeft,
-            color: isDark ? Colors.white : Colors.black,
-          ),
+          icon: Icon(Icons.arrow_back, color: ink),
           onPressed: () => context.pop(),
         ),
         actions: [
           if (expense != null) ...[
-            IconButton(
-              icon: const Icon(LucideIcons.edit),
-              color: isDark ? Colors.white : Colors.black,
-              onPressed: () {
-                context.push('/transactions/edit', extra: expense);
-              },
+            AppIconButton(
+              icon: Icons.edit,
+              onPressed: () => context.push('/transactions/edit', extra: expense),
             ),
-            IconButton(
-              icon: _isDeleting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(LucideIcons.trash2),
-              color: Colors.red,
-              onPressed: _deleteExpense,
-            ),
+            const SizedBox(width: AppSpacing.xs),
+            _isDeleting
+                ? const Padding(
+                    padding: EdgeInsets.all(AppSpacing.sm),
+                    child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                  )
+                : AppIconButton(icon: Icons.delete_outline, onPressed: _deleteExpense),
+            const SizedBox(width: AppSpacing.sm),
           ],
         ],
       ),
       body: dataAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Error: $e'),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () =>
-                    ref.invalidate(expenseDetailProvider(widget.expenseId)),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+        error: (e, _) => AppErrorState(
+          message: '$e',
+          onRetry: () => ref.invalidate(expenseDetailProvider(widget.expenseId)),
         ),
         data: (expense) => RefreshIndicator(
           onRefresh: () async {
@@ -128,79 +106,55 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.slate[800] : Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
+                AppCard(
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
+                  elevated: true,
                   child: Column(
                     children: [
-                      Icon(
-                        LucideIcons.receipt,
-                        size: 48,
-                        color: AppColors.primary[600],
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: AppColors.categoryAccent(expense.categoryName).withValues(alpha: isDark ? 0.18 : 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.receipt_long_outlined,
+                          size: 24,
+                          color: AppColors.categoryAccent(expense.categoryName),
+                        ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
                         expense.description,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.slate[900],
-                        ),
+                        style: AppTypography.sectionHeading.copyWith(color: ink),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '₹${expense.amount.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary[600],
-                        ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AmountText(
+                        amount: expense.amount,
+                        style: AppTypography.displayAmount,
+                        showSignPrefix: false,
                       ),
-                      const SizedBox(height: 24),
-                      Divider(
-                        color: isDark
-                            ? AppColors.slate[700]
-                            : AppColors.slate[200],
-                      ),
-                      const SizedBox(height: 24),
-                      _buildDetailRow(
-                        context,
-                        'Date',
-                        DateFormat('MMM dd, yyyy').format(expense.date),
-                      ),
-                      _buildDetailRow(
-                          context, 'Category', expense.categoryName),
-                      _buildDetailRow(
-                        context,
-                        'Group',
-                        expense.groupName ?? 'Personal',
-                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      Divider(color: isDark ? AppColors.lineDark : AppColors.line),
+                      const SizedBox(height: AppSpacing.xl),
+                      _buildDetailRow(context, 'Date', DateFormat('MMM dd, yyyy').format(expense.date)),
+                      _buildDetailRow(context, 'Category', expense.categoryName),
+                      _buildDetailRow(context, 'Group', expense.groupName ?? 'Personal'),
                       _buildDetailRow(
                         context,
                         'Paid By',
-                        expense.payerId == currentUserId
-                            ? 'You'
-                            : (expense.payerName ?? 'Other'),
+                        expense.payerId == currentUserId ? 'You' : (expense.payerName ?? 'Other'),
                       ),
                     ],
                   ),
                 ),
                 if (expense.groupId != null) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xl),
                   _buildSplitBreakdown(context, isDark, expense),
                 ],
               ],
@@ -211,52 +165,30 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
     );
   }
 
-  Widget _buildSplitBreakdown(
-    BuildContext context,
-    bool isDark,
-    Expense expense,
-  ) {
-    final groupDetails = expense.groupId != null
-        ? ref.watch(groupDetailsProvider(expense.groupId!)).value
-        : null;
+  Widget _buildSplitBreakdown(BuildContext context, bool isDark, Expense expense) {
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+    final groupDetails = expense.groupId != null ? ref.watch(groupDetailsProvider(expense.groupId!)).value : null;
 
     final participants = expense.participants;
     final splits = expense.splits;
     final totalAmount = expense.amount;
     final payerId = expense.payerId;
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.slate[800] : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(LucideIcons.users, size: 20, color: AppColors.primary[600]),
-              const SizedBox(width: 8),
-              Text(
-                'Split Details',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.slate[900],
-                ),
-              ),
+              Icon(Icons.people_outline, size: 18, color: ink),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Split Details', style: AppTypography.sectionHeading.copyWith(color: ink)),
             ],
           ),
-          const SizedBox(height: 16),
-          // Group members and their shares
+          const SizedBox(height: AppSpacing.lg),
           if (groupDetails != null)
             ...groupDetails.members.map((member) {
               final isPayer = member.id == payerId;
@@ -266,34 +198,30 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
               double share = 0;
               if (splits != null && splits.containsKey(member.id)) {
                 share = splits[member.id]!;
-              } else if (isParticipant &&
-                  (expense.splitType == 'EQUAL' || expense.splitType == null)) {
+              } else if (isParticipant && (expense.splitType == 'EQUAL' || expense.splitType == null)) {
                 share = totalAmount / participants.length.toDouble();
               }
 
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Row(
                         children: [
-                          CircleAvatar(
-                            radius: 14,
-                            backgroundColor: AppColors.primary[100],
-                            child: Text(
-                              member.displayName.isNotEmpty
-                                  ? member.displayName[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary[600],
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(color: sunken, shape: BoxShape.circle),
+                            child: Center(
+                              child: Text(
+                                member.displayName.isNotEmpty ? member.displayName[0].toUpperCase() : '?',
+                                style: AppTypography.bodyMuted.copyWith(color: ink, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,43 +229,23 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                                 Text(
                                   member.shortName,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark
-                                        ? Colors.white
-                                        : AppColors.slate[900],
-                                  ),
+                                  style: AppTypography.bodyEmphasis.copyWith(color: ink),
                                 ),
                                 if (isPayer)
-                                  Text(
-                                    'Paid the bill',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.green[400],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                  Text('Paid the bill', style: AppTypography.caption.copyWith(color: AppColors.positive)),
                               ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Text(
-                      '₹${share.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white70 : AppColors.slate[700],
-                      ),
-                    ),
+                    Text('₹${share.toStringAsFixed(2)}', style: AppTypography.amountSmall.copyWith(color: inkFaint)),
                   ],
                 ),
               );
             })
           else
-            const Center(child: Text('Loading split details...')),
+            Center(child: Text('Loading split details…', style: AppTypography.bodyMuted.copyWith(color: inkFaint))),
         ],
       ),
     );
@@ -345,26 +253,15 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
 
   Widget _buildDetailRow(BuildContext context, String label, String value) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: isDark ? AppColors.slate[400] : AppColors.slate[500],
-              fontSize: 14,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: isDark ? Colors.white : AppColors.slate[900],
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(label, style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
+          Text(value, style: AppTypography.bodyEmphasis.copyWith(color: ink)),
         ],
       ),
     );

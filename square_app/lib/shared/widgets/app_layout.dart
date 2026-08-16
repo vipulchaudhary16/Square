@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/utils/scaffold_key.dart';
 import 'add_entry_bottom_sheet.dart';
 import 'app_drawer.dart';
+import 'buttons/button_shell.dart';
 
 class AppLayout extends StatelessWidget {
   final Widget child;
@@ -13,8 +16,7 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile =
-        MediaQuery.of(context).size.width < 768; // Simple breakpoint
+    final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       key: appScaffoldKey,
@@ -26,53 +28,47 @@ class AppLayout extends StatelessWidget {
   }
 
   Widget _buildMobileNav(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentPath = state.uri.path;
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5), // Shadow upwards
-          ),
-        ],
+        color: isDark ? AppColors.surfaceDark : AppColors.surface,
+        border: Border(top: BorderSide(color: isDark ? AppColors.lineDark : AppColors.line)),
       ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavItem(
-                icon: LucideIcons.layoutGrid,
+                icon: Icons.grid_view_outlined,
                 label: 'Home',
                 isSelected: currentPath == '/dashboard',
                 onTap: () => context.go('/dashboard'),
               ),
               _NavItem(
-                icon: LucideIcons.receipt,
+                icon: Icons.receipt_long_outlined,
                 label: 'Transactions',
                 isSelected: currentPath == '/transactions',
                 onTap: () => context.go('/transactions'),
-              ), // Placeholder path
+              ),
               _NavItem(
-                icon: LucideIcons.plus,
+                icon: Icons.add,
                 label: 'Add',
                 isPrimary: true,
                 onTap: () => AddEntryBottomSheet.show(context),
               ),
               _NavItem(
-                icon: LucideIcons.users,
+                icon: Icons.people_outline,
                 label: 'Groups',
                 isSelected: currentPath.startsWith('/groups'),
                 onTap: () => context.go('/groups'),
               ),
               _NavItem(
-                icon: LucideIcons.user,
+                icon: Icons.person_outline,
                 label: 'Profile',
                 isSelected: currentPath == '/profile',
                 onTap: () => context.go('/profile'),
@@ -102,50 +98,48 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
     if (isPrimary) {
-      return GestureDetector(
+      return ButtonShell(
         onTap: onTap,
+        borderRadius: 24,
         child: Container(
-          width: 50,
-          height: 50,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
+            color: ink,
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).shadowColor.withOpacity(0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
-          child: Icon(icon, color: Theme.of(context).colorScheme.onPrimary),
+          child: Icon(icon, color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface, size: 22),
         ),
       );
     }
 
-    final color = isSelected
-        ? Theme.of(context).colorScheme.primary
-        : Theme.of(context).colorScheme.secondary;
+    final color = isSelected ? ink : inkFaint;
 
-    return GestureDetector(
+    return ButtonShell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      borderRadius: AppRadius.md,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: AppTypography.caption.copyWith(
+                color: color,
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

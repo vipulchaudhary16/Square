@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/input_field.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../../shared/widgets/app_icon_button.dart';
 import '../groups_provider.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
@@ -52,22 +54,15 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create New Group'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            LucideIcons.arrowLeft,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-          onPressed: () => context.pop(),
-        ),
+        leading: AppIconButton(icon: Icons.arrow_back, onPressed: () => context.pop()),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Form(
           key: _formKey,
           child: Column(
@@ -75,17 +70,14 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
             children: [
               Text(
                 'Start a new group to track shared expenses with friends, family, or roommates.',
-                style: TextStyle(
-                  color: isDark ? AppColors.slate[400] : AppColors.slate[00],
-                  fontSize: 14,
-                ),
+                style: AppTypography.body.copyWith(color: inkFaint),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xxl),
               InputField(
                 label: 'Group Name',
                 controller: _nameController,
                 hint: 'e.g. Trip to Vegas',
-                prefixIcon: LucideIcons.users, // Or group icon
+                prefixIcon: Icons.people_outline,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a group name';
@@ -93,15 +85,15 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
               InputField(
                 label: 'Description (Optional)',
                 controller: _descController,
                 hint: 'What is this group for?',
-                prefixIcon: LucideIcons.fileText,
+                prefixIcon: Icons.edit,
                 maxLines: 3,
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: AppSpacing.xxxl),
               PrimaryButton(
                 text: 'Create Group',
                 onPressed: _createGroup,

@@ -3,12 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../auth/presentation/auth_provider.dart';
 import '../../feature_flags/presentation/feature_flags_provider.dart';
 import '../../../../shared/widgets/amount_text.dart';
-import '../../../../shared/widgets/glass_container.dart';
+import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/app_empty_state.dart';
+import '../../../../shared/widgets/app_error_state.dart';
+import '../../../../shared/widgets/app_skeleton.dart';
+import '../../../../shared/widgets/ghost_button.dart';
 import '../../transactions/presentation/widgets/premium_transaction_card.dart';
 import '../../../../shared/widgets/menu_button.dart';
 import 'dashboard_provider.dart';
@@ -33,78 +39,86 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(dashboardProvider);
+    final user = ref.watch(authProvider).value;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final showTrends = ref
         .watch(featureFlagsProvider)
         .value
         ?.any((f) => f.key == 'show_expense_trends_chart' && f.value) ??
         false;
 
+    final initial = (user?.firstName.isNotEmpty == true)
+        ? user!.firstName[0].toUpperCase()
+        : 'U';
+
     return Scaffold(
       appBar: AppBar(
         systemOverlayStyle: isDark
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark,
-        title: const Text('Dashboard'),
+        title: Text('Dashboard', style: AppTypography.screenTitle.copyWith(color: ink)),
         automaticallyImplyLeading: false, // No back button on main tabs
-        backgroundColor: Colors.transparent,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 4.0),
+            padding: const EdgeInsets.only(right: AppSpacing.xs),
             child: InkWell(
               onTap: () => context.go('/profile'),
+              borderRadius: BorderRadius.circular(16),
               child: CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primary,
+                backgroundColor: ink,
                 radius: 16,
                 child: Text(
-                  'V',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                  initial,
+                  style: AppTypography.bodyEmphasis.copyWith(
+                    color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
                   ),
                 ),
               ),
             ),
           ),
           const MenuButton(),
+          const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: dashboardState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        loading: () => ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: const [
+            AppSkeletonRow(),
+            AppSkeletonRow(),
+            AppSkeletonRow(),
+          ],
+        ),
+        error: (err, stack) => AppErrorState(
+          message: '$err',
+          onRetry: () => ref.invalidate(dashboardProvider),
+        ),
         data: (data) {
-          if (data == null) return const Center(child: Text('No data'));
+          if (data == null) {
+            return const AppEmptyState(icon: Icons.grid_view_outlined, title: 'No data yet');
+          }
 
           final netBalance = data.totalIncome - data.totalExpenses;
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
               // Stats Carousel
               SizedBox(
-                height: 180,
+                height: 172,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
                   children: [
                     // Net Balance Card (Primary)
                     Container(
-                      width: 280,
-                      margin: const EdgeInsets.only(right: 16),
-                      padding: const EdgeInsets.all(24),
+                      width: 268,
+                      margin: const EdgeInsets.only(right: AppSpacing.md),
+                      padding: const EdgeInsets.all(AppSpacing.xl),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).shadowColor.withOpacity(0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                        color: ink,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,29 +127,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(AppSpacing.sm),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
                                 ),
                                 child: Icon(
-                                  LucideIcons.wallet,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary,
-                                  size: 20,
+                                  Icons.account_balance_wallet_outlined,
+                                  color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
+                                  size: 18,
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: AppSpacing.sm),
                               Text(
-                                'Net Balance',
-                                style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary.withOpacity(0.7),
-                                  fontWeight: FontWeight.w500,
+                                'Net balance',
+                                style: AppTypography.bodyMuted.copyWith(
+                                  color: (isDark ? AppColors.surfaceSunkenDark : AppColors.surface)
+                                      .withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -143,12 +151,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           AmountText(
                             amount: netBalance,
                             showPaise: true,
-                            tooltipBgColor: Theme.of(context).colorScheme.onPrimary,
-                            tooltipTextColor: Theme.of(context).colorScheme.primary,
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onPrimary,
+                            showSignPrefix: false,
+                            tooltipBgColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
+                            tooltipTextColor: ink,
+                            style: AppTypography.amountLarge.copyWith(
+                              color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
                             ),
                           ),
                           Row(
@@ -156,26 +163,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Inc: ${formatInr(data.totalIncome)}',
+                                  'Inc ${formatInr(data.totalIncome)}',
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimary.withOpacity(0.6),
-                                    fontSize: 12,
+                                  style: AppTypography.caption.copyWith(
+                                    color: (isDark ? AppColors.surfaceSunkenDark : AppColors.surface)
+                                        .withValues(alpha: 0.6),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Flexible(
                                 child: Text(
-                                  'Exp: ${formatInr(data.totalExpenses)}',
+                                  'Exp ${formatInr(data.totalExpenses)}',
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimary.withOpacity(0.6),
-                                    fontSize: 12,
+                                  style: AppTypography.caption.copyWith(
+                                    color: (isDark ? AppColors.surfaceSunkenDark : AppColors.surface)
+                                        .withValues(alpha: 0.6),
                                   ),
                                 ),
                               ),
@@ -185,172 +188,112 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ),
 
-                    // Investments Card
                     _buildStatCard(
                       context,
                       title: 'Investments',
                       amount: data.totalInvested,
-                      icon: LucideIcons.trendingUp,
-                      color: Colors.blue,
+                      icon: Icons.trending_up,
+                      sign: AmountSign.neutral,
                       subtext: 'Active investments',
                     ),
-
-                    // Lent Card
                     _buildStatCard(
                       context,
-                      title: 'Money Lent',
+                      title: 'Money lent',
                       amount: data.lentAmount,
-                      icon: LucideIcons.arrowLeftRight,
-                      color: Colors.green,
+                      icon: Icons.swap_horiz,
+                      sign: AmountSign.positive,
                       subtext: 'To be received',
                     ),
-
-                    // Borrowed Card
                     _buildStatCard(
                       context,
                       title: 'Borrowed',
                       amount: data.borrowedAmount,
-                      icon: LucideIcons.arrowLeftRight,
-                      color: Colors.red,
+                      icon: Icons.swap_horiz,
+                      sign: AmountSign.negative,
                       subtext: 'To be paid',
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
 
               // Chart Section
               if (showTrends) ...[
-                GlassContainer(
-                  width: double.infinity,
-                  height: 350,
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Expense Trends',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.slate[800],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: LineChart(
-                          // Switching to LineChart as easier to match "Area" look with fill
-                          LineChartData(
-                            gridData: FlGridData(show: false), // Clean look
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                              rightTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                              topTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  getTitlesWidget: (value, meta) {
-                                    return Text(
+                AppCard(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: SizedBox(
+                    height: 300,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Expense trends', style: AppTypography.sectionHeading.copyWith(color: ink)),
+                        const SizedBox(height: AppSpacing.lg),
+                        Expanded(
+                          child: LineChart(
+                            LineChartData(
+                              gridData: FlGridData(show: false),
+                              titlesData: FlTitlesData(
+                                leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, meta) => Text(
                                       value.toInt().toString(),
-                                      style: TextStyle(
-                                        color: isDark
-                                            ? AppColors.slate[500]
-                                            : AppColors.slate[400],
-                                        fontSize: 10,
+                                      style: AppTypography.caption.copyWith(
+                                        color: isDark ? AppColors.inkFaintDark : AppColors.inkFaint,
                                       ),
-                                    );
-                                  },
-                                  interval: 5, // Show every 5th day
+                                    ),
+                                    interval: 5,
+                                  ),
                                 ),
                               ),
+                              borderData: FlBorderData(show: false),
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: data.expenseGraph
+                                      .map((e) => FlSpot(e.day.toDouble(), e.currentMonth))
+                                      .toList(),
+                                  isCurved: true,
+                                  color: ink,
+                                  barWidth: 2.5,
+                                  dotData: FlDotData(show: false),
+                                  belowBarData: BarAreaData(show: true, color: ink.withValues(alpha: 0.08)),
+                                ),
+                                LineChartBarData(
+                                  spots: data.expenseGraph
+                                      .map((e) => FlSpot(e.day.toDouble(), e.lastMonth))
+                                      .toList(),
+                                  isCurved: true,
+                                  color: isDark ? AppColors.inkFaintDark : AppColors.inkFaint,
+                                  barWidth: 2,
+                                  dotData: FlDotData(show: false),
+                                ),
+                              ],
                             ),
-                            borderData: FlBorderData(show: false),
-                            lineBarsData: [
-                              // Current Month Line
-                              LineChartBarData(
-                                spots: data.expenseGraph
-                                    .map(
-                                      (e) => FlSpot(
-                                        e.day.toDouble(),
-                                        e.currentMonth,
-                                      ),
-                                    )
-                                    .toList(),
-                                isCurved: true,
-                                color: Theme.of(context).colorScheme.primary,
-                                barWidth: 3,
-                                dotData: FlDotData(show: false),
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withOpacity(0.1),
-                                ),
-                              ),
-                              // Last Month Line
-                              LineChartBarData(
-                                spots: data.expenseGraph
-                                    .map(
-                                      (e) =>
-                                          FlSpot(e.day.toDouble(), e.lastMonth),
-                                    )
-                                    .toList(),
-                                isCurved: true,
-                                color: Theme.of(context).colorScheme.secondary,
-                                barWidth: 3,
-                                dotData: FlDotData(show: false),
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.secondary.withOpacity(0.1),
-                                ),
-                              ),
-                            ],
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
               ],
 
               // Recent Transactions Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Recent Transactions',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => context.go('/transactions'),
-                    child: Text(
-                      'View All',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ),
+                  Text('Recent transactions', style: AppTypography.sectionHeading.copyWith(color: ink)),
+                  GhostButton(text: 'View all', compact: true, onPressed: () => context.go('/transactions')),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
 
-              // Transactions List
               if (data.recentExpenses.isEmpty)
-                const Center(child: Text("No expenses yet"))
+                const AppEmptyState(icon: Icons.receipt_long_outlined, title: 'No expenses yet')
               else
                 ...data.recentExpenses.map(
                   (e) => PremiumTransactionCard(
@@ -379,15 +322,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required String title,
     required double amount,
     required IconData icon,
-    required MaterialColor color,
+    required AmountSign sign,
     required String subtext,
   }) {
-    // We shouldn't use MaterialColor directly, so let's default to primary
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
     return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 16),
-      child: GlassContainer(
-        padding: const EdgeInsets.all(20),
+      width: 188,
+      margin: const EdgeInsets.only(right: AppSpacing.md),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -395,49 +341,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: ink.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
-                  child: Icon(
-                    icon,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 18,
-                  ),
+                  child: Icon(icon, color: ink, size: 16),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.label.copyWith(color: inkFaint),
                   ),
                 ),
               ],
             ),
-            AmountText(
-              amount: amount,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              ),
-            ),
-            Text(
-              subtext,
-              style: TextStyle(
-                fontSize: 10,
-                color: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.color?.withOpacity(0.6),
-              ),
-            ),
+            AmountText(amount: amount, sign: sign, showSignPrefix: false, style: AppTypography.amountLarge),
+            Text(subtext, style: AppTypography.caption.copyWith(color: inkFaint)),
           ],
         ),
       ),

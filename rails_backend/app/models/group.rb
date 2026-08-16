@@ -50,6 +50,6 @@ class Group < ApplicationRecord
 
   def api_json
     { id: id.to_s, name: name, description: description,
-      created_by: created_by_id.to_s, created_at: created_at.iso8601 }
+      created_by: created_by_id.to_s, created_at: created_at.iso8601, members: members.map(&:member_json) }
   end
 end

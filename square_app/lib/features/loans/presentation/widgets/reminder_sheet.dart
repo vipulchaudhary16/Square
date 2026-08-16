@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/app_bottom_sheet.dart';
+import '../../../../shared/widgets/app_chip.dart';
+import '../../../../shared/widgets/primary_button.dart';
 import '../../../transactions/data/loan_model.dart';
 import '../../data/loans_repository.dart';
 
@@ -21,12 +26,10 @@ class ReminderSheet extends StatefulWidget {
     required String token,
     required LoansRepository repository,
   }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) =>
-          ReminderSheet(loan: loan, token: token, repository: repository),
+    AppBottomSheet.show(
+      context,
+      title: 'Set Reminder',
+      builder: (_) => ReminderSheet(loan: loan, token: token, repository: repository),
     );
   }
 
@@ -90,199 +93,73 @@ class _ReminderSheetState extends State<ReminderSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     final hasDueDate = widget.loan.dueDate != null;
     final tomorrow = DateTime.now().add(const Duration(days: 1));
     final inThreeDays = DateTime.now().add(const Duration(days: 3));
+    final isCustom = _selectedDate != null &&
+        !_isSameDay(_selectedDate!, tomorrow) &&
+        !_isSameDay(_selectedDate!, inThreeDays) &&
+        !(hasDueDate && _isSameDay(_selectedDate!, widget.loan.dueDate!));
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF111111) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Set Reminder',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-          const SizedBox(height: 16),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
             children: [
-              _QuickChip(
+              AppChip(
                 label: 'Tomorrow',
-                selected: _selectedDate != null &&
-                    _isSameDay(_selectedDate!, tomorrow),
+                selected: _selectedDate != null && _isSameDay(_selectedDate!, tomorrow),
                 onTap: () => _selectQuickDate(tomorrow),
-                isDark: isDark,
               ),
-              _QuickChip(
+              AppChip(
                 label: 'In 3 days',
-                selected: _selectedDate != null &&
-                    _isSameDay(_selectedDate!, inThreeDays),
+                selected: _selectedDate != null && _isSameDay(_selectedDate!, inThreeDays),
                 onTap: () => _selectQuickDate(inThreeDays),
-                isDark: isDark,
               ),
-              _QuickChip(
+              AppChip(
                 label: 'On due date',
-                selected: hasDueDate &&
-                    _selectedDate != null &&
-                    _isSameDay(_selectedDate!, widget.loan.dueDate!),
-                onTap: hasDueDate
-                    ? () => _selectQuickDate(widget.loan.dueDate!)
-                    : null,
-                isDark: isDark,
-                disabled: !hasDueDate,
+                selected: hasDueDate && _selectedDate != null && _isSameDay(_selectedDate!, widget.loan.dueDate!),
+                onTap: hasDueDate ? () => _selectQuickDate(widget.loan.dueDate!) : null,
               ),
-              _QuickChip(
+              AppChip(
                 label: 'Custom',
-                selected: _selectedDate != null &&
-                    !_isSameDay(_selectedDate!, tomorrow) &&
-                    !_isSameDay(_selectedDate!, inThreeDays) &&
-                    !(hasDueDate &&
-                        _isSameDay(_selectedDate!, widget.loan.dueDate!)),
+                icon: Icons.calendar_month_outlined,
+                selected: isCustom,
                 onTap: _pickCustomDate,
-                isDark: isDark,
-                icon: LucideIcons.calendar,
               ),
             ],
           ),
           if (_selectedDate != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'Reminder: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: AppTypography.bodyMuted.copyWith(color: inkFaint),
             ),
           ],
           if (widget.loan.direction == 'lent' && widget.loan.borrowerUserId != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(
-                'Also nudge ${widget.loan.contactName}',
-                style: const TextStyle(fontSize: 13),
-              ),
+              title: Text('Also nudge ${widget.loan.contactName}', style: AppTypography.bodyMuted.copyWith(color: ink)),
               value: _nudgeBorrower,
               onChanged: (v) => setState(() => _nudgeBorrower = v),
               dense: true,
             ),
           ],
           if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(_error!,
-                style: const TextStyle(color: Colors.red, fontSize: 12)),
+            const SizedBox(height: AppSpacing.sm),
+            Text(_error!, style: AppTypography.errorText.copyWith(color: AppColors.negative)),
           ],
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _loading ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-              child: _loading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
-                  : const Text('Set Reminder',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 15)),
-            ),
-          ),
+          const SizedBox(height: AppSpacing.xl),
+          PrimaryButton(text: 'Set Reminder', onPressed: _submit, isLoading: _loading),
         ],
-      ),
-    );
-  }
-}
-
-class _QuickChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback? onTap;
-  final bool isDark;
-  final bool disabled;
-  final IconData? icon;
-
-  const _QuickChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    required this.isDark,
-    this.disabled = false,
-    this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: disabled ? null : onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected
-              ? Colors.orange[600]
-              : disabled
-                  ? (isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF0F0F0))
-                  : (isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F5F5)),
-          borderRadius: BorderRadius.circular(20),
-          border: selected
-              ? null
-              : Border.all(
-                  color: isDark
-                      ? const Color(0xFF333333)
-                      : const Color(0xFFDDDDDD)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon,
-                  size: 13,
-                  color: disabled
-                      ? Colors.grey
-                      : (selected ? Colors.white : null)),
-              const SizedBox(width: 4),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: disabled
-                    ? Colors.grey
-                    : (selected
-                        ? Colors.white
-                        : (isDark ? Colors.white70 : Colors.black87)),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

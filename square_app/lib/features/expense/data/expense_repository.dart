@@ -30,7 +30,9 @@ class ExpenseRepository {
         '/expenses/$id',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      return Expense.fromJson(response.data);
+      // GET /expenses/:id wraps the expense fields under an "expense" key
+      // (alongside logs/comments/users), unlike the flat array from index.
+      return Expense.fromJson(response.data['expense']);
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to fetch expense details';
     }

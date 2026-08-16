@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/animated_background.dart';
-import '../../../shared/widgets/glass_container.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/ghost_button.dart';
 import '../../../shared/widgets/input_field.dart';
 import '../../../shared/widgets/primary_button.dart';
 import 'auth_provider.dart';
@@ -57,6 +59,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkMuted = isDark ? AppColors.inkMutedDark : AppColors.inkMuted;
 
     // Listen for success
     ref.listen(authProvider, (previous, next) {
@@ -64,11 +69,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         context.go('/dashboard');
       }
       if (next.hasError) {
-        print(next.error);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.error.toString()),
-            backgroundColor: AppColors.error,
+            backgroundColor: AppColors.negative,
           ),
         );
       }
@@ -80,42 +84,28 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           const AnimatedBackground(),
           Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: GlassContainer(
-                width: double.infinity,
-                // height: null, // Auto height
-                padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: AppCard(
+                elevated: true,
+                padding: const EdgeInsets.all(AppSpacing.xxl),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Lock Icon
+                      // Mark
                       Container(
-                        width: 64,
-                        height: 64,
+                        width: 56,
+                        height: 56,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary[500]!,
-                              AppColors.primary[700]!,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary[500]!.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          color: ink,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
                         ),
-                        child: const Icon(
-                          LucideIcons.lock,
-                          color: Colors.white,
-                          size: 32,
+                        child: Icon(
+                          Icons.lock_outline,
+                          color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
+                          size: 26,
                         ),
                       ).animate().scale(
                         delay: 200.ms,
@@ -123,34 +113,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         curve: Curves.easeOutBack,
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // Title & Subtitle
                       Text(
-                        isLogin ? 'Welcome Back' : 'Create Account',
-                        style: Theme.of(context).textTheme.headlineMedium!
-                            .copyWith(
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : AppColors.slate[900],
-                            ),
+                        isLogin ? 'Welcome back' : 'Create account',
+                        style: AppTypography.screenTitle.copyWith(color: ink),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         isLogin
                             ? 'Sign in to manage your expenses'
                             : 'Enter your details to get started',
-                        style: TextStyle(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.slate[400]
-                              : AppColors.slate[500],
-                        ),
+                        style: AppTypography.body.copyWith(color: inkMuted),
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xl),
 
                       // Signup additional fields
                       if (!isLogin) ...[
@@ -158,50 +136,50 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           children: [
                             Expanded(
                               child: InputField(
-                                label: 'First Name',
+                                label: 'First name',
                                 hint: 'John',
                                 controller: _firstNameController,
-                                prefixIcon: LucideIcons.user,
+                                prefixIcon: Icons.person_outline,
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: InputField(
-                                label: 'Last Name',
+                                label: 'Last name',
                                 hint: 'Doe',
                                 controller: _lastNameController,
-                                prefixIcon: LucideIcons.user,
+                                prefixIcon: Icons.person_outline,
                               ),
                             ),
                           ],
                         ).animate().fadeIn().slideY(begin: 0.2, end: 0),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.md),
                       ],
 
                       InputField(
-                        label: 'Email Address',
+                        label: 'Email address',
                         hint: 'you@example.com',
                         controller: _emailController,
-                        prefixIcon: LucideIcons.mail,
+                        prefixIcon: Icons.mail_outline,
                         keyboardType: TextInputType.emailAddress,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
 
                       InputField(
                         label: 'Password',
                         hint: '••••••••',
                         controller: _passwordController,
-                        prefixIcon: LucideIcons.lock,
+                        prefixIcon: Icons.lock_outline,
                         isPassword: true,
                       ),
 
                       if (!isLogin) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.md),
                         InputField(
-                          label: 'Confirm Password',
+                          label: 'Confirm password',
                           hint: '••••••••',
                           controller: _confirmPasswordController,
-                          prefixIcon: LucideIcons.lock,
+                          prefixIcon: Icons.lock_outline,
                           isPassword: true,
                         ).animate().fadeIn().slideY(begin: 0.2, end: 0),
                       ],
@@ -209,64 +187,54 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       if (isLogin) ...[
                         Align(
                           alignment: Alignment.centerRight,
-                          child: TextButton(
+                          child: GhostButton(
+                            text: 'Forgot password?',
+                            compact: true,
                             onPressed: () {}, // TODO: Implement forgot password
-                            child: Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                color: AppColors.primary[600],
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
                           ),
                         ),
                       ] else ...[
-                        const SizedBox(height: 24),
+                        const SizedBox(height: AppSpacing.lg),
                       ],
 
+                      const SizedBox(height: AppSpacing.xs),
+
                       PrimaryButton(
-                        text: isLogin ? 'Sign In' : 'Create Account',
-                        icon: LucideIcons.arrowRight,
+                        text: isLogin ? 'Sign in' : 'Create account',
+                        icon: Icons.arrow_forward,
                         isLoading: authState.isLoading,
                         onPressed: _submit,
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
 
-                      // Toggle Mode
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            isLogin = !isLogin;
-                            _formKey.currentState?.reset();
-                          });
-                        },
-                        child: RichText(
-                          text: TextSpan(
-                            style: TextStyle(
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? AppColors.slate[400]
-                                  : AppColors.slate[500],
-                              fontSize: 14,
-                              fontFamily: 'Plus Jakarta Sans',
+                      // Toggle mode
+                      Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              isLogin = !isLogin;
+                              _formKey.currentState?.reset();
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                            child: RichText(
+                              text: TextSpan(
+                                style: AppTypography.bodyMuted.copyWith(color: inkMuted),
+                                children: [
+                                  TextSpan(
+                                    text: isLogin
+                                        ? "Don't have an account? "
+                                        : "Already have an account? ",
+                                  ),
+                                  TextSpan(
+                                    text: isLogin ? "Sign up" : "Log in",
+                                    style: AppTypography.bodyEmphasis.copyWith(color: ink),
+                                  ),
+                                ],
+                              ),
                             ),
-                            children: [
-                              TextSpan(
-                                text: isLogin
-                                    ? "Don't have an account? "
-                                    : "Already have an account? ",
-                              ),
-                              TextSpan(
-                                text: isLogin ? "Sign Up" : "Login",
-                                style: TextStyle(
-                                  color: AppColors.primary[600],
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ),

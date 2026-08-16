@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../../core/utils/currency_formatter.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/currency_formatter.dart';
+import '../../../../shared/widgets/amount_input_field.dart';
+import '../../../../shared/widgets/app_bottom_sheet.dart';
+import '../../../../shared/widgets/input_field.dart';
+import '../../../../shared/widgets/primary_button.dart';
 import '../../../transactions/data/loan_model.dart';
 import '../../data/loans_repository.dart';
 
@@ -24,12 +29,10 @@ class RecordPaymentSheet extends StatefulWidget {
     required String token,
     required LoansRepository repository,
   }) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => RecordPaymentSheet(
-          loan: loan, token: token, repository: repository),
+    return AppBottomSheet.show<bool>(
+      context,
+      title: 'Record Payment',
+      builder: (_) => RecordPaymentSheet(loan: loan, token: token, repository: repository),
     );
   }
 
@@ -48,8 +51,7 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
   @override
   void initState() {
     super.initState();
-    _amountCtrl = TextEditingController(
-        text: widget.loan.totalDue.toStringAsFixed(2));
+    _amountCtrl = TextEditingController(text: widget.loan.totalDue.toStringAsFixed(2));
     _noteCtrl = TextEditingController();
   }
 
@@ -61,7 +63,7 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
   }
 
   Future<void> _submit() async {
-    final amount = double.tryParse(_amountCtrl.text.trim());
+    final amount = double.tryParse(_amountCtrl.text.replaceAll(',', '').trim());
     if (amount == null || amount <= 0) {
       setState(() => _error = 'Enter a valid amount');
       return;
@@ -91,150 +93,67 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+    final line = isDark ? AppColors.lineDark : AppColors.line;
     final hasInterest = widget.loan.accruedInterest > 0;
 
     return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF111111) : Colors.white,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Outstanding ${formatInr(widget.loan.outstanding)}',
+              style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
+          const SizedBox(height: AppSpacing.lg),
+          AmountInputField(controller: _amountCtrl, errorText: _error),
+          const SizedBox(height: AppSpacing.lg),
+          GestureDetector(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _paidAt,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null) setState(() => _paidAt = picked);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: sunken,
+                border: Border.all(color: line),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_month_outlined, size: 16, color: inkFaint),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(DateFormat('dd MMM y').format(_paidAt), style: AppTypography.body.copyWith(color: ink)),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Record Payment',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : Colors.black,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          InputField(label: 'Note', hint: 'Optional', controller: _noteCtrl),
+          if (hasInterest) ...[
+            const SizedBox(height: AppSpacing.md),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                'Add ${formatInr(widget.loan.accruedInterest)} interest to Income',
+                style: AppTypography.bodyMuted.copyWith(color: ink),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Outstanding: ${formatInr(widget.loan.outstanding)}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _amountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                    RegExp(r'^\d+\.?\d{0,2}'))
-              ],
-              decoration: InputDecoration(
-                labelText: 'Amount',
-                prefixText: '₹ ',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            const SizedBox(height: 12),
-            InkWell(
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _paidAt,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                );
-                if (picked != null) setState(() => _paidAt = picked);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[400]!),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.calendar,
-                        size: 16,
-                        color:
-                            isDark ? Colors.white60 : Colors.black54),
-                    const SizedBox(width: 8),
-                    Text(
-                      DateFormat('dd MMM y').format(_paidAt),
-                      style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black87),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _noteCtrl,
-              decoration: InputDecoration(
-                labelText: 'Note (optional)',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            if (hasInterest) ...[
-              const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  'Add ${formatInr(widget.loan.accruedInterest)} interest to Income',
-                  style: const TextStyle(fontSize: 13),
-                ),
-                value: _addInterestToIncome,
-                onChanged: (v) => setState(() => _addInterestToIncome = v),
-                dense: true,
-              ),
-            ],
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(_error!,
-                  style:
-                      const TextStyle(color: Colors.red, fontSize: 12)),
-            ],
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[600],
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Text('Confirm Payment',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 15)),
-              ),
+              value: _addInterestToIncome,
+              onChanged: (v) => setState(() => _addInterestToIncome = v),
+              dense: true,
             ),
           ],
-        ),
+          const SizedBox(height: AppSpacing.xl),
+          PrimaryButton(text: 'Confirm Payment', onPressed: _submit, isLoading: _loading),
+        ],
       ),
     );
   }
