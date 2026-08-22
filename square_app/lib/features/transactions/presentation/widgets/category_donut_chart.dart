@@ -61,16 +61,14 @@ class CategoryDonutChart extends StatelessWidget {
           child: PieChart(
             PieChartData(
               sectionsSpace: 2,
-              centerSpaceRadius: 56,
+              centerSpaceRadius: 40,
               sections: segments.map((c) {
                 return PieChartSectionData(
                   value: c.amount,
                   color: colorFor(c),
-                  radius: 32,
+                  radius: 55,
                   showTitle: c.percent >= 8,
-                  title: c.percent >= 8
-                      ? '${formatInr(c.amount)}\n(${c.percent.toStringAsFixed(1)}%)'
-                      : '',
+                  title: c.percent >= 8 ? '${c.percent.toStringAsFixed(1)}%' : '',
                   titleStyle: AppTypography.caption.copyWith(color: surface, fontWeight: FontWeight.w700),
                   borderSide: BorderSide(color: surface, width: 2),
                 );
