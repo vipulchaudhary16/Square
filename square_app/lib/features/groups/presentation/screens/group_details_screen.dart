@@ -39,6 +39,7 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   PeriodSelection _reportPeriod = PeriodSelection.initial();
+  bool _showGroupTotalCategories = true;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _debounce;
@@ -688,6 +689,8 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
               ),
               firstSide: AnalysisCategorySide(label: 'Group total', side: summary.totalExpense),
               secondSide: AnalysisCategorySide(label: 'Your share', side: summary.yourShare),
+              showFirstSide: _showGroupTotalCategories,
+              onSideChanged: (v) => setState(() => _showGroupTotalCategories = v),
             ),
           ),
         ],

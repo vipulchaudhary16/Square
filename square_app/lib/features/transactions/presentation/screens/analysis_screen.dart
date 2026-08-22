@@ -21,6 +21,7 @@ class AnalysisScreen extends ConsumerStatefulWidget {
 
 class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   PeriodSelection _period = PeriodSelection.initial();
+  bool _showSpendingCategories = true;
 
   String get _rangeKey => '${_period.apiStartDate}|${_period.apiEndDate}';
 
@@ -82,6 +83,8 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
       ),
       firstSide: AnalysisCategorySide(label: 'Spending', side: summary.spending),
       secondSide: AnalysisCategorySide(label: 'Income', side: summary.income),
+      showFirstSide: _showSpendingCategories,
+      onSideChanged: (v) => setState(() => _showSpendingCategories = v),
       extra: Container(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
         decoration: BoxDecoration(color: sunken, borderRadius: BorderRadius.circular(AppRadius.md)),

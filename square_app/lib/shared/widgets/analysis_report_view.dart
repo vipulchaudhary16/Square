@@ -41,13 +41,15 @@ class AnalysisCategorySide {
 /// sides and a donut chart. Used by both the personal Analysis screen and
 /// the group Reports tab — they differ only in which tiles/sides they feed
 /// in, not in how any of it renders.
-class AnalysisReportView extends StatefulWidget {
+class AnalysisReportView extends StatelessWidget {
   const AnalysisReportView({
     super.key,
     required this.primaryTile,
     required this.secondaryTile,
     required this.firstSide,
     required this.secondSide,
+    required this.showFirstSide,
+    required this.onSideChanged,
     this.extra,
   });
 
@@ -56,24 +58,25 @@ class AnalysisReportView extends StatefulWidget {
   final AnalysisCategorySide firstSide;
   final AnalysisCategorySide secondSide;
 
+  /// Whether the category breakdown toggle is currently showing [firstSide]
+  /// (true) or [secondSide] (false). Owned by the parent screen so it
+  /// survives this widget being rebuilt for a new period.
+  final bool showFirstSide;
+
+  /// Invoked with the new toggle state when the user taps a side.
+  final ValueChanged<bool> onSideChanged;
+
   /// Optional content rendered below the stat tiles inside the same card.
   /// Omitted entirely when null (the group report has no equivalent to
   /// personal analysis's Net Balance row).
   final Widget? extra;
 
   @override
-  State<AnalysisReportView> createState() => _AnalysisReportViewState();
-}
-
-class _AnalysisReportViewState extends State<AnalysisReportView> {
-  bool _showFirstSide = true;
-
-  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
-    final selected = _showFirstSide ? widget.firstSide : widget.secondSide;
+    final selected = showFirstSide ? firstSide : secondSide;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,26 +89,26 @@ class _AnalysisReportViewState extends State<AnalysisReportView> {
                 children: [
                   Expanded(
                     child: StatTapTarget(
-                      label: widget.primaryTile.label,
-                      color: widget.primaryTile.color,
-                      amount: widget.primaryTile.amount,
-                      onTap: widget.primaryTile.onTap,
+                      label: primaryTile.label,
+                      color: primaryTile.color,
+                      amount: primaryTile.amount,
+                      onTap: primaryTile.onTap,
                     ),
                   ),
                   Expanded(
                     child: StatTapTarget(
-                      label: widget.secondaryTile.label,
-                      color: widget.secondaryTile.color,
-                      amount: widget.secondaryTile.amount,
+                      label: secondaryTile.label,
+                      color: secondaryTile.color,
+                      amount: secondaryTile.amount,
                       alignEnd: true,
-                      onTap: widget.secondaryTile.onTap,
+                      onTap: secondaryTile.onTap,
                     ),
                   ),
                 ],
               ),
-              if (widget.extra != null) ...[
+              if (extra != null) ...[
                 const SizedBox(height: AppSpacing.lg),
-                widget.extra!,
+                extra!,
               ],
             ],
           ),
@@ -123,16 +126,16 @@ class _AnalysisReportViewState extends State<AnalysisReportView> {
                   children: [
                     Expanded(
                       child: SegmentedToggleOption(
-                        label: widget.firstSide.label,
-                        selected: _showFirstSide,
-                        onTap: () => setState(() => _showFirstSide = true),
+                        label: firstSide.label,
+                        selected: showFirstSide,
+                        onTap: () => onSideChanged(true),
                       ),
                     ),
                     Expanded(
                       child: SegmentedToggleOption(
-                        label: widget.secondSide.label,
-                        selected: !_showFirstSide,
-                        onTap: () => setState(() => _showFirstSide = false),
+                        label: secondSide.label,
+                        selected: !showFirstSide,
+                        onTap: () => onSideChanged(false),
                       ),
                     ),
                   ],
@@ -140,7 +143,7 @@ class _AnalysisReportViewState extends State<AnalysisReportView> {
               ),
               const SizedBox(height: AppSpacing.lg),
               CategoryDonutChart(
-                key: ValueKey(_showFirstSide),
+                key: ValueKey(showFirstSide),
                 categories: selected.side.byCategory,
                 total: selected.side.total,
               ),
