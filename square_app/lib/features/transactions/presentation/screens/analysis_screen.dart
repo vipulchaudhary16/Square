@@ -7,6 +7,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_error_state.dart';
 import '../../../../shared/widgets/amount_text.dart';
+import '../../../../shared/widgets/stat_tap_target.dart';
 import '../../data/analysis_model.dart';
 import '../analysis_provider.dart';
 import '../widgets/category_donut_chart.dart';
@@ -80,7 +81,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _CashflowTapTarget(
+                    child: StatTapTarget(
                       label: 'SPENDING',
                       color: AppColors.negative,
                       amount: summary.spending.total,
@@ -88,7 +89,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                     ),
                   ),
                   Expanded(
-                    child: _CashflowTapTarget(
+                    child: StatTapTarget(
                       label: 'INCOME',
                       color: AppColors.positive,
                       amount: summary.income.total,
@@ -162,46 +163,6 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
     context.push(
       '/transactions/analysis-detail',
       extra: {'isSpending': isSpending, 'period': _period},
-    );
-  }
-}
-
-class _CashflowTapTarget extends StatelessWidget {
-  const _CashflowTapTarget({
-    required this.label,
-    required this.color,
-    required this.amount,
-    required this.onTap,
-    this.alignEnd = false,
-  });
-
-  final String label;
-  final Color color;
-  final double amount;
-  final bool alignEnd;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Text(label, style: AppTypography.label.copyWith(color: color)),
-          const SizedBox(height: 4),
-          // AmountText has its own tap gesture (shows an in-words tooltip) that
-          // would otherwise compete with this card's tap-to-drill-down — ignore
-          // its pointer so tapping the number always opens the list.
-          IgnorePointer(
-            child: AmountText(
-              amount: amount,
-              sign: AmountSign.neutral,
-              style: AppTypography.amountLarge,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
