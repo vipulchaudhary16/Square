@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import 'group_model.dart';
+import 'group_analysis_model.dart';
 
 final groupRepositoryProvider = Provider(
   (ref) => GroupRepository(ref.watch(apiClientProvider)),
@@ -111,6 +112,22 @@ class GroupRepository {
       throw e.response?.data['error'] ?? 'Failed to fetch group expenses';
     } catch (e) {
       throw Exception('Failed to fetch group expenses: $e');
+    }
+  }
+
+  Future<GroupAnalysisSummary> getGroupAnalysis(
+    String groupId, {
+    required String startDate,
+    required String endDate,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/groups/$groupId/analysis',
+        queryParameters: {'start_date': startDate, 'end_date': endDate},
+      );
+      return GroupAnalysisSummary.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw e.response?.data['error'] ?? 'Failed to fetch group analysis';
     }
   }
 

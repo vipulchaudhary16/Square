@@ -155,6 +155,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   return TransactionDrilldownScreen(
                     isSpending: extra['isSpending'] as bool,
                     period: extra['period'] as PeriodSelection,
+                    groupId: extra['groupId'] as String?,
                   );
                 },
               ),

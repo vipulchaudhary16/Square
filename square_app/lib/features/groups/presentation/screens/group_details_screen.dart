@@ -20,6 +20,9 @@ import '../../../auth/data/user_repository.dart';
 import '../../../auth/data/user_model.dart';
 import '../../../expense/presentation/widgets/expense_card.dart';
 import '../../../auth/presentation/auth_provider.dart';
+import '../../../../shared/widgets/analysis_report_view.dart';
+import '../../../transactions/presentation/widgets/period_selection.dart';
+import '../../../transactions/presentation/widgets/period_selector.dart';
 import '../groups_provider.dart';
 import '../widgets/settlement_log_row.dart';
 
@@ -35,6 +38,8 @@ class GroupDetailsScreen extends ConsumerStatefulWidget {
 class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  PeriodSelection _reportPeriod = PeriodSelection.initial();
+  bool _showGroupTotalCategories = true;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _debounce;
@@ -42,7 +47,7 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -88,6 +93,7 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
             Tab(text: 'Expenses'),
             Tab(text: 'Balances'),
             Tab(text: 'Members'),
+            Tab(text: 'Reports'),
           ],
         ),
       ),
@@ -101,6 +107,7 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
               _buildExpensesTab(context, details),
               _buildBalancesTab(context, details),
               _buildMembersTab(context, details),
+              _buildReportsTab(context, details),
             ],
           );
         },
@@ -630,6 +637,63 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildReportsTab(BuildContext context, GroupDetails details) {
+    final groupId = details.group.id;
+    final rangeKey = '$groupId|${_reportPeriod.apiStartDate}|${_reportPeriod.apiEndDate}';
+    final analysisAsync = ref.watch(groupAnalysisProvider(rangeKey));
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(groupAnalysisProvider(rangeKey));
+        try {
+          await ref.read(groupAnalysisProvider(rangeKey).future);
+        } catch (_) {}
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: [
+          PeriodSelector(
+            selection: _reportPeriod,
+            onChanged: (p) => setState(() => _reportPeriod = p),
+            transactionCount: analysisAsync.value?.totalExpense.count ?? 0,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          analysisAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (err, _) => AppErrorState(
+              message: err.toString(),
+              onRetry: () => ref.invalidate(groupAnalysisProvider(rangeKey)),
+            ),
+            data: (summary) => AnalysisReportView(
+              primaryTile: AnalysisStatTile(
+                label: 'TOTAL EXPENSE',
+                color: AppColors.negative,
+                amount: summary.totalExpense.total,
+              ),
+              secondaryTile: AnalysisStatTile(
+                label: 'YOUR SHARE',
+                color: AppColors.negative,
+                amount: summary.yourShare.total,
+                onTap: () => context.push(
+                  '/transactions/analysis-detail',
+                  extra: {'isSpending': true, 'period': _reportPeriod, 'groupId': groupId},
+                ),
+              ),
+              firstSide: AnalysisCategorySide(label: 'Group total', side: summary.totalExpense),
+              secondSide: AnalysisCategorySide(label: 'Your share', side: summary.yourShare),
+              showFirstSide: _showGroupTotalCategories,
+              onSideChanged: (v) => setState(() => _showGroupTotalCategories = v),
+            ),
+          ),
+        ],
       ),
     );
   }

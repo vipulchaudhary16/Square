@@ -3,7 +3,7 @@ import '../../expense/data/expense_model.dart';
 import '../data/income_model.dart';
 import 'transactions_provider.dart';
 
-/// Key shape: "startDate|endDate|categoryId|search" — categoryId/search may be empty.
+/// Key shape: "startDate|endDate|categoryId|search|groupId" — categoryId/search/groupId may be empty.
 final drilldownExpensesProvider = FutureProvider.autoDispose
     .family<List<Expense>, String>((ref, key) async {
       final parts = key.split('|');
@@ -13,6 +13,9 @@ final drilldownExpensesProvider = FutureProvider.autoDispose
           ? parts[2]
           : null;
       final search = parts.length > 3 ? parts[3] : '';
+      final groupId = parts.length > 4 && parts[4].isNotEmpty
+          ? parts[4]
+          : null;
 
       final repository = ref.watch(transactionRepositoryProvider);
       final result = await repository.getExpenses(
@@ -22,6 +25,7 @@ final drilldownExpensesProvider = FutureProvider.autoDispose
         categoryId: categoryId,
         startDate: startDate,
         endDate: endDate,
+        groupId: groupId,
       );
       return (result['data'] as List).map((e) => Expense.fromJson(e)).toList();
     });

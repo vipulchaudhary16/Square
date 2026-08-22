@@ -26,6 +26,7 @@ class Expense < ApplicationRecord
   scope :with_filters, ->(params) {
     s = all
     s = s.where(group_id: nil) if params[:personal_only] == "true"
+    s = s.where(group_id: params[:group_id]) if params[:group_id].present?
     s = s.where(category_id: params[:category_id]) if params[:category_id].present?
     s = s.where("date >= ?", params[:start_date]) if params[:start_date].present?
     s = s.where("date <= ?", params[:end_date]) if params[:end_date].present?
@@ -96,6 +97,14 @@ class Expense < ApplicationRecord
     else
       false
     end
+  end
+
+  def split_for(user_id)
+    split = expense_splits.find { |s| s.user_id == user_id }
+    return split.amount.to_f if split
+    return 0.0 if expense_splits.any?
+    return 0.0 unless expense_participants.any? { |p| p.user_id == user_id }
+    (amount / expense_participants.size.to_f).to_f
   end
 
   # Matches the shape GroupsController#group_expenses has always returned.
