@@ -154,7 +154,8 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
           ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: _SearchBarHeaderDelegate(
+            delegate: _PinnedHeaderDelegate(
+              extent: 80,
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -655,57 +656,70 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
           await ref.read(groupAnalysisProvider(rangeKey).future);
         } catch (_) {}
       },
-      child: ListView(
+      child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
-        children: [
-          PeriodSelector(
-            selection: _reportPeriod,
-            onChanged: (p) => setState(() => _reportPeriod = p),
-            transactionCount: analysisAsync.value?.totalExpense.count ?? 0,
+        slivers: [
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _PinnedHeaderDelegate(
+              extent: 140,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.lg),
+                child: PeriodSelector(
+                  selection: _reportPeriod,
+                  onChanged: (p) => setState(() => _reportPeriod = p),
+                  transactionCount: analysisAsync.value?.totalExpense.count ?? 0,
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          analysisAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (err, _) => AppErrorState(
-              message: err.toString(),
-              onRetry: () => ref.invalidate(groupAnalysisProvider(rangeKey)),
-            ),
-            data: (summary) => AnalysisReportView(
-              primaryTile: AnalysisStatTile(
-                label: 'TOTAL EXPENSE',
-                color: AppColors.negative,
-                amount: summary.totalExpense.total,
-                onTap: () => context.push(
-                  '/transactions/analysis-detail',
-                  extra: {
-                    'isSpending': true,
-                    'period': _reportPeriod,
-                    'groupId': groupId,
-                    'allGroupExpenses': true,
-                  },
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 100),
+            sliver: SliverToBoxAdapter(
+              child: analysisAsync.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
-                deltaPercent: summary.totalExpense.deltaPercent,
-                comparisonLabel: _reportPeriod.comparisonLabel,
-              ),
-              secondaryTile: AnalysisStatTile(
-                label: 'YOUR SHARE',
-                color: AppColors.negative,
-                amount: summary.yourShare.total,
-                onTap: () => context.push(
-                  '/transactions/analysis-detail',
-                  extra: {'isSpending': true, 'period': _reportPeriod, 'groupId': groupId},
+                error: (err, _) => AppErrorState(
+                  message: err.toString(),
+                  onRetry: () => ref.invalidate(groupAnalysisProvider(rangeKey)),
                 ),
-                deltaPercent: summary.yourShare.deltaPercent,
-                comparisonLabel: _reportPeriod.comparisonLabel,
+                data: (summary) => AnalysisReportView(
+                  primaryTile: AnalysisStatTile(
+                    label: 'TOTAL EXPENSE',
+                    color: AppColors.negative,
+                    amount: summary.totalExpense.total,
+                    onTap: () => context.push(
+                      '/transactions/analysis-detail',
+                      extra: {
+                        'isSpending': true,
+                        'period': _reportPeriod,
+                        'groupId': groupId,
+                        'allGroupExpenses': true,
+                      },
+                    ),
+                    deltaPercent: summary.totalExpense.deltaPercent,
+                    comparisonLabel: _reportPeriod.comparisonLabel,
+                  ),
+                  secondaryTile: AnalysisStatTile(
+                    label: 'YOUR SHARE',
+                    color: AppColors.negative,
+                    amount: summary.yourShare.total,
+                    onTap: () => context.push(
+                      '/transactions/analysis-detail',
+                      extra: {'isSpending': true, 'period': _reportPeriod, 'groupId': groupId},
+                    ),
+                    deltaPercent: summary.yourShare.deltaPercent,
+                    comparisonLabel: _reportPeriod.comparisonLabel,
+                  ),
+                  firstSide: AnalysisCategorySide(label: 'Group total', side: summary.totalExpense),
+                  secondSide: AnalysisCategorySide(label: 'Your share', side: summary.yourShare),
+                  showFirstSide: _showGroupTotalCategories,
+                  onSideChanged: (v) => setState(() => _showGroupTotalCategories = v),
+                ),
               ),
-              firstSide: AnalysisCategorySide(label: 'Group total', side: summary.totalExpense),
-              secondSide: AnalysisCategorySide(label: 'Your share', side: summary.yourShare),
-              showFirstSide: _showGroupTotalCategories,
-              onSideChanged: (v) => setState(() => _showGroupTotalCategories = v),
             ),
           ),
         ],
@@ -853,19 +867,22 @@ class _Avatar extends StatelessWidget {
   }
 }
 
-class _SearchBarHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _SearchBarHeaderDelegate({required this.child, required this.backgroundColor});
+/// A pinned sliver header of fixed [extent] — used both for the Expenses
+/// tab's search bar and the Reports tab's period selector, which pins so it
+/// stays reachable (and the current month/week/year stays visible) while
+/// scrolling through a long list below it.
+class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _PinnedHeaderDelegate({required this.child, required this.backgroundColor, required this.extent});
 
   final Widget child;
   final Color backgroundColor;
-
-  static const double _extent = 80;
-
-  @override
-  double get minExtent => _extent;
+  final double extent;
 
   @override
-  double get maxExtent => _extent;
+  double get minExtent => extent;
+
+  @override
+  double get maxExtent => extent;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
@@ -873,8 +890,8 @@ class _SearchBarHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(covariant _SearchBarHeaderDelegate oldDelegate) {
-    return oldDelegate.child != child || oldDelegate.backgroundColor != backgroundColor;
+  bool shouldRebuild(covariant _PinnedHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child || oldDelegate.backgroundColor != backgroundColor || oldDelegate.extent != extent;
   }
 }
 
