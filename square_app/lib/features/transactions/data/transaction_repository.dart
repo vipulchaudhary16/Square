@@ -12,6 +12,7 @@ class TransactionRepository {
     String? categoryId,
     String? startDate,
     String? endDate,
+    String? groupId,
   }) async {
     try {
       final response = await _dio.get(
@@ -19,7 +20,8 @@ class TransactionRepository {
         queryParameters: {
           'page': page,
           'limit': limit,
-          'personal_only': 'true',
+          if (groupId == null) 'personal_only': 'true',
+          if (groupId != null) 'group_id': groupId,
           if (search != null && search.isNotEmpty) 'search': search,
           if (categoryId != null) 'category_id': categoryId,
           if (startDate != null) 'start_date': startDate,

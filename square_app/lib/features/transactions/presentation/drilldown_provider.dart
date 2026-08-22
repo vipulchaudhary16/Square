@@ -4,13 +4,14 @@ import '../../expense/data/expense_model.dart';
 import '../data/income_model.dart';
 import 'transactions_provider.dart';
 
-/// Key shape: "startDate|endDate|categoryId|search" — categoryId/search may be empty.
+/// Key shape: "startDate|endDate|categoryId|search|groupId" — categoryId/search/groupId may be empty.
 final drilldownExpensesProvider = FutureProvider.autoDispose.family<List<Expense>, String>((ref, key) async {
   final parts = key.split('|');
   final startDate = parts[0];
   final endDate = parts[1];
   final categoryId = parts.length > 2 && parts[2].isNotEmpty ? parts[2] : null;
   final search = parts.length > 3 ? parts[3] : '';
+  final groupId = parts.length > 4 && parts[4].isNotEmpty ? parts[4] : null;
 
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token');
@@ -25,6 +26,7 @@ final drilldownExpensesProvider = FutureProvider.autoDispose.family<List<Expense
     categoryId: categoryId,
     startDate: startDate,
     endDate: endDate,
+    groupId: groupId,
   );
   return (result['data'] as List).map((e) => Expense.fromJson(e)).toList();
 });

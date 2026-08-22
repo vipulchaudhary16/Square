@@ -16,10 +16,11 @@ import '../widgets/period_selection.dart';
 import '../widgets/premium_transaction_card.dart';
 
 class TransactionDrilldownScreen extends ConsumerStatefulWidget {
-  const TransactionDrilldownScreen({super.key, required this.isSpending, required this.period});
+  const TransactionDrilldownScreen({super.key, required this.isSpending, required this.period, this.groupId});
 
   final bool isSpending;
   final PeriodSelection period;
+  final String? groupId;
 
   @override
   ConsumerState<TransactionDrilldownScreen> createState() => _TransactionDrilldownScreenState();
@@ -47,7 +48,7 @@ class _TransactionDrilldownScreenState extends ConsumerState<TransactionDrilldow
   }
 
   String get _key =>
-      '${widget.period.apiStartDate}|${widget.period.apiEndDate}|${_categoryId ?? ''}|$_searchQuery';
+      '${widget.period.apiStartDate}|${widget.period.apiEndDate}|${_categoryId ?? ''}|$_searchQuery|${widget.groupId ?? ''}';
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +59,7 @@ class _TransactionDrilldownScreenState extends ConsumerState<TransactionDrilldow
     final line = isDark ? AppColors.lineDark : AppColors.line;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.isSpending ? 'Spending' : 'Income')),
+      appBar: AppBar(title: Text(widget.groupId != null ? 'Your share' : (widget.isSpending ? 'Spending' : 'Income'))),
       body: Column(
         children: [
           Padding(
