@@ -7,6 +7,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_error_state.dart';
 import '../../../../shared/widgets/amount_text.dart';
+import '../../../../shared/widgets/segmented_toggle.dart';
 import '../../../../shared/widgets/stat_tap_target.dart';
 import '../../data/analysis_model.dart';
 import '../analysis_provider.dart';
@@ -130,14 +131,14 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: _ToggleTab(
+                      child: SegmentedToggleOption(
                         label: 'Spending',
                         selected: _showSpendingCategories,
                         onTap: () => setState(() => _showSpendingCategories = true),
                       ),
                     ),
                     Expanded(
-                      child: _ToggleTab(
+                      child: SegmentedToggleOption(
                         label: 'Income',
                         selected: !_showSpendingCategories,
                         onTap: () => setState(() => _showSpendingCategories = false),
@@ -163,43 +164,6 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
     context.push(
       '/transactions/analysis-detail',
       extra: {'isSpending': isSpending, 'period': _period},
-    );
-  }
-}
-
-class _ToggleTab extends StatelessWidget {
-  const _ToggleTab({required this.label, required this.selected, required this.onTap});
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? AppColors.inkDark : AppColors.ink;
-    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-    final surface = isDark ? AppColors.surfaceDark : AppColors.surface;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: selected ? surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: selected ? Border.all(color: isDark ? AppColors.lineDark : AppColors.line) : null,
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: AppTypography.bodyMuted.copyWith(
-              color: selected ? ink : inkFaint,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
