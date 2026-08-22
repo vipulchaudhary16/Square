@@ -662,7 +662,7 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
           SliverPersistentHeader(
             pinned: true,
             delegate: _PinnedHeaderDelegate(
-              extent: 140,
+              extent: 96,
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.lg),
@@ -886,7 +886,12 @@ class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return ColoredBox(color: backgroundColor, child: child);
+    // A pinned header's paintExtent comes from the CHILD's own measured
+    // height, while its layoutExtent/scrollExtent come from minExtent/
+    // maxExtent above — if the child doesn't fill exactly `extent`, those
+    // two disagree and the sliver layout throws. Force the child to fill
+    // the declared extent so they always match.
+    return SizedBox(height: extent, child: ColoredBox(color: backgroundColor, child: child));
   }
 
   @override
