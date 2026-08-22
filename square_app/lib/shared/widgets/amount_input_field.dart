@@ -74,17 +74,12 @@ class _AmountInputFieldState extends State<AmountInputField> {
             ),
           ],
         ),
-        Container(
-          margin: const EdgeInsets.only(top: AppSpacing.sm),
-          height: 1.4,
-          color: hasError ? AppColors.negative : (isDark ? AppColors.lineDark : AppColors.line),
-        ),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 120),
           child: hasError
               ? Padding(
                   key: const ValueKey('error'),
-                  padding: const EdgeInsets.only(left: 2, top: AppSpacing.xs),
+                  padding: const EdgeInsets.only(left: 2, top: AppSpacing.sm),
                   child: Text(widget.errorText!, style: AppTypography.errorText.copyWith(color: AppColors.negative)),
                 )
               : const SizedBox.shrink(key: ValueKey('none')),

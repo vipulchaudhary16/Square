@@ -7,7 +7,6 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/amount_input_field.dart';
 import '../../../../shared/widgets/app_bottom_sheet.dart';
-import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/buttons/button_shell.dart';
 import '../../../../shared/widgets/category_picker_sheet.dart';
 import '../../../../shared/widgets/input_field.dart';
@@ -343,6 +342,11 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: AppSpacing.md),
+                          AmountInputField(
+                            controller: _amountController,
+                            autofocus: widget.expense == null,
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
                           InputField(
                             label: 'DESCRIPTION',
                             hint: 'What was this for?',
@@ -350,16 +354,9 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                             prefixIcon: Icons.edit,
                           ),
                           const SizedBox(height: AppSpacing.xl),
-                          AmountInputField(controller: _amountController),
-                          const SizedBox(height: AppSpacing.xl),
-                          // Divider(color: isDark ? AppColors.lineDark : AppColors.line),
-                          // const SizedBox(height: AppSpacing.lg),
 
                           if (_isGroupExpense) ...[
-                            Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: AppSpacing.sm,
-                              runSpacing: AppSpacing.sm,
+                            Row(
                               children: [
                                 Text(
                                   "Paid by",
@@ -367,24 +364,31 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                     color: isDark ? AppColors.inkMutedDark : AppColors.inkMuted,
                                   ),
                                 ),
-                                _buildBadge("You", Icons.person_outline, isDark, () {}),
-                                Text(
-                                  "and split",
-                                  style: AppTypography.body.copyWith(
-                                    color: isDark ? AppColors.inkMutedDark : AppColors.inkMuted,
-                                  ),
-                                ),
-                                _buildBadge(
-                                  _splitType.toLowerCase(),
-                                  _splitType == 'EQUAL'
-                                      ? Icons.list_alt_outlined
-                                      : _splitType == 'PERCENT'
-                                          ? Icons.percent
-                                          : Icons.edit,
-                                  isDark,
-                                  () => _showSplitTypePicker(context),
-                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                _buildPaidByChip(isDark, () {}),
                               ],
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            Text(
+                              "SPLIT",
+                              style: AppTypography.label.copyWith(
+                                color: isDark ? AppColors.inkFaintDark : AppColors.inkFaint,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken,
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              child: Row(
+                                children: [
+                                  _buildSplitTypeOption('EQUAL', 'Equal', isDark),
+                                  _buildSplitTypeOption('EXACT', 'Unequal', isDark),
+                                  _buildSplitTypeOption('PERCENT', '%', isDark),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: AppSpacing.xl),
                             Text(
@@ -522,8 +526,71 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     );
   }
 
-  Widget _buildBadge(String label, IconData icon, bool isDark, VoidCallback onTap) {
-    return AppChip(label: label, icon: icon, onTap: onTap);
+  Widget _buildPaidByChip(bool isDark, VoidCallback onTap) {
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final onInk = isDark ? AppColors.surfaceSunkenDark : AppColors.surface;
+    final inkMuted = isDark ? AppColors.inkMutedDark : AppColors.inkMuted;
+    final line = isDark ? AppColors.lineDark : AppColors.line;
+    final unselectedBg = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+
+    return ButtonShell(
+      onTap: onTap,
+      borderRadius: 999,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
+        decoration: BoxDecoration(
+          color: unselectedBg,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: line, width: 1.2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(color: ink, shape: BoxShape.circle),
+              child: Icon(Icons.person, size: 12, color: onInk),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'You',
+              style: AppTypography.bodyMuted.copyWith(color: inkMuted, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSplitTypeOption(String value, String label, bool isDark) {
+    final isSelected = _splitType == value;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final onInk = isDark ? AppColors.surfaceSunkenDark : AppColors.surface;
+    final faint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+
+    return Expanded(
+      child: ButtonShell(
+        onTap: () => setState(() => _splitType = value),
+        borderRadius: AppRadius.sm,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: isSelected ? ink : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: AppTypography.bodyMuted.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isSelected ? onInk : faint,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildFloatingDock(BuildContext context, bool isDark) {
@@ -634,39 +701,6 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
         _selectedCategoryId = id;
         _selectedCategoryName = name;
       }),
-    );
-  }
-
-  void _showSplitTypePicker(BuildContext context) {
-    AppBottomSheet.show(
-      context,
-      title: 'Split type',
-      builder: (modalCtx) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ['EQUAL', 'EXACT', 'PERCENT'].map((t) {
-            final isDark = Theme.of(modalCtx).brightness == Brightness.dark;
-            final ink = isDark ? AppColors.inkDark : AppColors.ink;
-            return ButtonShell(
-              borderRadius: AppRadius.md,
-              onTap: () {
-                setState(() => _splitType = t);
-                Navigator.pop(modalCtx);
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(t, style: AppTypography.body.copyWith(color: ink))),
-                    if (_splitType == t) Icon(Icons.check, color: ink, size: 18),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
     );
   }
 
