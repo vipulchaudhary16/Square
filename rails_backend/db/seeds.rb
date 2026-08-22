@@ -31,6 +31,13 @@
     user_toggleable: true,
     default_value:   false,
   },
+  {
+    key:             "show_expense_trends_chart",
+    description:     "Show expense trends chart on the dashboard",
+    category:        "Dashboard",
+    user_toggleable: true,
+    default_value:   false,
+  },
 ].each do |attrs|
   FeatureFlagRegistry.find_or_create_by!(key: attrs[:key]) do |r|
     r.description     = attrs[:description]
