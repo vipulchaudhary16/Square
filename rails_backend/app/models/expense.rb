@@ -26,6 +26,7 @@ class Expense < ApplicationRecord
   scope :with_filters, ->(params) {
     s = all
     s = s.where(group_id: nil) if params[:personal_only] == "true"
+    s = s.where(group_id: params[:group_id]) if params[:group_id].present?
     s = s.where(category_id: params[:category_id]) if params[:category_id].present?
     s = s.where("date >= ?", params[:start_date]) if params[:start_date].present?
     s = s.where("date <= ?", params[:end_date]) if params[:end_date].present?

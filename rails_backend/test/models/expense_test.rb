@@ -32,4 +32,15 @@ class ExpenseTest < ActiveSupport::TestCase
 
     assert_equal 0.0, expense.split_for(@outsider.id)
   end
+
+  test "with_filters scopes to a specific group when group_id is given" do
+    group1 = create(:group, created_by: @payer)
+    group2 = create(:group, created_by: @payer)
+    e1 = create(:expense, payer: @payer, category: @category, group: group1)
+    e2 = create(:expense, payer: @payer, category: @category, group: group2)
+
+    result = Expense.with_filters(group_id: group1.id.to_s)
+    assert_includes result, e1
+    assert_not_includes result, e2
+  end
 end
