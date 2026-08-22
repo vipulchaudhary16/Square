@@ -156,6 +156,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     isSpending: extra['isSpending'] as bool,
                     period: extra['period'] as PeriodSelection,
                     groupId: extra['groupId'] as String?,
+                    allGroupExpenses: extra['allGroupExpenses'] as bool? ?? false,
                   );
                 },
               ),

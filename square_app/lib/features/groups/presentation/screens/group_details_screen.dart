@@ -403,7 +403,7 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
             )
           : ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
               itemCount: sortedDebts.length,
               itemBuilder: (context, index) {
                 final debt = sortedDebts[index];
@@ -590,7 +590,7 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
       },
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
         itemCount: details.members.length,
         itemBuilder: (context, index) {
           final member = details.members[index];
@@ -655,7 +655,7 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
         children: [
           PeriodSelector(
             selection: _reportPeriod,
@@ -677,6 +677,15 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
                 label: 'TOTAL EXPENSE',
                 color: AppColors.negative,
                 amount: summary.totalExpense.total,
+                onTap: () => context.push(
+                  '/transactions/analysis-detail',
+                  extra: {
+                    'isSpending': true,
+                    'period': _reportPeriod,
+                    'groupId': groupId,
+                    'allGroupExpenses': true,
+                  },
+                ),
               ),
               secondaryTile: AnalysisStatTile(
                 label: 'YOUR SHARE',
@@ -915,7 +924,7 @@ class _ExpenseListSliver extends ConsumerWidget {
         }
 
         return SliverPadding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 100),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {

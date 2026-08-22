@@ -79,12 +79,18 @@ class GroupRepository {
   Future<List<GroupFeedItem>> getGroupExpenses(
     String groupId, {
     String? searchQuery,
+    String? categoryId,
+    String? startDate,
+    String? endDate,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
       if (searchQuery != null && searchQuery.isNotEmpty) {
         queryParams['search'] = searchQuery;
       }
+      if (categoryId != null) queryParams['category_id'] = categoryId;
+      if (startDate != null) queryParams['start_date'] = startDate;
+      if (endDate != null) queryParams['end_date'] = endDate;
 
       final response = await _dio.get(
         '/groups/$groupId/expenses',

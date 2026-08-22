@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../expense/data/expense_model.dart';
 import '../../groups/data/group_model.dart';
 import '../../groups/data/group_repository.dart';
 import '../data/group_analysis_model.dart';
@@ -24,6 +25,28 @@ final groupAnalysisProvider = FutureProvider.autoDispose.family<GroupAnalysisSum
   final endDate = parts[2];
   final repository = ref.watch(groupRepositoryProvider);
   return repository.getGroupAnalysis(groupId, startDate: startDate, endDate: endDate);
+});
+
+/// Key shape: "groupId|startDate|endDate|categoryId|search" — categoryId/search may be
+/// empty. Every expense in the group matching the filters, regardless of who's involved
+/// — settlements dropped. Backs the "Total expense" tap on the group Reports tab, which
+/// (unlike "Your share") isn't scoped to the current user.
+final groupTotalExpensesProvider = FutureProvider.autoDispose.family<List<Expense>, String>((ref, key) async {
+  final parts = key.split('|');
+  final groupId = parts[0];
+  final startDate = parts[1];
+  final endDate = parts[2];
+  final categoryId = parts.length > 3 && parts[3].isNotEmpty ? parts[3] : null;
+  final search = parts.length > 4 ? parts[4] : '';
+  final repository = ref.watch(groupRepositoryProvider);
+  final items = await repository.getGroupExpenses(
+    groupId,
+    searchQuery: search,
+    categoryId: categoryId,
+    startDate: startDate,
+    endDate: endDate,
+  );
+  return items.whereType<ExpenseFeedItem>().map((item) => item.expense).toList();
 });
 
 final groupsProvider = AsyncNotifierProvider<GroupsNotifier, List<Group>>(

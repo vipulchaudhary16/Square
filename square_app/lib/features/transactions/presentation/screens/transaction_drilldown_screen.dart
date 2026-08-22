@@ -11,16 +11,28 @@ import '../../../../shared/widgets/app_skeleton.dart';
 import '../../../../shared/widgets/category_picker_sheet.dart';
 import '../../../auth/presentation/auth_provider.dart';
 import '../../../expense/presentation/widgets/expense_card.dart';
+import '../../../groups/presentation/groups_provider.dart';
 import '../drilldown_provider.dart';
 import '../widgets/period_selection.dart';
 import '../widgets/premium_transaction_card.dart';
 
 class TransactionDrilldownScreen extends ConsumerStatefulWidget {
-  const TransactionDrilldownScreen({super.key, required this.isSpending, required this.period, this.groupId});
+  const TransactionDrilldownScreen({
+    super.key,
+    required this.isSpending,
+    required this.period,
+    this.groupId,
+    this.allGroupExpenses = false,
+  });
 
   final bool isSpending;
   final PeriodSelection period;
   final String? groupId;
+
+  /// When true (with [groupId] set), shows every expense in the group for the
+  /// period instead of just the ones the current user is involved in — backs
+  /// the "Total expense" tap, as opposed to "Your share".
+  final bool allGroupExpenses;
 
   @override
   ConsumerState<TransactionDrilldownScreen> createState() => _TransactionDrilldownScreenState();
@@ -50,6 +62,9 @@ class _TransactionDrilldownScreenState extends ConsumerState<TransactionDrilldow
   String get _key =>
       '${widget.period.apiStartDate}|${widget.period.apiEndDate}|${_categoryId ?? ''}|$_searchQuery|${widget.groupId ?? ''}';
 
+  String get _groupTotalKey =>
+      '${widget.groupId}|${widget.period.apiStartDate}|${widget.period.apiEndDate}|${_categoryId ?? ''}|$_searchQuery';
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -59,7 +74,15 @@ class _TransactionDrilldownScreenState extends ConsumerState<TransactionDrilldow
     final line = isDark ? AppColors.lineDark : AppColors.line;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.groupId != null ? 'Your share' : (widget.isSpending ? 'Spending' : 'Income'))),
+      appBar: AppBar(
+        title: Text(
+          widget.allGroupExpenses
+              ? 'Group expenses'
+              : widget.groupId != null
+                  ? 'Your share'
+                  : (widget.isSpending ? 'Spending' : 'Income'),
+        ),
+      ),
       body: Column(
         children: [
           Padding(
@@ -130,7 +153,10 @@ class _TransactionDrilldownScreenState extends ConsumerState<TransactionDrilldow
   }
 
   Widget _buildExpenseList(BuildContext context) {
-    final expensesAsync = ref.watch(drilldownExpensesProvider(_key));
+    final provider = widget.allGroupExpenses
+        ? groupTotalExpensesProvider(_groupTotalKey)
+        : drilldownExpensesProvider(_key);
+    final expensesAsync = ref.watch(provider);
     final currentUser = ref.watch(authProvider).value;
 
     return expensesAsync.when(
@@ -141,7 +167,7 @@ class _TransactionDrilldownScreenState extends ConsumerState<TransactionDrilldow
       ),
       error: (err, _) => AppErrorState(
         message: err.toString(),
-        onRetry: () => ref.invalidate(drilldownExpensesProvider(_key)),
+        onRetry: () => ref.invalidate(provider),
       ),
       data: (expenses) {
         if (expenses.isEmpty) {
