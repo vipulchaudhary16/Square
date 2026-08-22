@@ -13,7 +13,8 @@ module Api
         category = current_user.categories.create!(
           name:        params[:name],
           applies_to:  Array(params[:applies_to]),
-          is_standard: false
+          is_standard: false,
+          color:       params[:color]
         )
         render json: category.api_json, status: :created
       rescue ActiveRecord::RecordInvalid => e
@@ -21,13 +22,15 @@ module Api
       end
 
       def update
-        if @category.is_standard
+        renaming = params[:name].present? || params[:applies_to].present?
+        if @category.is_standard && renaming
           return render json: { error: "Standard categories cannot be renamed" }, status: :unprocessable_entity
         end
 
         attrs = {}
         attrs[:name]       = params[:name]       if params[:name].present?
         attrs[:applies_to] = Array(params[:applies_to]) if params[:applies_to].present?
+        attrs[:color]      = params[:color]      if params[:color].present?
         return render json: { error: "No fields provided to update" }, status: :bad_request if attrs.empty?
 
         if @category.update(attrs)

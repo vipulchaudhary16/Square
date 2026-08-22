@@ -51,6 +51,30 @@ class AppColors {
     return categoryAccents[hash % categoryAccents.length];
   }
 
+  static String toHex(Color color) {
+    final r = (color.r * 255).round();
+    final g = (color.g * 255).round();
+    final b = (color.b * 255).round();
+    String byte(int v) => v.toRadixString(16).padLeft(2, '0');
+    return '#${byte(r)}${byte(g)}${byte(b)}'.toUpperCase();
+  }
+
+  static Color? parseHex(String? hex) {
+    if (hex == null || hex.isEmpty) return null;
+    final cleaned = hex.replaceFirst('#', '');
+    if (cleaned.length != 6) return null;
+    final value = int.tryParse(cleaned, radix: 16);
+    if (value == null) return null;
+    return Color(0xFF000000 | value);
+  }
+
+  /// A category's display color: its own stored [colorHex] if present and
+  /// valid, else the deterministic name-based [categoryAccent] fallback
+  /// (categories created before the color picker existed have no stored color).
+  static Color resolveCategoryColor(String name, {String? colorHex}) {
+    return parseHex(colorHex) ?? categoryAccent(name);
+  }
+
   // ---- Legacy maps kept for compatibility with existing call sites ----
   // Values realigned to the new ramp so unmigrated screens still shift
   // toward the new look; migrate call sites to the tokens above over time.

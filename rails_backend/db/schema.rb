@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_25_125330) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_16_074631) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -22,8 +22,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_25_125330) do
     t.text "details"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "to_user_id"
+    t.decimal "amount", precision: 12, scale: 2
     t.index ["loggable_type", "loggable_id"], name: "index_activity_logs_on_loggable"
     t.index ["loggable_type", "loggable_id"], name: "index_activity_logs_on_loggable_type_and_loggable_id"
+    t.index ["to_user_id"], name: "index_activity_logs_on_to_user_id"
     t.index ["user_id"], name: "index_activity_logs_on_user_id"
   end
 
@@ -46,6 +49,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_25_125330) do
     t.boolean "is_standard", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "color"
     t.index "user_id, lower((name)::text)", name: "index_categories_on_user_id_and_lower_name", unique: true
     t.index ["user_id"], name: "index_categories_on_user_id"
   end
@@ -262,6 +266,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_25_125330) do
   end
 
   add_foreign_key "activity_logs", "users"
+  add_foreign_key "activity_logs", "users", column: "to_user_id"
   add_foreign_key "budgets", "categories"
   add_foreign_key "budgets", "users"
   add_foreign_key "categories", "users"

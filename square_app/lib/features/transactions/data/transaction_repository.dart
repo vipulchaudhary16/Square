@@ -8,11 +8,23 @@ class TransactionRepository {
     String token, {
     int page = 1,
     int limit = 10,
+    String? search,
+    String? categoryId,
+    String? startDate,
+    String? endDate,
   }) async {
     try {
       final response = await _dio.get(
         '/expenses',
-        queryParameters: {'page': page, 'limit': limit},
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+          'personal_only': 'true',
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (categoryId != null) 'category_id': categoryId,
+          if (startDate != null) 'start_date': startDate,
+          if (endDate != null) 'end_date': endDate,
+        },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       final List<dynamic> data =
@@ -28,18 +40,46 @@ class TransactionRepository {
     String token, {
     int page = 1,
     int limit = 10,
+    String? search,
+    String? categoryId,
+    String? startDate,
+    String? endDate,
   }) async {
     try {
       final response = await _dio.get(
         '/incomes',
-        queryParameters: {'page': page, 'limit': limit},
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (categoryId != null) 'category_id': categoryId,
+          if (startDate != null) 'start_date': startDate,
+          if (endDate != null) 'end_date': endDate,
+        },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      final List<dynamic> data = response.data ?? [];
-      final int total = response.data.length ?? 0;
+      final List<dynamic> data = response.data['data'] ?? [];
+      final int total = response.data['total'] ?? 0;
       return {'data': data, 'total': total};
     } catch (e) {
       throw Exception('Failed to fetch incomes: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getAnalysis(
+    String token, {
+    required String startDate,
+    required String endDate,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/analysis',
+        queryParameters: {'start_date': startDate, 'end_date': endDate},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Failed to fetch analysis: $e');
     }
   }
 

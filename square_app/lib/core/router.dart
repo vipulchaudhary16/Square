@@ -10,6 +10,8 @@ import '../../features/transactions/presentation/transactions_screen.dart';
 import '../../features/transactions/presentation/screens/add_edit_income_screen.dart';
 import '../../features/transactions/presentation/screens/add_edit_investment_screen.dart';
 import '../../features/transactions/presentation/screens/add_edit_loan_screen.dart';
+import '../../features/transactions/presentation/screens/transaction_drilldown_screen.dart';
+import '../../features/transactions/presentation/widgets/period_selection.dart';
 import '../../features/expense/data/expense_model.dart';
 import '../../features/transactions/data/loan_model.dart';
 import '../../features/contacts/data/contact_model.dart';
@@ -145,6 +147,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'expenses/:id',
                 builder: (context, state) =>
                     ExpenseDetailScreen(expenseId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: 'analysis-detail',
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>;
+                  return TransactionDrilldownScreen(
+                    isSpending: extra['isSpending'] as bool,
+                    period: extra['period'] as PeriodSelection,
+                  );
+                },
               ),
             ],
           ),

@@ -13,6 +13,7 @@ class Category < ApplicationRecord
 
   validates :name, presence: true, uniqueness: { scope: :user_id, case_sensitive: false }
   validates :applies_to, presence: true
+  validates :color, format: { with: /\A#[0-9A-Fa-f]{6}\z/ }, allow_nil: true
   validate :applies_to_must_be_valid
 
   def destroy_with_reassignment!(fallback_name: "Other")
@@ -30,7 +31,7 @@ class Category < ApplicationRecord
   end
 
   def api_json
-    { id: id.to_s, name: name, applies_to: applies_to, is_standard: is_standard }
+    { id: id.to_s, name: name, applies_to: applies_to, is_standard: is_standard, color: color }
   end
 
   private

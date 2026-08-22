@@ -23,17 +23,17 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     });
   }
 
-  Future<void> create(String name, List<String> appliesTo) async {
+  Future<void> create(String name, List<String> appliesTo, {String? color}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-    await ref.read(categoriesRepositoryProvider).createCategory(token, name, appliesTo);
+    await ref.read(categoriesRepositoryProvider).createCategory(token, name, appliesTo, color: color);
     await refresh();
   }
 
-  Future<void> updateCategory(String id, String name, List<String> appliesTo) async {
+  Future<void> updateCategory(String id, String name, List<String> appliesTo, {String? color}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-    await ref.read(categoriesRepositoryProvider).updateCategory(token, id, name, appliesTo);
+    await ref.read(categoriesRepositoryProvider).updateCategory(token, id, name, appliesTo, color: color);
     await refresh();
   }
 

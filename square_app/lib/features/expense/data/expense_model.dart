@@ -4,6 +4,7 @@ class Expense {
   final double amount;
   final String categoryId;
   final String categoryName;
+  final String? categoryColor;
   final DateTime date;
   final String? groupId;
   final String? groupName;
@@ -20,6 +21,7 @@ class Expense {
     required this.amount,
     required this.categoryId,
     required this.categoryName,
+    this.categoryColor,
     required this.date,
     this.groupId,
     this.groupName,
@@ -37,6 +39,7 @@ class Expense {
       amount: (json['amount'] ?? 0).toDouble(),
       categoryId: json['category_id'] ?? '',
       categoryName: json['category_name'] ?? 'General',
+      categoryColor: json['category_color'],
       date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
       groupId: json['group_id'],
       groupName: json['group_name'],

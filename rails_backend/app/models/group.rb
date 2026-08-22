@@ -4,6 +4,7 @@ class Group < ApplicationRecord
   has_many :members, through: :group_memberships, source: :user
   has_many :group_invites, dependent: :destroy
   has_many :expenses, dependent: :destroy
+  has_many :activity_logs, as: :loggable, dependent: :destroy
 
   validates :name, presence: true
 
@@ -26,26 +27,30 @@ class Group < ApplicationRecord
     GroupMembership.find_or_create_by!(group: self, user: user)
   end
 
-  def settle_debt!(from_user:, to_user:, amount:)
-    expense = Expense.new(
-      description: "Settlement",
-      amount:      amount,
-      category:    "Settlement",
-      date:        Time.current,
-      payer_id:    from_user.id,
-      group_id:    id,
-      split_type:  "EXACT"
+  class DebtExceededError < StandardError; end
+
+  def settlements
+    activity_logs.settlements
+  end
+
+  def debts
+    DebtSettlementService.compute(
+      expenses.includes(:expense_participants, :expense_splits),
+      settlements.includes(:user, :to_user)
     )
-    transaction do
-      expense.save!
-      ExpenseParticipant.create!(expense: expense, user: to_user)
-      ExpenseSplit.create!(expense: expense, user: to_user, amount: amount)
-      ActivityLog.record!(
-        loggable: expense, user: from_user, action: "SETTLE",
-        details: "#{from_user.display_name} settled #{amount} with #{to_user.display_name}"
-      )
-    end
-    expense
+  end
+
+  def settle_debt!(from_user:, to_user:, amount:)
+    amount = amount.to_f
+    raise ArgumentError, "amount must be positive" unless amount > 0.01
+
+    owed = debts.find { |d| d.from_id == from_user.id && d.to_id == to_user.id }&.amount || 0.0
+    raise DebtExceededError, "amount exceeds what is owed" if amount > owed + 0.01
+
+    ActivityLog.record!(
+      loggable: self, user: from_user, action: "SETTLE", to_user: to_user, amount: amount,
+      details: "#{from_user.display_name} paid #{to_user.display_name} #{amount}"
+    )
   end
 
   def api_json

@@ -7,6 +7,7 @@ class Income {
   final String userId;
   final String categoryId;
   final String categoryName;
+  final String? categoryColor;
 
   Income({
     required this.id,
@@ -17,6 +18,7 @@ class Income {
     required this.userId,
     required this.categoryId,
     required this.categoryName,
+    this.categoryColor,
   });
 
   factory Income.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class Income {
       userId: json['user_id'] ?? '',
       categoryId: json['category_id'] ?? '',
       categoryName: json['category_name'] ?? 'General',
+      categoryColor: json['category_color'],
     );
   }
 

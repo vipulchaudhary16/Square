@@ -19,9 +19,10 @@ import '../data/loan_model.dart';
 import '../presentation/transactions_provider.dart';
 import '../../../../shared/widgets/add_entry_bottom_sheet.dart';
 import '../../../../shared/widgets/menu_button.dart';
+import 'screens/analysis_screen.dart';
 import 'widgets/premium_transaction_card.dart';
 
-const _tabLabels = ['Expenses', 'Income', 'Invest', 'Loans'];
+const _tabLabels = ['Analysis', 'Invest', 'Loans'];
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -37,13 +38,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
   void _invalidateActiveTab() {
     switch (_tabController.index) {
-      case 0:
-        ref.invalidate(transactionsExpensesProvider);
       case 1:
-        ref.invalidate(incomesProvider);
-      case 2:
         ref.invalidate(investmentsProvider);
-      case 3:
+      case 2:
         ref.invalidate(loansProvider);
     }
   }
@@ -51,7 +48,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       if (_tabController.index != _selectedIndex && !_tabController.indexIsChanging) {
         setState(() => _selectedIndex = _tabController.index);
@@ -95,7 +92,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 0),
             child: Row(
-              children: List.generate(4, (i) {
+              children: List.generate(3, (i) {
                 final isSelected = _selectedIndex == i;
                 return Expanded(
                   child: ButtonShell(
@@ -131,8 +128,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                TransactionListView<Expense>(provider: transactionsExpensesProvider),
-                TransactionListView<Income>(provider: incomesProvider),
+                const AnalysisScreen(),
                 TransactionListView<Investment>(provider: investmentsProvider),
                 TransactionListView<Loan>(provider: loansProvider),
               ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -38,8 +39,9 @@ class _CategoriesSettingsScreenState
         submitLabel: 'Create',
         initialName: '',
         initialTypes: const ['expense', 'income', 'budget'],
-        onSubmit: (name, types) async {
-          await ref.read(categoriesProvider.notifier).create(name, types);
+        initialColorHex: null,
+        onSubmit: (name, types, color) async {
+          await ref.read(categoriesProvider.notifier).create(name, types, color: color);
         },
       ),
     );
@@ -53,8 +55,9 @@ class _CategoriesSettingsScreenState
         submitLabel: 'Save',
         initialName: cat.name,
         initialTypes: cat.appliesTo,
-        onSubmit: (name, types) async {
-          await ref.read(categoriesProvider.notifier).updateCategory(cat.id, name, types);
+        initialColorHex: cat.color,
+        onSubmit: (name, types, color) async {
+          await ref.read(categoriesProvider.notifier).updateCategory(cat.id, name, types, color: color);
         },
       ),
     );
@@ -103,14 +106,16 @@ class _CategoriesSettingsScreenState
       body: categoriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Failed to load: $e', style: AppTypography.body.copyWith(color: ink))),
-        data: (categories) => ListView(
+        data: (categories) => GridView.builder(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          children: categories
-              .map((cat) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _buildCategoryTile(cat),
-                  ))
-              .toList(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 200,
+            mainAxisSpacing: AppSpacing.sm,
+            crossAxisSpacing: AppSpacing.sm,
+            mainAxisExtent: 164,
+          ),
+          itemCount: categories.length,
+          itemBuilder: (context, index) => _buildCategoryTile(categories[index]),
         ),
       ),
     );
@@ -120,51 +125,56 @@ class _CategoriesSettingsScreenState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-    final accent = AppColors.categoryAccent(cat.name);
+    final accent = AppColors.resolveCategoryColor(cat.name, colorHex: cat.color);
 
     return AppCard(
-      child: Row(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: accent, shape: BoxShape.circle)),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(width: 28, height: 28, decoration: BoxDecoration(color: accent, shape: BoxShape.circle)),
+              if (cat.isStandard)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: Icon(Icons.lock_outline, size: 14, color: inkFaint),
+                )
+              else
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(cat.name, style: AppTypography.cardHeading.copyWith(color: ink)),
-                    if (cat.isStandard) ...[
-                      const SizedBox(width: AppSpacing.xs),
-                      Icon(Icons.lock_outline, size: 12, color: inkFaint),
-                    ],
+                    AppIconButton(
+                      icon: Icons.edit,
+                      size: 26,
+                      iconSize: 13,
+                      onPressed: () => _openEditDialog(cat),
+                    ),
+                    const SizedBox(width: 4),
+                    AppIconButton(
+                      icon: Icons.delete_outline,
+                      size: 26,
+                      iconSize: 13,
+                      onPressed: () => _delete(cat),
+                    ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Wrap(
-                  spacing: AppSpacing.xs,
-                  children: cat.appliesTo
-                      .map((type) => AppChip(label: _typeLabels[type] ?? type))
-                      .toList(),
-                ),
-              ],
-            ),
+            ],
           ),
-          if (!cat.isStandard) ...[
-            AppIconButton(
-              icon: Icons.edit,
-              size: 32,
-              iconSize: 15,
-              onPressed: () => _openEditDialog(cat),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            AppIconButton(
-              icon: Icons.delete_outline,
-              size: 32,
-              iconSize: 15,
-              onPressed: () => _delete(cat),
-            ),
-          ],
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            cat.name,
+            style: AppTypography.cardHeading.copyWith(color: ink),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: cat.appliesTo.map((type) => AppChip(label: _typeLabels[type] ?? type)).toList(),
+          ),
         ],
       ),
     );
@@ -180,6 +190,7 @@ class _CategoryFormDialogContent extends StatefulWidget {
     required this.submitLabel,
     required this.initialName,
     required this.initialTypes,
+    required this.initialColorHex,
     required this.onSubmit,
   });
 
@@ -187,7 +198,8 @@ class _CategoryFormDialogContent extends StatefulWidget {
   final String submitLabel;
   final String initialName;
   final List<String> initialTypes;
-  final Future<void> Function(String name, List<String> types) onSubmit;
+  final String? initialColorHex;
+  final Future<void> Function(String name, List<String> types, String? colorHex) onSubmit;
 
   @override
   State<_CategoryFormDialogContent> createState() => _CategoryFormDialogContentState();
@@ -196,6 +208,7 @@ class _CategoryFormDialogContent extends StatefulWidget {
 class _CategoryFormDialogContentState extends State<_CategoryFormDialogContent> {
   late final _nameController = TextEditingController(text: widget.initialName);
   late final List<String> _selectedTypes = [...widget.initialTypes];
+  late Color _selectedColor = AppColors.parseHex(widget.initialColorHex) ?? AppColors.categoryAccents.first;
   bool _isSubmitting = false;
   String? _error;
 
@@ -223,7 +236,7 @@ class _CategoryFormDialogContentState extends State<_CategoryFormDialogContent> 
       _error = null;
     });
     try {
-      await widget.onSubmit(name, _selectedTypes);
+      await widget.onSubmit(name, _selectedTypes, AppColors.toHex(_selectedColor));
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       setState(() {
@@ -261,6 +274,13 @@ class _CategoryFormDialogContentState extends State<_CategoryFormDialogContent> 
               ),
             );
           }).toList(),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text('COLOR', style: AppTypography.label.copyWith(color: inkFaint)),
+        const SizedBox(height: AppSpacing.sm),
+        _CategoryColorPicker(
+          selectedColor: _selectedColor,
+          onChanged: (color) => setState(() => _selectedColor = color),
         ),
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.sm),
@@ -345,6 +365,116 @@ class _ScopeCheckboxOption extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Predefined swatches (the app's existing categoryAccents palette) plus a
+/// custom option opening a full color picker for anything outside that set.
+class _CategoryColorPicker extends StatelessWidget {
+  const _CategoryColorPicker({required this.selectedColor, required this.onChanged});
+
+  final Color selectedColor;
+  final ValueChanged<Color> onChanged;
+
+  bool get _isCustom => !AppColors.categoryAccents.any((c) => c == selectedColor);
+
+  Future<void> _openCustomPicker(BuildContext context) async {
+    Color picked = selectedColor;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Pick a color'),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: selectedColor,
+            onColorChanged: (c) => picked = c,
+            enableAlpha: false,
+            labelTypes: const [],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Select'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) onChanged(picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final isCustom = _isCustom;
+
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        ...AppColors.categoryAccents.map((color) {
+          final selected = !isCustom && color == selectedColor;
+          return GestureDetector(
+            onTap: () => onChanged(color),
+            child: _ColorSwatch(color: color, selected: selected, ink: ink),
+          );
+        }),
+        GestureDetector(
+          onTap: () => _openCustomPicker(context),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isCustom ? selectedColor : null,
+              gradient: isCustom
+                  ? null
+                  : const SweepGradient(colors: [
+                      Color(0xFFE94E4E),
+                      Color(0xFFE9C64E),
+                      Color(0xFF4EE96B),
+                      Color(0xFF4EA9E9),
+                      Color(0xFF9E4EE9),
+                      Color(0xFFE94E4E),
+                    ]),
+              border: isCustom ? Border.all(color: ink, width: 2.5) : null,
+            ),
+            child: Icon(
+              isCustom ? Icons.check : Icons.colorize,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ColorSwatch extends StatelessWidget {
+  const _ColorSwatch({required this.color, required this.selected, required this.ink});
+
+  final Color color;
+  final bool selected;
+  final Color ink;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: selected ? Border.all(color: ink, width: 2.5) : null,
+      ),
+      child: selected ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
     );
   }
 }

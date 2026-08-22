@@ -352,8 +352,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                           const SizedBox(height: AppSpacing.xl),
                           AmountInputField(controller: _amountController),
                           const SizedBox(height: AppSpacing.xl),
-                          Divider(color: isDark ? AppColors.lineDark : AppColors.line),
-                          const SizedBox(height: AppSpacing.lg),
+                          // Divider(color: isDark ? AppColors.lineDark : AppColors.line),
+                          // const SizedBox(height: AppSpacing.lg),
 
                           if (_isGroupExpense) ...[
                             Wrap(

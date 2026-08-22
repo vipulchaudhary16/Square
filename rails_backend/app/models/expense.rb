@@ -101,17 +101,19 @@ class Expense < ApplicationRecord
   # Matches the shape GroupsController#group_expenses has always returned.
   def group_summary_json
     {
-      id:           id.to_s,
-      description:  description,
-      amount:       amount.to_f,
-      category:     category,
-      date:         date.iso8601,
-      payer_id:     payer_id.to_s,
-      payer_name:   payer.display_name,
-      group_id:     group_id&.to_s,
-      split_type:   split_type,
-      participants: expense_participants.map { |p| p.user_id.to_s },
-      splits:       expense_splits.each_with_object({}) { |s, h| h[s.user_id.to_s] = s.amount.to_f }
+      id:            id.to_s,
+      description:   description,
+      amount:        amount.to_f,
+      category_id:   category_id.to_s,
+      category_name: category&.name || "",
+      category_color: category&.color,
+      date:          date.iso8601,
+      payer_id:      payer_id.to_s,
+      payer_name:    payer.display_name,
+      group_id:      group_id&.to_s,
+      split_type:    split_type,
+      participants:  expense_participants.map { |p| p.user_id.to_s },
+      splits:        expense_splits.each_with_object({}) { |s, h| h[s.user_id.to_s] = s.amount.to_f }
     }
   end
 
@@ -122,6 +124,7 @@ class Expense < ApplicationRecord
       amount:        amount.to_f,
       category_id:   category_id.to_s,
       category_name: category&.name || "",
+      category_color: category&.color,
       date:          date.iso8601,
       payer_id:      payer_id.to_s,
       payer_name:    payer.display_name,

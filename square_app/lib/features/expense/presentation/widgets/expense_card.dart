@@ -82,7 +82,7 @@ class ExpenseCard extends ConsumerWidget {
 
     return TransactionRow(
       icon: isPersonal ? Icons.receipt_long_outlined : Icons.people_outline,
-      accentColor: AppColors.categoryAccent(category),
+      accentColor: AppColors.resolveCategoryColor(category, colorHex: expense.categoryColor),
       title: description,
       metaParts: metaParts,
       onTap: onTap,

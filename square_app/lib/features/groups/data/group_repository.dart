@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import 'group_model.dart';
-import '../../expense/data/expense_model.dart';
 
 final groupRepositoryProvider = Provider((ref) => GroupRepository());
 
@@ -112,7 +111,7 @@ class GroupRepository {
     }
   }
 
-  Future<List<Expense>> getGroupExpenses(
+  Future<List<GroupFeedItem>> getGroupExpenses(
     String groupId, {
     String? searchQuery,
   }) async {
@@ -148,11 +147,29 @@ class GroupRepository {
         dataList = [];
       }
 
-      return dataList.map((json) => Expense.fromJson(json)).toList();
+      return dataList.map((json) => groupFeedItemFromJson(json)).toList();
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to fetch group expenses';
     } catch (e) {
       throw Exception('Failed to fetch group expenses: $e');
+    }
+  }
+
+  Future<void> settle(String groupId, String toUserId, double amount) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) throw Exception('Not authenticated');
+
+      await _dio.post(
+        '/groups/$groupId/settle',
+        data: {'to_user_id': toUserId, 'amount': amount},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+    } on DioException catch (e) {
+      throw e.response?.data['error'] ?? 'Failed to settle';
+    } catch (e) {
+      throw Exception('Failed to settle: $e');
     }
   }
 }

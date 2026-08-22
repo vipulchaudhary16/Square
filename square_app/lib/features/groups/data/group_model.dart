@@ -1,3 +1,5 @@
+import '../../expense/data/expense_model.dart';
+
 class Group {
   final String id;
   final String name;
@@ -80,6 +82,68 @@ class Debt {
       amount: (json['amount'] ?? 0).toDouble(),
     );
   }
+}
+
+class Settlement {
+  final String id;
+  final double amount;
+  final DateTime date;
+  final String fromUserId;
+  final String fromUserName;
+  final String toUserId;
+  final String toUserName;
+  final String? groupId;
+
+  Settlement({
+    required this.id,
+    required this.amount,
+    required this.date,
+    required this.fromUserId,
+    required this.fromUserName,
+    required this.toUserId,
+    required this.toUserName,
+    this.groupId,
+  });
+
+  factory Settlement.fromJson(Map<String, dynamic> json) {
+    return Settlement(
+      id: json['id'] ?? '',
+      amount: (json['amount'] ?? 0).toDouble(),
+      date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
+      fromUserId: json['from_user_id'] ?? '',
+      fromUserName: json['from_user_name'] ?? '',
+      toUserId: json['to_user_id'] ?? '',
+      toUserName: json['to_user_name'] ?? '',
+      groupId: json['group_id'],
+    );
+  }
+}
+
+/// A single entry in a group's chronological feed — either a shared [Expense]
+/// or a direct [Settlement] payment between two members.
+sealed class GroupFeedItem {
+  DateTime get date;
+}
+
+class ExpenseFeedItem extends GroupFeedItem {
+  final Expense expense;
+  ExpenseFeedItem(this.expense);
+
+  @override
+  DateTime get date => expense.date;
+}
+
+class SettlementFeedItem extends GroupFeedItem {
+  final Settlement settlement;
+  SettlementFeedItem(this.settlement);
+
+  @override
+  DateTime get date => settlement.date;
+}
+
+GroupFeedItem groupFeedItemFromJson(Map<String, dynamic> json) {
+  if (json['type'] == 'settlement') return SettlementFeedItem(Settlement.fromJson(json));
+  return ExpenseFeedItem(Expense.fromJson(json));
 }
 
 class GroupDetails {

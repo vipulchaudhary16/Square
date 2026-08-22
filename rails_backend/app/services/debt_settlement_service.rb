@@ -1,7 +1,7 @@
 class DebtSettlementService
   Debt = Struct.new(:from_id, :to_id, :amount)
 
-  def self.compute(expenses)
+  def self.compute(expenses, settlements = [])
     net = Hash.new(0.0)
 
     expenses.each do |exp|
@@ -21,6 +21,12 @@ class DebtSettlementService
           participants.each { |p| net[p.user_id] -= share }
         end
       end
+    end
+
+    settlements.each do |s|
+      amount = s.amount.to_f
+      net[s.user_id]    += amount
+      net[s.to_user_id] -= amount
     end
 
     net.transform_values! { |v| (v * 100).round / 100.0 }

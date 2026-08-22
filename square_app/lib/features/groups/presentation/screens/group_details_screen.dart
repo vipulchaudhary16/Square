@@ -18,10 +18,10 @@ import '../../../../shared/widgets/amount_text.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../auth/data/user_repository.dart';
 import '../../../auth/data/user_model.dart';
-import '../../../expense/data/expense_model.dart';
 import '../../../expense/presentation/widgets/expense_card.dart';
 import '../../../auth/presentation/auth_provider.dart';
 import '../groups_provider.dart';
+import '../widgets/settlement_log_row.dart';
 
 class GroupDetailsScreen extends ConsumerStatefulWidget {
   final String groupId;
@@ -410,32 +410,164 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
                 );
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 final ink = isDark ? AppColors.inkDark : AppColors.ink;
+                final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
                 final line = debtLineText(debt, currentUserId, fromUser, toUser);
+                final canSettle = debt.from == currentUserId;
 
                 return AppCard(
                   margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                   padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Avatar(name: fromUser.displayName),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          line.text,
-                          style: AppTypography.body.copyWith(color: ink),
+                      Row(
+                        children: [
+                          _Avatar(name: fromUser.displayName),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              line.text,
+                              style: AppTypography.body.copyWith(color: ink),
+                            ),
+                          ),
+                          AmountText(
+                            amount: debt.amount,
+                            sign: line.sign,
+                            showSignPrefix: false,
+                            style: AppTypography.amountInline,
+                          ),
+                        ],
+                      ),
+                      if (canSettle) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: InkWell(
+                            onTap: () => _showSettleSheet(context, details.group.id, toUser, debt.amount),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.sync_alt, size: 14, color: inkFaint),
+                                const SizedBox(width: 4),
+                                Text('Settle', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      AmountText(
-                        amount: debt.amount,
-                        sign: line.sign,
-                        showSignPrefix: false,
-                        style: AppTypography.amountInline,
-                      ),
+                      ],
                     ],
                   ),
                 );
               },
             ),
+    );
+  }
+
+  void _showSettleSheet(BuildContext context, String groupId, GroupMember toUser, double maxAmount) {
+    final amountController = TextEditingController(text: maxAmount.toStringAsFixed(2));
+    bool isSubmitting = false;
+    String? errorText;
+
+    AppBottomSheet.show(
+      context,
+      title: 'Settle up',
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final ink = isDark ? AppColors.inkDark : AppColors.ink;
+            final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+            final line = isDark ? AppColors.lineDark : AppColors.line;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _Avatar(name: toUser.displayName),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Pay ${toUser.displayName}',
+                          style: AppTypography.cardHeading.copyWith(color: ink),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('Amount', style: AppTypography.label.copyWith(color: inkFaint)),
+                  const SizedBox(height: AppSpacing.sm),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: line),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    child: TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: AppTypography.body.copyWith(color: ink),
+                      decoration: InputDecoration(
+                        prefixText: '₹ ',
+                        prefixStyle: AppTypography.body.copyWith(color: ink),
+                        filled: false,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                      ),
+                      onChanged: (_) => setState(() => errorText = null),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'You owe ${toUser.displayName} up to ₹${maxAmount.toStringAsFixed(2)}',
+                    style: AppTypography.caption.copyWith(color: inkFaint),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(errorText!, style: AppTypography.errorText.copyWith(color: AppColors.negative)),
+                  ],
+                  const SizedBox(height: AppSpacing.lg),
+                  PrimaryButton(
+                    text: 'Settle',
+                    isLoading: isSubmitting,
+                    onPressed: () async {
+                      final parsed = double.tryParse(amountController.text.trim());
+                      if (parsed == null || parsed <= 0) {
+                        setState(() => errorText = 'Enter a valid amount');
+                        return;
+                      }
+                      if (parsed > maxAmount + 0.01) {
+                        setState(() => errorText = 'Cannot be more than ₹${maxAmount.toStringAsFixed(2)}');
+                        return;
+                      }
+                      setState(() => isSubmitting = true);
+                      try {
+                        await ref.read(groupRepositoryProvider).settle(groupId, toUser.id, parsed);
+                        ref.invalidate(groupDetailsProvider(groupId));
+                        ref.invalidate(groupExpensesProvider("$groupId|$_searchQuery"));
+                        if (context.mounted) {
+                          context.pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Settled ₹${parsed.toStringAsFixed(2)} with ${toUser.displayName}')),
+                          );
+                        }
+                      } catch (e) {
+                        setState(() {
+                          isSubmitting = false;
+                          errorText = '$e';
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -695,8 +827,8 @@ class _ExpenseListSliver extends ConsumerWidget {
           onRetry: () => ref.invalidate(groupExpensesProvider("$groupId|$searchQuery")),
         ),
       ),
-      data: (expenses) {
-        if (expenses.isEmpty) {
+      data: (items) {
+        if (items.isEmpty) {
           return SliverFillRemaining(
             hasScrollBody: false,
             child: Center(
@@ -711,7 +843,7 @@ class _ExpenseListSliver extends ConsumerWidget {
           );
         }
 
-        final grouped = _groupByDate(expenses);
+        final grouped = _groupByDate(items);
         final flatList = <dynamic>[];
         for (final entry in grouped.entries) {
           flatList.add(entry.key);
@@ -725,12 +857,17 @@ class _ExpenseListSliver extends ConsumerWidget {
               (context, index) {
                 final item = flatList[index];
                 if (item is String) return _buildDateHeader(context, item, isFirst: index == 0);
-                final expense = item as Expense;
-                return ExpenseCard(
-                  expense: expense,
-                  currentUserId: currentUser?.id ?? '',
-                  onTap: () => context.push('/transactions/expenses/${expense.id}'),
-                );
+                return switch (item as GroupFeedItem) {
+                  ExpenseFeedItem(:final expense) => ExpenseCard(
+                      expense: expense,
+                      currentUserId: currentUser?.id ?? '',
+                      onTap: () => context.push('/transactions/expenses/${expense.id}'),
+                    ),
+                  SettlementFeedItem(:final settlement) => SettlementLogRow(
+                      settlement: settlement,
+                      currentUserId: currentUser?.id ?? '',
+                    ),
+                };
               },
               childCount: flatList.length,
             ),
@@ -751,14 +888,14 @@ class _ExpenseListSliver extends ConsumerWidget {
     );
   }
 
-  Map<String, List<Expense>> _groupByDate(List<Expense> expenses) {
+  Map<String, List<GroupFeedItem>> _groupByDate(List<GroupFeedItem> items) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final groups = <String, List<Expense>>{};
+    final groups = <String, List<GroupFeedItem>>{};
 
-    for (final expense in expenses) {
-      final date = expense.date;
+    for (final item in items) {
+      final date = item.date;
       final day = DateTime(date.year, date.month, date.day);
       final String label;
       if (day == today) {
@@ -770,7 +907,7 @@ class _ExpenseListSliver extends ConsumerWidget {
       } else {
         label = DateFormat('MMMM d, y').format(date);
       }
-      (groups[label] ??= []).add(expense);
+      (groups[label] ??= []).add(item);
     }
     return groups;
   }

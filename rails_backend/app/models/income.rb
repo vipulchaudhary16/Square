@@ -10,6 +10,27 @@ class Income < ApplicationRecord
   validates :source, :amount, :date, presence: true
   validates :amount, numericality: { greater_than: 0 }
 
+  scope :with_filters, ->(params) {
+    s = all
+    s = s.where(category_id: params[:category_id]) if params[:category_id].present?
+    s = s.where("date >= ?", params[:start_date]) if params[:start_date].present?
+    s = s.where("date <= ?", params[:end_date]) if params[:end_date].present?
+    s = s.where("source ILIKE ? OR description ILIKE ?",
+                "%#{ActiveRecord::Base.sanitize_sql_like(params[:search])}%",
+                "%#{ActiveRecord::Base.sanitize_sql_like(params[:search])}%") if params[:search].present?
+    s
+  }
+
+  scope :with_sort, ->(params) {
+    col   = %w[date amount].include?(params[:sort_by]) ? params[:sort_by] : "date"
+    order = params[:sort_order] == "asc" ? :asc : :desc
+    reorder(col => order)
+  }
+
+  def self.for_index(user, params)
+    user.incomes.with_filters(params).with_sort(params).includes(:category)
+  end
+
   def self.create_for_user!(user:, params:)
     category = user.categories.find_by(id: params[:category_id]) ||
                user.categories.find_by(name: "General")
@@ -36,7 +57,7 @@ class Income < ApplicationRecord
 
   def api_json
     { id: id.to_s, user_id: user_id.to_s, source: source, amount: amount.to_f,
-      category_id: category_id.to_s, category_name: category&.name || "",
+      category_id: category_id.to_s, category_name: category&.name || "", category_color: category&.color,
       date: date.iso8601, description: description, created_at: created_at.iso8601 }
   end
 end

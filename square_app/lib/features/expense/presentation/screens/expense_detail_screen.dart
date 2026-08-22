@@ -118,13 +118,13 @@ class _ExpenseDetailScreenState extends ConsumerState<ExpenseDetailScreen> {
                         width: 56,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: AppColors.categoryAccent(expense.categoryName).withValues(alpha: isDark ? 0.18 : 0.1),
+                          color: AppColors.resolveCategoryColor(expense.categoryName, colorHex: expense.categoryColor).withValues(alpha: isDark ? 0.18 : 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.receipt_long_outlined,
                           size: 24,
-                          color: AppColors.categoryAccent(expense.categoryName),
+                          color: AppColors.resolveCategoryColor(expense.categoryName, colorHex: expense.categoryColor),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),

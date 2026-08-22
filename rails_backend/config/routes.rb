@@ -16,6 +16,9 @@ Rails.application.routes.draw do
       member { post :comments }
     end
 
+    # Analysis (period-scoped spending/income summary + category breakdown)
+    get "analysis", to: "analysis#show"
+
     # Groups
     resources :groups, only: [:create, :index, :show] do
       member do

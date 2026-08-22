@@ -114,7 +114,7 @@ class _CategoryPickerSheetState extends ConsumerState<CategoryPickerSheet> {
                             itemBuilder: (_, i) {
                               final cat = filtered[i];
                               final selected = widget.selectedId == cat.id;
-                              final accent = AppColors.categoryAccent(cat.name);
+                              final accent = AppColors.resolveCategoryColor(cat.name, colorHex: cat.color);
                               return ButtonShell(
                                 onTap: () {
                                   widget.onSelected(cat.id, cat.name);

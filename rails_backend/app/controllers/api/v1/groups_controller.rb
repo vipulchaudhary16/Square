@@ -9,9 +9,8 @@ module Api
       end
 
       def show
-        members  = @group.members
-        expenses = @group.expenses.includes(:expense_participants, :expense_splits)
-        debts    = DebtSettlementService.compute(expenses)
+        members = @group.members
+        debts   = @group.debts
         render json: {
           group:   @group.api_json,
           members: members.map(&:member_json),
@@ -53,16 +52,28 @@ module Api
         expenses = @group.expenses
           .with_filters(params)
           .with_sort(params)
-          .includes(:payer, :expense_splits, :expense_participants)
-        render json: expenses.map(&:group_summary_json)
+          .includes(:payer, :category, :expense_splits, :expense_participants)
+        items = expenses.map { |e| e.group_summary_json.merge(type: "expense") }
+
+        if params[:search].blank?
+          items += @group.settlements.includes(:user, :to_user).map(&:settlement_json)
+        end
+
+        items.sort_by! { |i| i[:date] }
+        items.reverse! unless params[:sort_order] == "asc"
+        render json: items
       end
 
       def settle
         to_user = User.find(params[:to_user_id])
-        expense = @group.settle_debt!(from_user: current_user, to_user: to_user, amount: params[:amount].to_f)
-        render json: { message: "Debt settled successfully", expense: { id: expense.id.to_s } }
+        @group.settle_debt!(from_user: current_user, to_user: to_user, amount: params[:amount])
+        render json: { message: "Debt settled successfully" }
       rescue ActiveRecord::RecordNotFound
         render json: { error: "User not found" }, status: :not_found
+      rescue Group::DebtExceededError => e
+        render json: { error: e.message }, status: :unprocessable_entity
+      rescue ArgumentError => e
+        render json: { error: e.message }, status: :bad_request
       end
 
       private

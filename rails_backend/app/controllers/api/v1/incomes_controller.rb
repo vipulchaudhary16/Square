@@ -4,7 +4,17 @@ module Api
       before_action :set_income, only: [:show, :update, :destroy, :comments]
 
       def index
-        render json: current_user.incomes.includes(:category).order(date: :desc).map(&:api_json)
+        incomes = Income.for_index(current_user, params)
+
+        if params[:limit].present?
+          page  = (params[:page] || 1).to_i
+          limit = params[:limit].to_i
+          total = incomes.count
+          data  = incomes.offset((page - 1) * limit).limit(limit)
+          render json: { data: data.map(&:api_json), total: total, page: page, limit: limit }
+        else
+          render json: incomes.map(&:api_json)
+        end
       end
 
       def show

@@ -21,20 +21,20 @@ class CategoriesRepository {
   }
 
   Future<Category> createCategory(
-      String token, String name, List<String> appliesTo) async {
+      String token, String name, List<String> appliesTo, {String? color}) async {
     final response = await _dio.post(
       '/categories',
-      data: {'name': name, 'applies_to': appliesTo},
+      data: {'name': name, 'applies_to': appliesTo, if (color != null) 'color': color},
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return Category.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<Category> updateCategory(
-      String token, String id, String name, List<String> appliesTo) async {
+      String token, String id, String name, List<String> appliesTo, {String? color}) async {
     final response = await _dio.patch(
       '/categories/$id',
-      data: {'name': name, 'applies_to': appliesTo},
+      data: {'name': name, 'applies_to': appliesTo, if (color != null) 'color': color},
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return Category.fromJson(response.data as Map<String, dynamic>);
