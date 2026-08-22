@@ -1,27 +1,19 @@
 import 'package:dio/dio.dart';
-import '../../../core/constants/api_constants.dart';
 
 class AuthRepository {
   final Dio _dio;
 
-  AuthRepository({Dio? dio})
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+  AuthRepository(this._dio);
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      print('Making request to: ${_dio.options.baseUrl}/auth/login');
       final response = await _dio.post(
         '/auth/login',
         data: {'email': email, 'password': password},
       );
       return response.data;
     } on DioException catch (e) {
-      print('Login Error: ${e.message}');
-      print('Login response: ${e.response?.data}');
       throw e.response?.data['error'] ?? 'Login failed: ${e.message}';
-    } catch (e) {
-      print('Unexpected Login Error: $e');
-      throw 'An unexpected error occurred';
     }
   }
 
@@ -45,5 +37,11 @@ class AuthRepository {
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Signup failed';
     }
+  }
+
+  /// Best-effort — the caller always clears local session state regardless
+  /// of whether this succeeds.
+  Future<void> logout(String refreshToken) async {
+    await _dio.post('/auth/logout', data: {'refresh_token': refreshToken});
   }
 }

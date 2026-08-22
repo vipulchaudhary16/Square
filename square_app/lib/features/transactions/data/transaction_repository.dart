@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import '../../../../core/constants/api_constants.dart';
 
 class TransactionRepository {
-  final Dio _dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+  final Dio _dio;
 
-  Future<Map<String, dynamic>> getExpenses(
-    String token, {
+  TransactionRepository(this._dio);
+
+  Future<Map<String, dynamic>> getExpenses({
     int page = 1,
     int limit = 10,
     String? search,
@@ -25,7 +25,6 @@ class TransactionRepository {
           if (startDate != null) 'start_date': startDate,
           if (endDate != null) 'end_date': endDate,
         },
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       final List<dynamic> data =
           response.data['data'] ?? []; // Adjust based on API response structure
@@ -36,8 +35,7 @@ class TransactionRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getIncomes(
-    String token, {
+  Future<Map<String, dynamic>> getIncomes({
     int page = 1,
     int limit = 10,
     String? search,
@@ -56,7 +54,6 @@ class TransactionRepository {
           if (startDate != null) 'start_date': startDate,
           if (endDate != null) 'end_date': endDate,
         },
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       final List<dynamic> data = response.data['data'] ?? [];
       final int total = response.data['total'] ?? 0;
@@ -66,8 +63,7 @@ class TransactionRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getAnalysis(
-    String token, {
+  Future<Map<String, dynamic>> getAnalysis({
     required String startDate,
     required String endDate,
   }) async {
@@ -75,7 +71,6 @@ class TransactionRepository {
       final response = await _dio.get(
         '/analysis',
         queryParameters: {'start_date': startDate, 'end_date': endDate},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return response.data as Map<String, dynamic>;
     } catch (e) {
@@ -83,8 +78,7 @@ class TransactionRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getInvestments(
-    String token, {
+  Future<Map<String, dynamic>> getInvestments({
     int page = 1,
     int limit = 10,
   }) async {
@@ -92,7 +86,6 @@ class TransactionRepository {
       final response = await _dio.get(
         '/investments',
         queryParameters: {'page': page, 'limit': limit},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       final List<dynamic> data = response.data ?? [];
       final int total = response.data.length ?? 0;
@@ -102,16 +95,11 @@ class TransactionRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getLoans(
-    String token, {
-    int page = 1,
-    int limit = 10,
-  }) async {
+  Future<Map<String, dynamic>> getLoans({int page = 1, int limit = 10}) async {
     try {
       final response = await _dio.get(
         '/loans',
         queryParameters: {'page': page, 'limit': limit},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       final List<dynamic> data = response.data ?? [];
       final int total = response.data.length ?? 0;
@@ -122,61 +110,41 @@ class TransactionRepository {
   }
 
   // Create Methods
-  Future<void> createExpense(String token, Map<String, dynamic> data) async {
+  Future<void> createExpense(Map<String, dynamic> data) async {
     try {
-      await _dio.post(
-        '/expenses',
-        data: data,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.post('/expenses', data: data);
     } catch (e) {
       throw Exception('Failed to create expense: $e');
     }
   }
 
-  Future<void> createIncome(String token, Map<String, dynamic> data) async {
+  Future<void> createIncome(Map<String, dynamic> data) async {
     try {
-      await _dio.post(
-        '/incomes',
-        data: data,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.post('/incomes', data: data);
     } catch (e) {
       throw Exception('Failed to create income: $e');
     }
   }
 
-  Future<void> createInvestment(String token, Map<String, dynamic> data) async {
+  Future<void> createInvestment(Map<String, dynamic> data) async {
     try {
-      await _dio.post(
-        '/investments',
-        data: data,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.post('/investments', data: data);
     } catch (e) {
       throw Exception('Failed to create investment: $e');
     }
   }
 
-  Future<void> createLoan(String token, Map<String, dynamic> data) async {
+  Future<void> createLoan(Map<String, dynamic> data) async {
     try {
-      await _dio.post(
-        '/loans',
-        data: data,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.post('/loans', data: data);
     } catch (e) {
       throw Exception('Failed to create loan: $e');
     }
   }
 
-  Future<void> updateLoan(String token, String loanId, Map<String, dynamic> data) async {
+  Future<void> updateLoan(String loanId, Map<String, dynamic> data) async {
     try {
-      await _dio.patch(
-        '/loans/$loanId',
-        data: data,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.patch('/loans/$loanId', data: data);
     } catch (e) {
       throw Exception('Failed to update loan: $e');
     }

@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/network/api_client.dart';
 import '../../feature_flags/presentation/feature_flags_provider.dart';
 import '../data/dashboard_cache.dart';
 import '../data/dashboard_repository.dart';
 import '../data/dashboard_model.dart';
 
-final dashboardRepositoryProvider = Provider((ref) => DashboardRepository());
+final dashboardRepositoryProvider = Provider(
+  (ref) => DashboardRepository(ref.watch(apiClientProvider)),
+);
 
 final dashboardProvider =
     AsyncNotifierProvider<DashboardNotifier, DashboardData?>(
@@ -26,13 +28,9 @@ class DashboardNotifier extends AsyncNotifier<DashboardData?> {
       (f) => f.key == 'show_expense_trends_chart' && f.value,
     );
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    if (token == null) return null;
-
     final fresh = await ref
         .read(dashboardRepositoryProvider)
-        .getDashboardData(token, includeTrends: showTrends);
+        .getDashboardData(includeTrends: showTrends);
     await DashboardCache.write(fresh);
     return fresh;
   }

@@ -1,6 +1,5 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/network/api_client.dart';
 import '../../expense/data/expense_model.dart';
 import '../data/income_model.dart';
 import '../data/investment_model.dart';
@@ -8,7 +7,7 @@ import '../data/loan_model.dart';
 import '../data/transaction_repository.dart';
 
 final transactionRepositoryProvider = Provider(
-  (ref) => TransactionRepository(),
+  (ref) => TransactionRepository(ref.watch(apiClientProvider)),
 );
 
 // State holding the list and pagination info
@@ -41,13 +40,14 @@ class TransactionState<T> {
 }
 
 // Generic Notifier
-abstract class GenericTransactionNotifier<T> extends AsyncNotifier<TransactionState<T>> {
+abstract class GenericTransactionNotifier<T>
+    extends AsyncNotifier<TransactionState<T>> {
   final T Function(Map<String, dynamic> json) _fromJson;
 
   GenericTransactionNotifier(this._fromJson);
 
-  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10});
-  Future<void> createItem(String token, Map<String, dynamic> data);
+  Future<Map<String, dynamic>> fetchPage({int page = 1, int limit = 10});
+  Future<void> createItem(Map<String, dynamic> data);
 
   @override
   Future<TransactionState<T>> build() async {
@@ -84,14 +84,7 @@ abstract class GenericTransactionNotifier<T> extends AsyncNotifier<TransactionSt
     bool isRefresh = false,
     List<T>? currentItems,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    if (token == null) {
-      throw Exception('User not authenticated');
-    }
-
-    final result = await fetchPage(token, page: page, limit: 10);
+    final result = await fetchPage(page: page, limit: 10);
 
     final List<T> newData = (result['data'] as List)
         .map((e) => _fromJson(e))
@@ -112,11 +105,7 @@ abstract class GenericTransactionNotifier<T> extends AsyncNotifier<TransactionSt
   }
 
   Future<void> create(Map<String, dynamic> data) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    if (token == null) return;
-
-    await createItem(token, data);
+    await createItem(data);
     await refresh();
   }
 }
@@ -126,13 +115,15 @@ class ExpensesNotifier extends GenericTransactionNotifier<Expense> {
   ExpensesNotifier() : super(Expense.fromJson);
 
   @override
-  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10}) {
-    return ref.read(transactionRepositoryProvider).getExpenses(token, page: page, limit: limit);
+  Future<Map<String, dynamic>> fetchPage({int page = 1, int limit = 10}) {
+    return ref
+        .read(transactionRepositoryProvider)
+        .getExpenses(page: page, limit: limit);
   }
 
   @override
-  Future<void> createItem(String token, Map<String, dynamic> data) {
-    return ref.read(transactionRepositoryProvider).createExpense(token, data);
+  Future<void> createItem(Map<String, dynamic> data) {
+    return ref.read(transactionRepositoryProvider).createExpense(data);
   }
 }
 
@@ -140,13 +131,15 @@ class IncomesNotifier extends GenericTransactionNotifier<Income> {
   IncomesNotifier() : super(Income.fromJson);
 
   @override
-  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10}) {
-    return ref.read(transactionRepositoryProvider).getIncomes(token, page: page, limit: limit);
+  Future<Map<String, dynamic>> fetchPage({int page = 1, int limit = 10}) {
+    return ref
+        .read(transactionRepositoryProvider)
+        .getIncomes(page: page, limit: limit);
   }
 
   @override
-  Future<void> createItem(String token, Map<String, dynamic> data) {
-    return ref.read(transactionRepositoryProvider).createIncome(token, data);
+  Future<void> createItem(Map<String, dynamic> data) {
+    return ref.read(transactionRepositoryProvider).createIncome(data);
   }
 }
 
@@ -154,13 +147,15 @@ class InvestmentsNotifier extends GenericTransactionNotifier<Investment> {
   InvestmentsNotifier() : super(Investment.fromJson);
 
   @override
-  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10}) {
-    return ref.read(transactionRepositoryProvider).getInvestments(token, page: page, limit: limit);
+  Future<Map<String, dynamic>> fetchPage({int page = 1, int limit = 10}) {
+    return ref
+        .read(transactionRepositoryProvider)
+        .getInvestments(page: page, limit: limit);
   }
 
   @override
-  Future<void> createItem(String token, Map<String, dynamic> data) {
-    return ref.read(transactionRepositoryProvider).createInvestment(token, data);
+  Future<void> createItem(Map<String, dynamic> data) {
+    return ref.read(transactionRepositoryProvider).createInvestment(data);
   }
 }
 
@@ -168,19 +163,19 @@ class LoansNotifier extends GenericTransactionNotifier<Loan> {
   LoansNotifier() : super(Loan.fromJson);
 
   @override
-  Future<Map<String, dynamic>> fetchPage(String token, {int page = 1, int limit = 10}) {
-    return ref.read(transactionRepositoryProvider).getLoans(token, page: page, limit: limit);
+  Future<Map<String, dynamic>> fetchPage({int page = 1, int limit = 10}) {
+    return ref
+        .read(transactionRepositoryProvider)
+        .getLoans(page: page, limit: limit);
   }
 
   @override
-  Future<void> createItem(String token, Map<String, dynamic> data) {
-    return ref.read(transactionRepositoryProvider).createLoan(token, data);
+  Future<void> createItem(Map<String, dynamic> data) {
+    return ref.read(transactionRepositoryProvider).createLoan(data);
   }
 
   Future<void> updateLoan(String loanId, Map<String, dynamic> data) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    await ref.read(transactionRepositoryProvider).updateLoan(token, loanId, data);
+    await ref.read(transactionRepositoryProvider).updateLoan(loanId, data);
     await refresh();
   }
 }

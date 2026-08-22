@@ -10,26 +10,23 @@ import '../../data/loans_repository.dart';
 
 class ReminderSheet extends StatefulWidget {
   final Loan loan;
-  final String token;
   final LoansRepository repository;
 
   const ReminderSheet({
     super.key,
     required this.loan,
-    required this.token,
     required this.repository,
   });
 
   static void show(
     BuildContext context, {
     required Loan loan,
-    required String token,
     required LoansRepository repository,
   }) {
     AppBottomSheet.show(
       context,
       title: 'Set Reminder',
-      builder: (_) => ReminderSheet(loan: loan, token: token, repository: repository),
+      builder: (_) => ReminderSheet(loan: loan, repository: repository),
     );
   }
 
@@ -68,16 +65,15 @@ class _ReminderSheetState extends State<ReminderSheet> {
     });
     try {
       await widget.repository.setReminder(
-        widget.token,
         widget.loan.id,
         remindAt: _selectedDate!,
         nudgeBorrower: _nudgeBorrower,
       );
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reminder set')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Reminder set')));
       }
     } catch (e) {
       setState(() {
@@ -98,7 +94,8 @@ class _ReminderSheetState extends State<ReminderSheet> {
     final hasDueDate = widget.loan.dueDate != null;
     final tomorrow = DateTime.now().add(const Duration(days: 1));
     final inThreeDays = DateTime.now().add(const Duration(days: 3));
-    final isCustom = _selectedDate != null &&
+    final isCustom =
+        _selectedDate != null &&
         !_isSameDay(_selectedDate!, tomorrow) &&
         !_isSameDay(_selectedDate!, inThreeDays) &&
         !(hasDueDate && _isSameDay(_selectedDate!, widget.loan.dueDate!));
@@ -115,18 +112,27 @@ class _ReminderSheetState extends State<ReminderSheet> {
             children: [
               AppChip(
                 label: 'Tomorrow',
-                selected: _selectedDate != null && _isSameDay(_selectedDate!, tomorrow),
+                selected:
+                    _selectedDate != null &&
+                    _isSameDay(_selectedDate!, tomorrow),
                 onTap: () => _selectQuickDate(tomorrow),
               ),
               AppChip(
                 label: 'In 3 days',
-                selected: _selectedDate != null && _isSameDay(_selectedDate!, inThreeDays),
+                selected:
+                    _selectedDate != null &&
+                    _isSameDay(_selectedDate!, inThreeDays),
                 onTap: () => _selectQuickDate(inThreeDays),
               ),
               AppChip(
                 label: 'On due date',
-                selected: hasDueDate && _selectedDate != null && _isSameDay(_selectedDate!, widget.loan.dueDate!),
-                onTap: hasDueDate ? () => _selectQuickDate(widget.loan.dueDate!) : null,
+                selected:
+                    hasDueDate &&
+                    _selectedDate != null &&
+                    _isSameDay(_selectedDate!, widget.loan.dueDate!),
+                onTap: hasDueDate
+                    ? () => _selectQuickDate(widget.loan.dueDate!)
+                    : null,
               ),
               AppChip(
                 label: 'Custom',
@@ -143,11 +149,15 @@ class _ReminderSheetState extends State<ReminderSheet> {
               style: AppTypography.bodyMuted.copyWith(color: inkFaint),
             ),
           ],
-          if (widget.loan.direction == 'lent' && widget.loan.borrowerUserId != null) ...[
+          if (widget.loan.direction == 'lent' &&
+              widget.loan.borrowerUserId != null) ...[
             const SizedBox(height: AppSpacing.md),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text('Also nudge ${widget.loan.contactName}', style: AppTypography.bodyMuted.copyWith(color: ink)),
+              title: Text(
+                'Also nudge ${widget.loan.contactName}',
+                style: AppTypography.bodyMuted.copyWith(color: ink),
+              ),
               value: _nudgeBorrower,
               onChanged: (v) => setState(() => _nudgeBorrower = v),
               dense: true,
@@ -155,10 +165,19 @@ class _ReminderSheetState extends State<ReminderSheet> {
           ],
           if (_error != null) ...[
             const SizedBox(height: AppSpacing.sm),
-            Text(_error!, style: AppTypography.errorText.copyWith(color: AppColors.negative)),
+            Text(
+              _error!,
+              style: AppTypography.errorText.copyWith(
+                color: AppColors.negative,
+              ),
+            ),
           ],
           const SizedBox(height: AppSpacing.xl),
-          PrimaryButton(text: 'Set Reminder', onPressed: _submit, isLoading: _loading),
+          PrimaryButton(
+            text: 'Set Reminder',
+            onPressed: _submit,
+            isLoading: _loading,
+          ),
         ],
       ),
     );

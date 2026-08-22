@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/constants/api_constants.dart';
+import '../../../core/network/api_client.dart';
 import '../../transactions/data/loan_model.dart';
 import '../../transactions/data/loan_payment_model.dart';
 
@@ -17,14 +17,13 @@ class LoanDetail {
 }
 
 class LoansRepository {
-  final Dio _dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+  final Dio _dio;
 
-  Future<LoanDetail> getLoan(String token, String loanId) async {
+  LoansRepository(this._dio);
+
+  Future<LoanDetail> getLoan(String loanId) async {
     try {
-      final res = await _dio.get(
-        '/loans/$loanId',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      final res = await _dio.get('/loans/$loanId');
       final data = res.data as Map<String, dynamic>;
       final loan = Loan.fromJson(data['loan']);
       final payments = (data['payments'] as List? ?? [])
@@ -32,14 +31,17 @@ class LoansRepository {
           .toList();
       final timeline = (data['interest_timeline'] as List? ?? [])
           .cast<Map<String, dynamic>>();
-      return LoanDetail(loan: loan, payments: payments, interestTimeline: timeline);
+      return LoanDetail(
+        loan: loan,
+        payments: payments,
+        interestTimeline: timeline,
+      );
     } catch (e) {
       throw Exception('Failed to fetch loan: $e');
     }
   }
 
   Future<Map<String, dynamic>> recordPayment(
-    String token,
     String loanId, {
     required double amount,
     required DateTime paidAt,
@@ -50,12 +52,11 @@ class LoansRepository {
       final res = await _dio.post(
         '/loans/$loanId/payments',
         data: {
-          'amount':                 amount,
-          'paid_at':                paidAt.toIso8601String(),
+          'amount': amount,
+          'paid_at': paidAt.toIso8601String(),
           if (note != null) 'note': note,
           'add_interest_to_income': addInterestToIncome,
         },
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return res.data as Map<String, dynamic>;
     } catch (e) {
@@ -64,7 +65,6 @@ class LoansRepository {
   }
 
   Future<void> setReminder(
-    String token,
     String loanId, {
     required DateTime remindAt,
     bool nudgeBorrower = false,
@@ -76,13 +76,12 @@ class LoansRepository {
       await _dio.post(
         '/loans/$loanId/reminders',
         data: {
-          'remind_at':      remindAt.toUtc().toIso8601String(),
+          'remind_at': remindAt.toUtc().toIso8601String(),
           'nudge_borrower': nudgeBorrower,
-          'via_push':       viaPush,
-          'via_email':      viaEmail,
-          'via_sms':        viaSms,
+          'via_push': viaPush,
+          'via_email': viaEmail,
+          'via_sms': viaSms,
         },
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
     } catch (e) {
       throw Exception('Failed to set reminder: $e');
@@ -90,7 +89,6 @@ class LoansRepository {
   }
 
   Future<Map<String, dynamic>> updateConfirmation(
-    String token,
     String loanId,
     String confirmationStatus,
   ) async {
@@ -98,7 +96,6 @@ class LoansRepository {
       final res = await _dio.patch(
         '/loans/$loanId/confirmation',
         data: {'confirmation_status': confirmationStatus},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return res.data as Map<String, dynamic>;
     } catch (e) {
@@ -107,4 +104,6 @@ class LoansRepository {
   }
 }
 
-final loansRepositoryProvider = Provider((ref) => LoansRepository());
+final loansRepositoryProvider = Provider(
+  (ref) => LoansRepository(ref.watch(apiClientProvider)),
+);

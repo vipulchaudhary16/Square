@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/network/token_storage.dart';
 import '../../dashboard/data/dashboard_cache.dart';
 import '../data/auth_repository.dart';
 import '../data/user_model.dart';
 
-final authRepositoryProvider = Provider((ref) => AuthRepository());
+final authRepositoryProvider = Provider(
+  (ref) => AuthRepository(ref.watch(apiClientProvider)),
+);
 
 final authProvider = AsyncNotifierProvider<AuthNotifier, User?>(
   AuthNotifier.new,
@@ -18,11 +22,13 @@ class AuthNotifier extends AsyncNotifier<User?> {
   }
 
   Future<User?> _checkLoginStatus() async {
+    final refreshToken = await ref
+        .read(tokenStorageProvider)
+        .readRefreshToken();
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
     final userData = prefs.getString('user');
 
-    if (token != null && userData != null) {
+    if (refreshToken != null && userData != null) {
       try {
         return User.fromJson(jsonDecode(userData));
       } catch (e) {
@@ -37,14 +43,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
     state = await AsyncValue.guard(() async {
       final repository = ref.read(authRepositoryProvider);
       final data = await repository.login(email, password);
-      final user = User.fromJson(data['user']);
-      final token = data['token'];
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token);
-      await prefs.setString('user', jsonEncode(user.toJson()));
-
-      return user;
+      return _persistSession(data);
     });
   }
 
@@ -63,20 +62,44 @@ class AuthNotifier extends AsyncNotifier<User?> {
         firstName,
         lastName,
       );
-      final user = User.fromJson(data['user']);
-      final token = data['token'];
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', token);
-      await prefs.setString('user', jsonEncode(user.toJson()));
-
-      return user;
+      return _persistSession(data);
     });
   }
 
-  Future<void> logout() async {
+  Future<User> _persistSession(Map<String, dynamic> data) async {
+    final user = User.fromJson(data['user']);
+
+    await ref
+        .read(tokenStorageProvider)
+        .saveTokens(
+          accessToken: data['access_token'] as String,
+          refreshToken: data['refresh_token'] as String,
+        );
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
+    await prefs.setString('user', jsonEncode(user.toJson()));
+
+    return user;
+  }
+
+  Future<void> logout() async {
+    final tokenStorage = ref.read(tokenStorageProvider);
+    final refreshToken = await tokenStorage.readRefreshToken();
+    if (refreshToken != null) {
+      try {
+        await ref.read(authRepositoryProvider).logout(refreshToken);
+      } catch (_) {
+        // Best-effort — always clear local state below regardless.
+      }
+    }
+    await forceSignOut();
+  }
+
+  /// Clears local session state without calling the backend — used when the
+  /// API client's interceptor has already determined the session is dead
+  /// (e.g. a refresh attempt failed) and there's nothing left to revoke.
+  Future<void> forceSignOut() async {
+    await ref.read(tokenStorageProvider).clear();
+    final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user');
     await DashboardCache.clear();
     state = const AsyncValue.data(null);

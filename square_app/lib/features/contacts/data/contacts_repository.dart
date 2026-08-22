@@ -1,17 +1,15 @@
 import 'package:dio/dio.dart';
-import '../../../../core/constants/api_constants.dart';
 import 'contact_model.dart';
 import '../../transactions/data/loan_model.dart';
 
 class ContactsRepository {
-  final Dio _dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+  final Dio _dio;
 
-  Future<List<Contact>> getContacts(String token) async {
+  ContactsRepository(this._dio);
+
+  Future<List<Contact>> getContacts() async {
     try {
-      final res = await _dio.get(
-        '/contacts',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      final res = await _dio.get('/contacts');
       return (res.data as List? ?? [])
           .map((j) => Contact.fromJson(j as Map<String, dynamic>))
           .toList();
@@ -20,12 +18,11 @@ class ContactsRepository {
     }
   }
 
-  Future<ContactSearchResult> search(String token, String query) async {
+  Future<ContactSearchResult> search(String query) async {
     try {
       final res = await _dio.get(
         '/contacts/search',
         queryParameters: {'q': query},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       final data = res.data as Map<String, dynamic>;
       return ContactSearchResult(
@@ -42,7 +39,6 @@ class ContactsRepository {
   }
 
   Future<Contact> updateContact(
-    String token,
     String contactId, {
     required String name,
     String? phone,
@@ -56,7 +52,6 @@ class ContactsRepository {
           if (phone != null && phone.isNotEmpty) 'phone': phone,
           if (email != null && email.isNotEmpty) 'email': email,
         },
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return Contact.fromJson(res.data);
     } catch (e) {
@@ -64,8 +59,7 @@ class ContactsRepository {
     }
   }
 
-  Future<Contact> createContact(
-    String token, {
+  Future<Contact> createContact({
     required String name,
     String? phone,
     String? email,
@@ -80,7 +74,6 @@ class ContactsRepository {
           if (email != null) 'email': email,
           if (linkedUserId != null) 'linked_user_id': linkedUserId,
         },
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return Contact.fromJson(res.data);
     } catch (e) {
@@ -88,13 +81,9 @@ class ContactsRepository {
     }
   }
 
-  Future<ContactLoansResult> getContactLoans(
-      String token, String contactId) async {
+  Future<ContactLoansResult> getContactLoans(String contactId) async {
     try {
-      final res = await _dio.get(
-        '/contacts/$contactId/loans',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      final res = await _dio.get('/contacts/$contactId/loans');
       final data = res.data as Map<String, dynamic>;
       return ContactLoansResult(
         contact: Contact.fromJson(data['contact']),

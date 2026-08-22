@@ -1,22 +1,20 @@
 import 'package:dio/dio.dart';
-import '../../../../core/constants/api_constants.dart';
 import 'expense_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/network/api_client.dart';
 
-final expenseRepositoryProvider = Provider((ref) => ExpenseRepository());
+final expenseRepositoryProvider = Provider(
+  (ref) => ExpenseRepository(ref.watch(apiClientProvider)),
+);
 
 class ExpenseRepository {
   final Dio _dio;
 
-  ExpenseRepository({Dio? dio})
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+  ExpenseRepository(this._dio);
 
-  Future<List<Expense>> getExpenses(String token) async {
+  Future<List<Expense>> getExpenses() async {
     try {
-      final response = await _dio.get(
-        '/expenses',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      final response = await _dio.get('/expenses');
       final List<dynamic> data = response.data;
       return data.map((json) => Expense.fromJson(json)).toList();
     } on DioException catch (e) {
@@ -24,12 +22,9 @@ class ExpenseRepository {
     }
   }
 
-  Future<Expense> getExpenseById(String token, String id) async {
+  Future<Expense> getExpenseById(String id) async {
     try {
-      final response = await _dio.get(
-        '/expenses/$id',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      final response = await _dio.get('/expenses/$id');
       // GET /expenses/:id wraps the expense fields under an "expense" key
       // (alongside logs/comments/users), unlike the flat array from index.
       return Expense.fromJson(response.data['expense']);
@@ -38,43 +33,28 @@ class ExpenseRepository {
     }
   }
 
-  Future<void> createExpense(
-    String token,
-    Map<String, dynamic> expenseData,
-  ) async {
+  Future<void> createExpense(Map<String, dynamic> expenseData) async {
     try {
-      await _dio.post(
-        '/expenses',
-        data: expenseData,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.post('/expenses', data: expenseData);
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to create expense';
     }
   }
 
   Future<void> updateExpense(
-    String token,
     String id,
     Map<String, dynamic> expenseData,
   ) async {
     try {
-      await _dio.put(
-        '/expenses/$id',
-        data: expenseData,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.put('/expenses/$id', data: expenseData);
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to update expense';
     }
   }
 
-  Future<void> deleteExpense(String token, String id) async {
+  Future<void> deleteExpense(String id) async {
     try {
-      await _dio.delete(
-        '/expenses/$id',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.delete('/expenses/$id');
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to delete expense';
     }

@@ -91,7 +91,7 @@ GEM
     builder (3.3.0)
     cgi (0.5.1)
     concurrent-ruby (1.3.6)
-    connection_pool (3.0.2)
+    connection_pool (2.5.5)
     crass (1.0.6)
     date (3.5.1)
     debug (1.11.1)
@@ -182,6 +182,8 @@ GEM
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.2.6)
+    rack-attack (6.8.0)
+      rack (>= 1.0, < 4)
     rack-cors (2.0.2)
       rack (>= 2.0.0)
     rack-session (2.1.2)
@@ -227,6 +229,10 @@ GEM
       erb
       psych (>= 4.0.0)
       tsort
+    redis (5.4.1)
+      redis-client (>= 0.22.0)
+    redis-client (0.30.1)
+      connection_pool
     reline (0.6.3)
       io-console (~> 0.5)
     securerandom (0.4.1)
@@ -254,6 +260,7 @@ DEPENDENCIES
   bcrypt (~> 3.1)
   bootsnap
   brakeman
+  connection_pool (~> 2.4)
   dashboard!
   debug
   dotenv-rails
@@ -264,8 +271,10 @@ DEPENDENCIES
   kaminari (~> 1.2)
   pg (~> 1.5)
   puma (~> 6.4)
+  rack-attack (~> 6.7)
   rack-cors (~> 2.0)
   rails (~> 7.2.0)
+  redis (~> 5.3)
   shoulda-matchers (~> 6.2)
   tzinfo-data
 

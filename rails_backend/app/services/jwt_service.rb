@@ -1,9 +1,9 @@
 class JwtService
   ALGORITHM = "HS256"
-  EXPIRY    = 72.hours
+  EXPIRY    = Integer(ENV.fetch("ACCESS_TOKEN_TTL_MINUTES", 15)).minutes
 
   def self.encode(payload)
-    payload = payload.merge(exp: (Time.current + EXPIRY).to_i)
+    payload = payload.merge(exp: (Time.current + EXPIRY).to_i, jti: SecureRandom.uuid)
     JWT.encode(payload, secret, ALGORITHM)
   end
 

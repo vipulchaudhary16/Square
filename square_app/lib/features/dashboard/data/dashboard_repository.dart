@@ -1,22 +1,16 @@
 import 'package:dio/dio.dart';
-import '../../../core/constants/api_constants.dart';
 import 'dashboard_model.dart';
 
 class DashboardRepository {
   final Dio _dio;
 
-  DashboardRepository({Dio? dio})
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+  DashboardRepository(this._dio);
 
-  Future<DashboardData> getDashboardData(
-    String token, {
-    bool includeTrends = true,
-  }) async {
+  Future<DashboardData> getDashboardData({bool includeTrends = true}) async {
     try {
       final response = await _dio.get(
         '/dashboard',
         queryParameters: {'include_trends': includeTrends.toString()},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return DashboardData.fromJson(response.data);
     } on DioException catch (e) {

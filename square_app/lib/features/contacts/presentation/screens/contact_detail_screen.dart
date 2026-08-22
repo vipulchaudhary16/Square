@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -17,14 +16,10 @@ import '../../data/contact_model.dart';
 import '../contacts_provider.dart';
 import '../../../../features/transactions/data/loan_model.dart';
 
-final _contactLoansProvider =
-    FutureProvider.autoDispose.family<ContactLoansResult, String>(
-  (ref, contactId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    return ref.read(contactsRepositoryProvider).getContactLoans(token, contactId);
-  },
-);
+final _contactLoansProvider = FutureProvider.autoDispose
+    .family<ContactLoansResult, String>((ref, contactId) async {
+      return ref.read(contactsRepositoryProvider).getContactLoans(contactId);
+    });
 
 class ContactDetailScreen extends ConsumerWidget {
   final String contactId;
@@ -85,23 +80,32 @@ class _ContactDetailBody extends StatelessWidget {
                 icon: Icons.edit,
                 iconSize: 16,
                 onPressed: () async {
-                  await context.push('/contacts/${contact.id}/edit', extra: contact);
+                  await context.push(
+                    '/contacts/${contact.id}/edit',
+                    extra: contact,
+                  );
                 },
               ),
               const SizedBox(width: AppSpacing.sm),
             ],
-            flexibleSpace: FlexibleSpaceBar(background: _Header(contact: contact, net: net)),
+            flexibleSpace: FlexibleSpaceBar(
+              background: _Header(contact: contact, net: net),
+            ),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(48),
               child: Container(
-                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: line))),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: line)),
+                ),
                 child: TabBar(
                   labelColor: ink,
                   unselectedLabelColor: inkFaint,
                   indicatorColor: ink,
                   indicatorWeight: 2,
                   labelStyle: AppTypography.bodyEmphasis.copyWith(fontSize: 13),
-                  unselectedLabelStyle: AppTypography.body.copyWith(fontSize: 13),
+                  unselectedLabelStyle: AppTypography.body.copyWith(
+                    fontSize: 13,
+                  ),
                   tabs: [
                     Tab(text: 'Active (${activeLoans.length})'),
                     Tab(text: 'Settled (${settledLoans.length})'),
@@ -152,10 +156,19 @@ class _Header extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.18),
                   shape: BoxShape.circle,
-                  border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.5),
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
                 ),
                 child: Center(
-                  child: Text(contact.initials, style: AppTypography.screenTitle.copyWith(color: accent, fontSize: 20)),
+                  child: Text(
+                    contact.initials,
+                    style: AppTypography.screenTitle.copyWith(
+                      color: accent,
+                      fontSize: 20,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -163,14 +176,28 @@ class _Header extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(contact.name, style: AppTypography.sectionHeading.copyWith(color: ink, fontSize: 18)),
+                    Text(
+                      contact.name,
+                      style: AppTypography.sectionHeading.copyWith(
+                        color: ink,
+                        fontSize: 18,
+                      ),
+                    ),
                     if (contact.phone != null) ...[
                       const SizedBox(height: 2),
-                      Text(contact.phone!, style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
+                      Text(
+                        contact.phone!,
+                        style: AppTypography.bodyMuted.copyWith(
+                          color: inkFaint,
+                        ),
+                      ),
                     ],
                     if (contact.onPlatform) ...[
                       const SizedBox(height: AppSpacing.xs),
-                      AppChip(label: 'On platform', status: AppChipStatus.positive),
+                      AppChip(
+                        label: 'On platform',
+                        status: AppChipStatus.positive,
+                      ),
                     ],
                   ],
                 ),
@@ -190,7 +217,11 @@ class _BalanceCard extends StatelessWidget {
   final double amount;
   final bool isOwed;
 
-  const _BalanceCard({required this.contact, required this.amount, required this.isOwed});
+  const _BalanceCard({
+    required this.contact,
+    required this.amount,
+    required this.isOwed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -199,14 +230,24 @@ class _BalanceCard extends StatelessWidget {
     final color = isOwed ? AppColors.positive : AppColors.negative;
 
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       child: Row(
         children: [
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-            child: Icon(isOwed ? Icons.trending_up : Icons.trending_down, size: 16, color: color),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isOwed ? Icons.trending_up : Icons.trending_down,
+              size: 16,
+              color: color,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -214,7 +255,9 @@ class _BalanceCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isOwed ? '${contact.name} owes you' : 'You owe ${contact.name}',
+                  isOwed
+                      ? '${contact.name} owes you'
+                      : 'You owe ${contact.name}',
                   style: AppTypography.caption.copyWith(color: inkFaint),
                 ),
                 const SizedBox(height: 1),
@@ -227,7 +270,10 @@ class _BalanceCard extends StatelessWidget {
               ],
             ),
           ),
-          Text('net balance', style: AppTypography.caption.copyWith(color: inkFaint)),
+          Text(
+            'net balance',
+            style: AppTypography.caption.copyWith(color: inkFaint),
+          ),
         ],
       ),
     );
@@ -244,7 +290,10 @@ class _LoanList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (loans.isEmpty) {
       return const Center(
-        child: AppEmptyState(icon: Icons.inbox_outlined, title: 'No loans here'),
+        child: AppEmptyState(
+          icon: Icons.inbox_outlined,
+          title: 'No loans here',
+        ),
       );
     }
     return RefreshIndicator(
@@ -254,7 +303,12 @@ class _LoanList extends ConsumerWidget {
       },
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xxl),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.xxl,
+        ),
         itemCount: loans.length,
         itemBuilder: (_, i) => _LoanCard(loan: loans[i]),
       ),
@@ -282,8 +336,8 @@ class _LoanCard extends StatelessWidget {
     final status = loan.isOverdue
         ? AppChipStatus.negative
         : loan.isPaid
-            ? AppChipStatus.positive
-            : AppChipStatus.warning;
+        ? AppChipStatus.positive
+        : AppChipStatus.warning;
     final statusLabel = loan.isOverdue ? 'Overdue' : loan.status;
 
     return AppInteractiveCard(
@@ -295,7 +349,10 @@ class _LoanCard extends StatelessWidget {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
             child: Icon(
               isLent ? Icons.north_east_rounded : Icons.south_west_rounded,
               size: 18,
@@ -309,7 +366,10 @@ class _LoanCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTypography.cardHeading.copyWith(color: ink, fontSize: 13),
+                  style: AppTypography.cardHeading.copyWith(
+                    color: ink,
+                    fontSize: 13,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -326,11 +386,15 @@ class _LoanCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (loan.interestMode != 'none' && loan.interestRate != null) ...[
+                    if (loan.interestMode != 'none' &&
+                        loan.interestRate != null) ...[
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         '${loan.interestRate!.toStringAsFixed(loan.interestRate! % 1 == 0 ? 0 : 1)}%',
-                        style: AppTypography.caption.copyWith(color: AppColors.warning, fontWeight: FontWeight.w500),
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.warning,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ],
@@ -342,9 +406,17 @@ class _LoanCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(formatInr(loan.amount), style: AppTypography.amountInline.copyWith(color: accentColor)),
+              Text(
+                formatInr(loan.amount),
+                style: AppTypography.amountInline.copyWith(color: accentColor),
+              ),
               if (loan.interestMode != 'none' && loan.totalDue != loan.amount)
-                Text(formatInr(loan.totalDue), style: AppTypography.caption.copyWith(color: AppColors.warning)),
+                Text(
+                  formatInr(loan.totalDue),
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.warning,
+                  ),
+                ),
             ],
           ),
         ],

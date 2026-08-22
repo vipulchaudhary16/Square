@@ -1,27 +1,20 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/api_constants.dart';
+import '../../../core/network/api_client.dart';
 import 'group_model.dart';
 
-final groupRepositoryProvider = Provider((ref) => GroupRepository());
+final groupRepositoryProvider = Provider(
+  (ref) => GroupRepository(ref.watch(apiClientProvider)),
+);
 
 class GroupRepository {
   final Dio _dio;
 
-  GroupRepository({Dio? dio})
-    : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+  GroupRepository(this._dio);
 
   Future<List<Group>> getUserGroups() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
-      final response = await _dio.get(
-        '/groups',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      final response = await _dio.get('/groups');
 
       if (response.data == null) return [];
 
@@ -47,15 +40,7 @@ class GroupRepository {
 
   Future<Group> createGroup(Map<String, dynamic> groupData) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
-      final response = await _dio.post(
-        '/groups',
-        data: groupData,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      final response = await _dio.post('/groups', data: groupData);
       return Group.fromJson(response.data);
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to create group';
@@ -64,14 +49,7 @@ class GroupRepository {
 
   Future<GroupDetails> getGroupDetails(String id) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
-      final response = await _dio.get(
-        '/groups/$id',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      final response = await _dio.get('/groups/$id');
       return GroupDetails.fromJson(response.data);
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to fetch group details';
@@ -81,13 +59,7 @@ class GroupRepository {
   // Helper method for generic calls if needed
   Future<void> inviteUser(String groupId, String email) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      await _dio.post(
-        '/groups/$groupId/invite',
-        data: {'email': email},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.post('/groups/$groupId/invite', data: {'email': email});
     } catch (e) {
       throw Exception('Failed to invite user: $e');
     }
@@ -95,15 +67,7 @@ class GroupRepository {
 
   Future<void> addMember(String groupId, String userId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
-      await _dio.post(
-        '/groups/$groupId/members',
-        data: {'user_id': userId},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
+      await _dio.post('/groups/$groupId/members', data: {'user_id': userId});
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to add member';
     } catch (e) {
@@ -116,10 +80,6 @@ class GroupRepository {
     String? searchQuery,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
       final queryParams = <String, dynamic>{};
       if (searchQuery != null && searchQuery.isNotEmpty) {
         queryParams['search'] = searchQuery;
@@ -128,7 +88,6 @@ class GroupRepository {
       final response = await _dio.get(
         '/groups/$groupId/expenses',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (response.data == null) {
@@ -157,14 +116,9 @@ class GroupRepository {
 
   Future<void> settle(String groupId, String toUserId, double amount) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
       await _dio.post(
         '/groups/$groupId/settle',
         data: {'to_user_id': toUserId, 'amount': amount},
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to settle';

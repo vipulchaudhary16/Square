@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../data/expense_model.dart';
 import '../data/expense_repository.dart';
 
@@ -10,33 +9,15 @@ final expenseProvider = AsyncNotifierProvider<ExpenseNotifier, List<Expense>>(
 class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
   @override
   Future<List<Expense>> build() async {
-    return _fetchExpenses();
-  }
-
-  Future<List<Expense>> _fetchExpenses() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    if (token == null) {
-      return [];
-    }
-
-    final repository = ref.read(expenseRepositoryProvider);
-    return repository.getExpenses(token);
+    return ref.read(expenseRepositoryProvider).getExpenses();
   }
 
   Future<void> addExpense(Map<String, dynamic> expenseData) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
       final repository = ref.read(expenseRepositoryProvider);
-      await repository.createExpense(token, expenseData);
-
-      // refetch to update list
-      return _fetchExpenses();
+      await repository.createExpense(expenseData);
+      return repository.getExpenses();
     });
   }
 
@@ -46,35 +27,23 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
   ) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
       final repository = ref.read(expenseRepositoryProvider);
-      await repository.updateExpense(token, id, expenseData);
-
-      return _fetchExpenses();
+      await repository.updateExpense(id, expenseData);
+      return repository.getExpenses();
     });
   }
 
   Future<void> deleteExpense(String id) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      if (token == null) throw Exception('Not authenticated');
-
       final repository = ref.read(expenseRepositoryProvider);
-      await repository.deleteExpense(token, id);
-
-      return _fetchExpenses();
+      await repository.deleteExpense(id);
+      return repository.getExpenses();
     });
   }
 }
 
-final expenseDetailProvider =
-    FutureProvider.autoDispose.family<Expense, String>((ref, id) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token') ?? '';
-  return ref.read(expenseRepositoryProvider).getExpenseById(token, id);
-});
+final expenseDetailProvider = FutureProvider.autoDispose
+    .family<Expense, String>((ref, id) async {
+      return ref.read(expenseRepositoryProvider).getExpenseById(id);
+    });

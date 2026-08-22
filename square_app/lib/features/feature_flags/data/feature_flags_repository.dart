@@ -1,29 +1,20 @@
 import 'package:dio/dio.dart';
-import 'package:square_app/core/constants/api_constants.dart';
 import 'feature_flag_model.dart';
 
 class FeatureFlagsRepository {
   final Dio _dio;
 
-  FeatureFlagsRepository({Dio? dio})
-      : _dio = dio ?? Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+  FeatureFlagsRepository(this._dio);
 
-  Future<List<FeatureFlag>> getFlags(String token) async {
-    final response = await _dio.get(
-      '/users/me/flags',
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
+  Future<List<FeatureFlag>> getFlags() async {
+    final response = await _dio.get('/users/me/flags');
     return (response.data as List)
         .map((e) => FeatureFlag.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  Future<List<FeatureFlag>> updateFlag(String token, String id, bool value) async {
-    final response = await _dio.patch(
-      '/users/me/flags',
-      data: {id: value},
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
+  Future<List<FeatureFlag>> updateFlag(String id, bool value) async {
+    final response = await _dio.patch('/users/me/flags', data: {id: value});
     return (response.data as List)
         .map((e) => FeatureFlag.fromJson(e as Map<String, dynamic>))
         .toList();

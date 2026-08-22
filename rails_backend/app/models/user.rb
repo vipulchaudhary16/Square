@@ -59,10 +59,6 @@ class User < ApplicationRecord
     UserMailer.password_reset(self, token).deliver_later
   end
 
-  def auth_token
-    JwtService.encode({ user_id: id.to_s })
-  end
-
   def update_feature_flags!(parsed)
     registry = FeatureFlagRegistry.all.index_by { |r| r.id.to_s }
     parsed.each do |id_str, value|

@@ -1,23 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/network/api_client.dart';
 import '../data/contact_model.dart';
 import '../data/contacts_repository.dart';
 
-final contactsRepositoryProvider = Provider((_) => ContactsRepository());
+final contactsRepositoryProvider = Provider(
+  (ref) => ContactsRepository(ref.watch(apiClientProvider)),
+);
 
-final contactsProvider =
-    AsyncNotifierProvider<ContactsNotifier, List<Contact>>(
-        ContactsNotifier.new);
+final contactsProvider = AsyncNotifierProvider<ContactsNotifier, List<Contact>>(
+  ContactsNotifier.new,
+);
 
 class ContactsNotifier extends AsyncNotifier<List<Contact>> {
   @override
-  Future<List<Contact>> build() => _fetch();
-
-  Future<List<Contact>> _fetch() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    return ref.read(contactsRepositoryProvider).getContacts(token);
-  }
+  Future<List<Contact>> build() =>
+      ref.read(contactsRepositoryProvider).getContacts();
 
   Future<Contact> create({
     required String name,
@@ -25,17 +22,17 @@ class ContactsNotifier extends AsyncNotifier<List<Contact>> {
     String? email,
     String? linkedUserId,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    final contact = await ref.read(contactsRepositoryProvider).createContact(
-          token,
+    final contact = await ref
+        .read(contactsRepositoryProvider)
+        .createContact(
           name: name,
           phone: phone,
           email: email,
           linkedUserId: linkedUserId,
         );
-    final current =
-        state is AsyncData<List<Contact>> ? state.requireValue : <Contact>[];
+    final current = state is AsyncData<List<Contact>>
+        ? state.requireValue
+        : <Contact>[];
     state = AsyncData([...current, contact]);
     return contact;
   }
@@ -46,17 +43,12 @@ class ContactsNotifier extends AsyncNotifier<List<Contact>> {
     String? phone,
     String? email,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    final updated = await ref.read(contactsRepositoryProvider).updateContact(
-          token,
-          contactId,
-          name: name,
-          phone: phone,
-          email: email,
-        );
-    final current =
-        state is AsyncData<List<Contact>> ? state.requireValue : <Contact>[];
+    final updated = await ref
+        .read(contactsRepositoryProvider)
+        .updateContact(contactId, name: name, phone: phone, email: email);
+    final current = state is AsyncData<List<Contact>>
+        ? state.requireValue
+        : <Contact>[];
     state = AsyncData(
       current.map((c) => c.id == contactId ? updated : c).toList(),
     );
@@ -64,13 +56,10 @@ class ContactsNotifier extends AsyncNotifier<List<Contact>> {
   }
 }
 
-final contactSearchProvider = FutureProvider.family<ContactSearchResult, String>(
-  (ref, query) async {
-    if (query.length < 2) {
-      return ContactSearchResult(contacts: [], platformUsers: []);
-    }
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    return ref.read(contactsRepositoryProvider).search(token, query);
-  },
-);
+final contactSearchProvider =
+    FutureProvider.family<ContactSearchResult, String>((ref, query) async {
+      if (query.length < 2) {
+        return ContactSearchResult(contacts: [], platformUsers: []);
+      }
+      return ref.read(contactsRepositoryProvider).search(query);
+    });

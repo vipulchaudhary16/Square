@@ -1,17 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/network/api_client.dart';
 import '../data/feature_flag_model.dart';
 import '../data/feature_flags_repository.dart';
 
-final featureFlagsRepositoryProvider =
-    Provider((_) => FeatureFlagsRepository());
+final featureFlagsRepositoryProvider = Provider(
+  (ref) => FeatureFlagsRepository(ref.watch(apiClientProvider)),
+);
 
 class FeatureFlagsNotifier extends AsyncNotifier<List<FeatureFlag>> {
   @override
   Future<List<FeatureFlag>> build() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    return ref.read(featureFlagsRepositoryProvider).getFlags(token);
+    return ref.read(featureFlagsRepositoryProvider).getFlags();
   }
 
   /// Returns the resolved boolean for a flag by key.
@@ -30,13 +29,14 @@ class FeatureFlagsNotifier extends AsyncNotifier<List<FeatureFlag>> {
     if (state.value == null) return;
     final previous = state;
     state = AsyncData(
-      state.value!.map((f) => f.id == id ? f.copyWith(value: value) : f).toList(),
+      state.value!
+          .map((f) => f.id == id ? f.copyWith(value: value) : f)
+          .toList(),
     );
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
-      final updated =
-          await ref.read(featureFlagsRepositoryProvider).updateFlag(token, id, value);
+      final updated = await ref
+          .read(featureFlagsRepositoryProvider)
+          .updateFlag(id, value);
       state = AsyncData(updated);
     } catch (_) {
       state = previous;
@@ -47,5 +47,5 @@ class FeatureFlagsNotifier extends AsyncNotifier<List<FeatureFlag>> {
 
 final featureFlagsProvider =
     AsyncNotifierProvider<FeatureFlagsNotifier, List<FeatureFlag>>(
-  FeatureFlagsNotifier.new,
-);
+      FeatureFlagsNotifier.new,
+    );

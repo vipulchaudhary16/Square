@@ -7,6 +7,9 @@ Rails.application.routes.draw do
     # Auth
     post   "auth/signup",          to: "auth#signup"
     post   "auth/login",           to: "auth#login"
+    post   "auth/refresh",         to: "auth#refresh"
+    post   "auth/logout",          to: "auth#logout"
+    post   "auth/logout-all",      to: "auth#logout_all"
     post   "auth/forgot-password", to: "auth#forgot_password"
     post   "auth/reset-password",  to: "auth#reset_password"
     get    "auth/me",              to: "auth#me"

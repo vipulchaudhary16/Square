@@ -21,13 +21,10 @@ import 'widgets/interest_timeline_card.dart';
 import 'widgets/record_payment_sheet.dart';
 import 'widgets/reminder_sheet.dart';
 
-final _loanDetailProvider = FutureProvider.autoDispose.family<LoanDetail, String>(
-  (ref, loanId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    return ref.read(loansRepositoryProvider).getLoan(token, loanId);
-  },
-);
+final _loanDetailProvider = FutureProvider.autoDispose
+    .family<LoanDetail, String>((ref, loanId) async {
+      return ref.read(loansRepositoryProvider).getLoan(loanId);
+    });
 
 class LoanDetailScreen extends ConsumerWidget {
   final String loanId;
@@ -39,7 +36,9 @@ class LoanDetailScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surfaceSunken,
+      backgroundColor: isDark
+          ? AppColors.surfaceSunkenDark
+          : AppColors.surfaceSunken,
       body: data.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
@@ -100,33 +99,51 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
       future: _userIdFuture,
       builder: (context, snap) {
         final currentUserId = snap.data;
-        final isLender = currentUserId != null && loan.lenderUserId == currentUserId;
-        final isBorrower = currentUserId != null && loan.borrowerUserId == currentUserId;
+        final isLender =
+            currentUserId != null && loan.lenderUserId == currentUserId;
+        final isBorrower =
+            currentUserId != null && loan.borrowerUserId == currentUserId;
 
         return Scaffold(
-          backgroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surfaceSunken,
+          backgroundColor: isDark
+              ? AppColors.surfaceSunkenDark
+              : AppColors.surfaceSunken,
           appBar: AppBar(
-            backgroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surfaceSunken,
+            backgroundColor: isDark
+                ? AppColors.surfaceSunkenDark
+                : AppColors.surfaceSunken,
             elevation: 0,
-            leading: AppIconButton(icon: Icons.arrow_back, onPressed: () => context.pop()),
-            title: Text(loan.contactName, style: AppTypography.screenTitle.copyWith(color: ink, fontSize: 18)),
+            leading: AppIconButton(
+              icon: Icons.arrow_back,
+              onPressed: () => context.pop(),
+            ),
+            title: Text(
+              loan.contactName,
+              style: AppTypography.screenTitle.copyWith(
+                color: ink,
+                fontSize: 18,
+              ),
+            ),
             actions: [
               if (isLender) ...[
                 AppIconButton(
                   icon: Icons.edit,
                   onPressed: () async {
-                    final refreshed = await context.push<bool>('/loans/${loan.id}/edit', extra: loan);
+                    final refreshed = await context.push<bool>(
+                      '/loans/${loan.id}/edit',
+                      extra: loan,
+                    );
                     if (refreshed == true) onRefresh();
                   },
                 ),
                 AppIconButton(
                   icon: Icons.notifications_outlined,
-                  onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    final token = prefs.getString('token') ?? '';
-                    if (context.mounted) {
-                      ReminderSheet.show(context, loan: loan, token: token, repository: ref.read(loansRepositoryProvider));
-                    }
+                  onPressed: () {
+                    ReminderSheet.show(
+                      context,
+                      loan: loan,
+                      repository: ref.read(loansRepositoryProvider),
+                    );
                   },
                 ),
                 const SizedBox(width: AppSpacing.xs),
@@ -136,18 +153,27 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
           floatingActionButton: isLender && loan.status != 'PAID'
               ? FloatingActionButton.extended(
                   onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    final token = prefs.getString('token') ?? '';
-                    if (context.mounted) {
-                      await RecordPaymentSheet.show(context, loan: loan, token: token, repository: ref.read(loansRepositoryProvider));
-                      onRefresh();
-                    }
+                    await RecordPaymentSheet.show(
+                      context,
+                      loan: loan,
+                      repository: ref.read(loansRepositoryProvider),
+                    );
+                    onRefresh();
                   },
                   backgroundColor: AppColors.ink,
-                  foregroundColor: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
+                  foregroundColor: isDark
+                      ? AppColors.surfaceSunkenDark
+                      : AppColors.surface,
                   elevation: 0,
                   icon: const Icon(Icons.check_circle, size: 18),
-                  label: Text('Record Payment', style: AppTypography.button.copyWith(color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface)),
+                  label: Text(
+                    'Record Payment',
+                    style: AppTypography.button.copyWith(
+                      color: isDark
+                          ? AppColors.surfaceSunkenDark
+                          : AppColors.surface,
+                    ),
+                  ),
                 )
               : null,
           body: RefreshIndicator(
@@ -167,26 +193,18 @@ class _LoanDetailBodyState extends ConsumerState<_LoanDetailBody> {
                     isDark: isDark,
                   ),
                 if (isBorrower && loan.status != 'PAID')
-                  FutureBuilder<String>(
-                    future: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      return prefs.getString('token') ?? '';
-                    }(),
-                    builder: (context, snap) {
-                      final token = snap.data ?? '';
-                      return _ConfirmationBar(
-                        loan: loan,
-                        token: token,
-                        repository: ref.read(loansRepositoryProvider),
-                        onUpdated: onRefresh,
-                      );
-                    },
+                  _ConfirmationBar(
+                    loan: loan,
+                    repository: ref.read(loansRepositoryProvider),
+                    onUpdated: onRefresh,
                   ),
                 _SectionHeader(label: 'Payment History', isDark: isDark),
                 if (detail.payments.isEmpty)
                   _EmptyPayments(isDark: isDark)
                 else
-                  ...detail.payments.map((p) => _PaymentTile(payment: p, isDark: isDark)),
+                  ...detail.payments.map(
+                    (p) => _PaymentTile(payment: p, isDark: isDark),
+                  ),
               ],
             ),
           ),
@@ -201,7 +219,11 @@ class _AmountCard extends StatelessWidget {
   final bool isLent;
   final bool isDark;
 
-  const _AmountCard({required this.loan, required this.isLent, required this.isDark});
+  const _AmountCard({
+    required this.loan,
+    required this.isLent,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -216,12 +238,20 @@ class _AmountCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              AppChip(label: isLent ? 'LENT' : 'BORROWED', status: isLent ? AppChipStatus.positive : AppChipStatus.negative),
+              AppChip(
+                label: isLent ? 'LENT' : 'BORROWED',
+                status: isLent
+                    ? AppChipStatus.positive
+                    : AppChipStatus.negative,
+              ),
               const SizedBox(width: AppSpacing.xs),
               _StatusChip(status: loan.status),
               if (loan.confirmationStatus == 'confirmed') ...[
                 const SizedBox(width: AppSpacing.xs),
-                const AppChip(label: 'Confirmed', status: AppChipStatus.positive),
+                const AppChip(
+                  label: 'Confirmed',
+                  status: AppChipStatus.positive,
+                ),
               ],
               if (loan.confirmationStatus == 'disputed') ...[
                 const SizedBox(width: AppSpacing.xs),
@@ -238,31 +268,61 @@ class _AmountCard extends StatelessWidget {
           ),
           if (loan.description != null && loan.description!.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
-            Text(loan.description!, style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
+            Text(
+              loan.description!,
+              style: AppTypography.bodyMuted.copyWith(color: inkFaint),
+            ),
           ],
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              _InfoPair(label: 'Date', value: DateFormat('dd MMM y').format(loan.date), ink: ink, inkFaint: inkFaint),
+              _InfoPair(
+                label: 'Date',
+                value: DateFormat('dd MMM y').format(loan.date),
+                ink: ink,
+                inkFaint: inkFaint,
+              ),
               if (loan.dueDate != null) ...[
                 const SizedBox(width: AppSpacing.xl),
-                _InfoPair(label: 'Due', value: DateFormat('dd MMM y').format(loan.dueDate!), ink: ink, inkFaint: inkFaint),
+                _InfoPair(
+                  label: 'Due',
+                  value: DateFormat('dd MMM y').format(loan.dueDate!),
+                  ink: ink,
+                  inkFaint: inkFaint,
+                ),
               ],
             ],
           ),
           if (loan.interestMode != 'none') ...[
             const SizedBox(height: AppSpacing.md),
-            Divider(height: 1, color: isDark ? AppColors.lineDark : AppColors.line),
+            Divider(
+              height: 1,
+              color: isDark ? AppColors.lineDark : AppColors.line,
+            ),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                _InfoPair(label: 'Outstanding', value: formatInr(loan.outstanding), ink: ink, inkFaint: inkFaint),
+                _InfoPair(
+                  label: 'Outstanding',
+                  value: formatInr(loan.outstanding),
+                  ink: ink,
+                  inkFaint: inkFaint,
+                ),
                 const SizedBox(width: AppSpacing.xl),
-                _InfoPair(label: 'Total Due', value: formatInr(loan.totalDue), ink: ink, inkFaint: inkFaint, highlight: true),
+                _InfoPair(
+                  label: 'Total Due',
+                  value: formatInr(loan.totalDue),
+                  ink: ink,
+                  inkFaint: inkFaint,
+                  highlight: true,
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            Divider(height: 1, color: isDark ? AppColors.lineDark : AppColors.line),
+            Divider(
+              height: 1,
+              color: isDark ? AppColors.lineDark : AppColors.line,
+            ),
             const SizedBox(height: AppSpacing.md),
             _InterestDetailsRow(loan: loan, isDark: isDark),
           ],
@@ -307,9 +367,15 @@ class _InterestDetailsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final chips = <(String, String)>[
       if (loan.interestRate != null)
-        ('Rate', '${loan.interestRate!.toStringAsFixed(loan.interestRate! % 1 == 0 ? 0 : 2)}%'),
+        (
+          'Rate',
+          '${loan.interestRate!.toStringAsFixed(loan.interestRate! % 1 == 0 ? 0 : 2)}%',
+        ),
       if (loan.interestPeriod != null)
-        ('Per', '${loan.interestPeriod![0].toUpperCase()}${loan.interestPeriod!.substring(1)}'),
+        (
+          'Per',
+          '${loan.interestPeriod![0].toUpperCase()}${loan.interestPeriod!.substring(1)}',
+        ),
       if (loan.interestBasis != null)
         ('Calc', loan.interestBasis == 'total' ? 'Compound' : 'Simple'),
       ('Type', _modeLabel),
@@ -318,7 +384,9 @@ class _InterestDetailsRow extends StatelessWidget {
     return Wrap(
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.xs,
-      children: chips.map((c) => _InterestChip(label: c.$1, value: c.$2, isDark: isDark)).toList(),
+      children: chips
+          .map((c) => _InterestChip(label: c.$1, value: c.$2, isDark: isDark))
+          .toList(),
     );
   }
 }
@@ -327,14 +395,21 @@ class _InterestChip extends StatelessWidget {
   final String label;
   final String value;
   final bool isDark;
-  const _InterestChip({required this.label, required this.value, required this.isDark});
+  const _InterestChip({
+    required this.label,
+    required this.value,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
     final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken,
         borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -342,8 +417,20 @@ class _InterestChip extends StatelessWidget {
       child: RichText(
         text: TextSpan(
           children: [
-            TextSpan(text: '$label  ', style: AppTypography.caption.copyWith(color: inkFaint, fontSize: 10)),
-            TextSpan(text: value, style: AppTypography.caption.copyWith(color: ink, fontWeight: FontWeight.w600)),
+            TextSpan(
+              text: '$label  ',
+              style: AppTypography.caption.copyWith(
+                color: inkFaint,
+                fontSize: 10,
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: AppTypography.caption.copyWith(
+                color: ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -371,7 +458,10 @@ class _InfoPair extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.caption.copyWith(color: inkFaint, fontSize: 10)),
+        Text(
+          label,
+          style: AppTypography.caption.copyWith(color: inkFaint, fontSize: 10),
+        ),
         Text(
           value,
           style: AppTypography.bodyMuted.copyWith(
@@ -393,8 +483,16 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
-      child: Text(label.toUpperCase(), style: AppTypography.label.copyWith(color: inkFaint)),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: AppTypography.label.copyWith(color: inkFaint),
+      ),
     );
   }
 }
@@ -408,7 +506,12 @@ class _EmptyPayments extends StatelessWidget {
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Center(child: Text('No payments recorded yet', style: AppTypography.bodyMuted.copyWith(color: inkFaint))),
+      child: Center(
+        child: Text(
+          'No payments recorded yet',
+          style: AppTypography.bodyMuted.copyWith(color: inkFaint),
+        ),
+      ),
     );
   }
 }
@@ -424,27 +527,51 @@ class _PaymentTile extends StatelessWidget {
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
 
     return AppCard(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
           Container(
             width: 34,
             height: 34,
-            decoration: BoxDecoration(color: AppColors.positiveSoft, shape: BoxShape.circle),
-            child: const Icon(Icons.check_circle, size: 16, color: AppColors.positive),
+            decoration: BoxDecoration(
+              color: AppColors.positiveSoft,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_circle,
+              size: 16,
+              color: AppColors.positive,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(payment.note ?? 'Payment', style: AppTypography.cardHeading.copyWith(color: ink, fontSize: 13)),
-                Text(DateFormat('dd MMM y').format(payment.paidAt), style: AppTypography.caption.copyWith(color: inkFaint)),
+                Text(
+                  payment.note ?? 'Payment',
+                  style: AppTypography.cardHeading.copyWith(
+                    color: ink,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  DateFormat('dd MMM y').format(payment.paidAt),
+                  style: AppTypography.caption.copyWith(color: inkFaint),
+                ),
               ],
             ),
           ),
-          AmountText(amount: payment.amount, sign: AmountSign.positive, showSignPrefix: false, style: AppTypography.amountInline),
+          AmountText(
+            amount: payment.amount,
+            sign: AmountSign.positive,
+            showSignPrefix: false,
+            style: AppTypography.amountInline,
+          ),
         ],
       ),
     );
@@ -453,13 +580,11 @@ class _PaymentTile extends StatelessWidget {
 
 class _ConfirmationBar extends StatelessWidget {
   final Loan loan;
-  final String token;
   final LoansRepository repository;
   final VoidCallback onUpdated;
 
   const _ConfirmationBar({
     required this.loan,
-    required this.token,
     required this.repository,
     required this.onUpdated,
   });
@@ -471,12 +596,18 @@ class _ConfirmationBar extends StatelessWidget {
     final ink = isDark ? AppColors.inkDark : AppColors.ink;
 
     return AppCard(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Confirm this loan?', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
+          Text(
+            'Confirm this loan?',
+            style: AppTypography.bodyEmphasis.copyWith(color: ink),
+          ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
@@ -484,7 +615,7 @@ class _ConfirmationBar extends StatelessWidget {
                 child: SecondaryButton(
                   text: 'Confirm',
                   onPressed: () async {
-                    await repository.updateConfirmation(token, loan.id, 'confirmed');
+                    await repository.updateConfirmation(loan.id, 'confirmed');
                     onUpdated();
                   },
                 ),
@@ -494,7 +625,7 @@ class _ConfirmationBar extends StatelessWidget {
                 child: SecondaryButton(
                   text: 'Dispute',
                   onPressed: () async {
-                    await repository.updateConfirmation(token, loan.id, 'disputed');
+                    await repository.updateConfirmation(loan.id, 'disputed');
                     onUpdated();
                   },
                 ),

@@ -13,26 +13,23 @@ import '../../data/loans_repository.dart';
 
 class RecordPaymentSheet extends StatefulWidget {
   final Loan loan;
-  final String token;
   final LoansRepository repository;
 
   const RecordPaymentSheet({
     super.key,
     required this.loan,
-    required this.token,
     required this.repository,
   });
 
   static Future<bool?> show(
     BuildContext context, {
     required Loan loan,
-    required String token,
     required LoansRepository repository,
   }) {
     return AppBottomSheet.show<bool>(
       context,
       title: 'Record Payment',
-      builder: (_) => RecordPaymentSheet(loan: loan, token: token, repository: repository),
+      builder: (_) => RecordPaymentSheet(loan: loan, repository: repository),
     );
   }
 
@@ -51,7 +48,9 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
   @override
   void initState() {
     super.initState();
-    _amountCtrl = TextEditingController(text: widget.loan.totalDue.toStringAsFixed(2));
+    _amountCtrl = TextEditingController(
+      text: widget.loan.totalDue.toStringAsFixed(2),
+    );
     _noteCtrl = TextEditingController();
   }
 
@@ -74,7 +73,6 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
     });
     try {
       await widget.repository.recordPayment(
-        widget.token,
         widget.loan.id,
         amount: amount,
         paidAt: _paidAt,
@@ -95,7 +93,9 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+    final sunken = isDark
+        ? AppColors.surfaceRaisedDark
+        : AppColors.surfaceSunken;
     final line = isDark ? AppColors.lineDark : AppColors.line;
     final hasInterest = widget.loan.accruedInterest > 0;
 
@@ -105,8 +105,10 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Outstanding ${formatInr(widget.loan.outstanding)}',
-              style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
+          Text(
+            'Outstanding ${formatInr(widget.loan.outstanding)}',
+            style: AppTypography.bodyMuted.copyWith(color: inkFaint),
+          ),
           const SizedBox(height: AppSpacing.lg),
           AmountInputField(controller: _amountCtrl, errorText: _error),
           const SizedBox(height: AppSpacing.lg),
@@ -121,7 +123,10 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
               if (picked != null) setState(() => _paidAt = picked);
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
+              ),
               decoration: BoxDecoration(
                 color: sunken,
                 border: Border.all(color: line),
@@ -129,9 +134,16 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_month_outlined, size: 16, color: inkFaint),
+                  Icon(
+                    Icons.calendar_month_outlined,
+                    size: 16,
+                    color: inkFaint,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
-                  Text(DateFormat('dd MMM y').format(_paidAt), style: AppTypography.body.copyWith(color: ink)),
+                  Text(
+                    DateFormat('dd MMM y').format(_paidAt),
+                    style: AppTypography.body.copyWith(color: ink),
+                  ),
                 ],
               ),
             ),
@@ -152,7 +164,11 @@ class _RecordPaymentSheetState extends State<RecordPaymentSheet> {
             ),
           ],
           const SizedBox(height: AppSpacing.xl),
-          PrimaryButton(text: 'Confirm Payment', onPressed: _submit, isLoading: _loading),
+          PrimaryButton(
+            text: 'Confirm Payment',
+            onPressed: _submit,
+            isLoading: _loading,
+          ),
         ],
       ),
     );

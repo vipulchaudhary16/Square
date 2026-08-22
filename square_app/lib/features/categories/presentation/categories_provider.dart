@@ -1,46 +1,50 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/network/api_client.dart';
 import '../data/category_model.dart';
 import '../data/categories_repository.dart';
 
-final categoriesRepositoryProvider =
-    Provider((_) => CategoriesRepository());
+final categoriesRepositoryProvider = Provider(
+  (ref) => CategoriesRepository(ref.watch(apiClientProvider)),
+);
 
 class CategoriesNotifier extends AsyncNotifier<List<Category>> {
   @override
   Future<List<Category>> build() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    return ref.read(categoriesRepositoryProvider).getCategories(token);
+    return ref.read(categoriesRepositoryProvider).getCategories();
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
-      return ref.read(categoriesRepositoryProvider).getCategories(token);
+      return ref.read(categoriesRepositoryProvider).getCategories();
     });
   }
 
-  Future<void> create(String name, List<String> appliesTo, {String? color}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    await ref.read(categoriesRepositoryProvider).createCategory(token, name, appliesTo, color: color);
+  Future<void> create(
+    String name,
+    List<String> appliesTo, {
+    String? color,
+  }) async {
+    await ref
+        .read(categoriesRepositoryProvider)
+        .createCategory(name, appliesTo, color: color);
     await refresh();
   }
 
-  Future<void> updateCategory(String id, String name, List<String> appliesTo, {String? color}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    await ref.read(categoriesRepositoryProvider).updateCategory(token, id, name, appliesTo, color: color);
+  Future<void> updateCategory(
+    String id,
+    String name,
+    List<String> appliesTo, {
+    String? color,
+  }) async {
+    await ref
+        .read(categoriesRepositoryProvider)
+        .updateCategory(id, name, appliesTo, color: color);
     await refresh();
   }
 
   Future<void> delete(String id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-    await ref.read(categoriesRepositoryProvider).deleteCategory(token, id);
+    await ref.read(categoriesRepositoryProvider).deleteCategory(id);
     await refresh();
   }
 
@@ -53,5 +57,5 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
 
 final categoriesProvider =
     AsyncNotifierProvider<CategoriesNotifier, List<Category>>(
-  CategoriesNotifier.new,
-);
+      CategoriesNotifier.new,
+    );
