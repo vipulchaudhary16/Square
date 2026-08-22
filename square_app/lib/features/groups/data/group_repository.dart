@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import 'group_model.dart';
+import 'group_analysis_model.dart';
 
 final groupRepositoryProvider = Provider((ref) => GroupRepository());
 
@@ -152,6 +153,27 @@ class GroupRepository {
       throw e.response?.data['error'] ?? 'Failed to fetch group expenses';
     } catch (e) {
       throw Exception('Failed to fetch group expenses: $e');
+    }
+  }
+
+  Future<GroupAnalysisSummary> getGroupAnalysis(
+    String groupId, {
+    required String startDate,
+    required String endDate,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) throw Exception('Not authenticated');
+
+      final response = await _dio.get(
+        '/groups/$groupId/analysis',
+        queryParameters: {'start_date': startDate, 'end_date': endDate},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return GroupAnalysisSummary.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw e.response?.data['error'] ?? 'Failed to fetch group analysis';
     }
   }
 

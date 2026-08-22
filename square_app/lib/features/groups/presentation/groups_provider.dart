@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../groups/data/group_model.dart';
 import '../../groups/data/group_repository.dart';
+import '../data/group_analysis_model.dart';
 
 final groupDetailsProvider = FutureProvider.autoDispose.family<GroupDetails, String>((ref, id) async {
   final repository = ref.watch(groupRepositoryProvider);
@@ -13,6 +14,16 @@ final groupExpensesProvider = FutureProvider.autoDispose.family<List<GroupFeedIt
   final search = parts.length > 1 ? (parts[1].isEmpty ? null : parts[1]) : null;
   final repository = ref.watch(groupRepositoryProvider);
   return repository.getGroupExpenses(groupId, searchQuery: search);
+});
+
+/// Key shape: "groupId|startDate|endDate".
+final groupAnalysisProvider = FutureProvider.autoDispose.family<GroupAnalysisSummary, String>((ref, key) async {
+  final parts = key.split('|');
+  final groupId = parts[0];
+  final startDate = parts[1];
+  final endDate = parts[2];
+  final repository = ref.watch(groupRepositoryProvider);
+  return repository.getGroupAnalysis(groupId, startDate: startDate, endDate: endDate);
 });
 
 final groupsProvider = AsyncNotifierProvider<GroupsNotifier, List<Group>>(
