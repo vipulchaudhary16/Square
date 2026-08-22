@@ -8,19 +8,8 @@ class DebtSettlementService
       amount = exp.amount.to_f
       net[exp.payer_id] += amount
 
-      splits = exp.expense_splits
-      if splits.any?
-        splits.each do |s|
-          share = exp.split_type == "PERCENT" ? (amount * s.amount.to_f / 100.0) : s.amount.to_f
-          net[s.user_id] -= share
-        end
-      else
-        participants = exp.expense_participants
-        if participants.any?
-          share = amount / participants.size.to_f
-          participants.each { |p| net[p.user_id] -= share }
-        end
-      end
+      user_ids = (exp.expense_splits.map(&:user_id) + exp.expense_participants.map(&:user_id)).uniq
+      user_ids.each { |uid| net[uid] -= exp.split_for(uid) }
     end
 
     settlements.each do |s|
