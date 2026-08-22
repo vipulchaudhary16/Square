@@ -51,6 +51,22 @@ class PeriodSelection {
 
   bool get supportsNavigation => type != PeriodType.custom;
 
+  /// Name of the immediately-prior equivalent period, for "+12% vs last
+  /// month"-style comparisons — null for custom ranges, which have no single
+  /// well-defined "previous" period to compare against.
+  String? get comparisonLabel {
+    switch (type) {
+      case PeriodType.week:
+        return 'last week';
+      case PeriodType.month:
+        return 'last month';
+      case PeriodType.year:
+        return 'last year';
+      case PeriodType.custom:
+        return null;
+    }
+  }
+
   String get label {
     switch (type) {
       case PeriodType.week:

@@ -18,21 +18,39 @@ class AnalysisStatTile {
     required this.color,
     required this.amount,
     this.onTap,
+    this.deltaPercent,
+    this.comparisonLabel,
+    this.increaseIsGood = false,
   });
 
   final String label;
   final Color color;
   final double amount;
   final VoidCallback? onTap;
+
+  /// Percent change vs [comparisonLabel]'s period — null (or a null
+  /// [comparisonLabel]) shows no delta at all, e.g. for a custom date range.
+  final double? deltaPercent;
+
+  /// e.g. "last month".
+  final String? comparisonLabel;
+
+  /// Whether an increase should read as positive (green) rather than the
+  /// default negative (red) — true for income-like tiles.
+  final bool increaseIsGood;
 }
 
 /// One side of the category breakdown toggle — e.g. "Spending"/"Income", or
 /// "Group total"/"Your share".
 class AnalysisCategorySide {
-  const AnalysisCategorySide({required this.label, required this.side});
+  const AnalysisCategorySide({required this.label, required this.side, this.increaseIsGood = false});
 
   final String label;
   final AnalysisSide side;
+
+  /// Whether a category's amount increasing should read as positive (green)
+  /// rather than the default negative (red) — true for income sides.
+  final bool increaseIsGood;
 }
 
 /// The shared report layout: two stat tiles side by side (plus optional
@@ -93,6 +111,9 @@ class AnalysisReportView extends StatelessWidget {
                       color: primaryTile.color,
                       amount: primaryTile.amount,
                       onTap: primaryTile.onTap,
+                      deltaPercent: primaryTile.deltaPercent,
+                      comparisonLabel: primaryTile.comparisonLabel,
+                      increaseIsGood: primaryTile.increaseIsGood,
                     ),
                   ),
                   Expanded(
@@ -102,6 +123,9 @@ class AnalysisReportView extends StatelessWidget {
                       amount: secondaryTile.amount,
                       alignEnd: true,
                       onTap: secondaryTile.onTap,
+                      deltaPercent: secondaryTile.deltaPercent,
+                      comparisonLabel: secondaryTile.comparisonLabel,
+                      increaseIsGood: secondaryTile.increaseIsGood,
                     ),
                   ),
                 ],
@@ -146,6 +170,7 @@ class AnalysisReportView extends StatelessWidget {
                 key: ValueKey(showFirstSide),
                 categories: selected.side.byCategory,
                 total: selected.side.total,
+                increaseIsGood: selected.increaseIsGood,
               ),
             ],
           ),

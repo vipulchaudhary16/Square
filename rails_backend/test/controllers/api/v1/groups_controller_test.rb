@@ -62,6 +62,51 @@ class Api::V1::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 50.0, body["your_share"]["total"]
   end
 
+  test "group_analysis returns delta_percent for both sides against the compare date range" do
+    last_month = Date.today.prev_month
+
+    current = create(:expense, payer: @alice, category: @category, group: @group, amount: 100.0, date: Date.today)
+    create(:expense_participant, expense: current, user: @alice)
+    create(:expense_participant, expense: current, user: @bob)
+    create(:expense_split, expense: current, user: @alice, amount: 50.0)
+    create(:expense_split, expense: current, user: @bob, amount: 50.0)
+
+    previous = create(:expense, payer: @alice, category: @category, group: @group, amount: 50.0, date: last_month)
+    create(:expense_participant, expense: previous, user: @alice)
+    create(:expense_participant, expense: previous, user: @bob)
+    create(:expense_split, expense: previous, user: @alice, amount: 25.0)
+    create(:expense_split, expense: previous, user: @bob, amount: 25.0)
+
+    get "/api/groups/#{@group.id}/analysis",
+        params: {
+          start_date: Date.today.iso8601,
+          end_date: Date.today.iso8601,
+          compare_start_date: last_month.iso8601,
+          compare_end_date: last_month.iso8601
+        },
+        headers: auth_header(@bob)
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_equal 100.0, body["total_expense"]["delta_percent"]
+    assert_equal 100.0, body["your_share"]["delta_percent"]
+  end
+
+  test "group_analysis omits delta_percent when no compare date range is given" do
+    e1 = create(:expense, payer: @alice, category: @category, group: @group, amount: 100.0, date: Date.today)
+    create(:expense_participant, expense: e1, user: @bob)
+    create(:expense_split, expense: e1, user: @bob, amount: 100.0)
+
+    get "/api/groups/#{@group.id}/analysis",
+        params: { start_date: Date.today.iso8601, end_date: Date.today.iso8601 },
+        headers: auth_header(@bob)
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_not body["total_expense"].key?("delta_percent")
+    assert_not body["your_share"].key?("delta_percent")
+  end
+
   test "group_analysis 404s for a non-member" do
     outsider = create(:user)
     get "/api/groups/#{@group.id}/analysis", headers: auth_header(outsider)

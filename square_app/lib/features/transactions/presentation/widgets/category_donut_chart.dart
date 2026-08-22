@@ -12,10 +12,19 @@ import '../../data/analysis_model.dart';
 /// legended (never color-alone), since that palette has one CVD-marginal
 /// adjacent pair.
 class CategoryDonutChart extends StatelessWidget {
-  const CategoryDonutChart({super.key, required this.categories, required this.total});
+  const CategoryDonutChart({
+    super.key,
+    required this.categories,
+    required this.total,
+    this.increaseIsGood = false,
+  });
 
   final List<CategoryBreakdown> categories;
   final double total;
+
+  /// Whether a category's spend increasing should read as positive (green)
+  /// rather than the default negative (red) — true for income categories.
+  final bool increaseIsGood;
 
   @override
   Widget build(BuildContext context) {
@@ -97,14 +106,54 @@ class CategoryDonutChart extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Text(
-                    '${formatInr(c.amount)} (${c.percent.toStringAsFixed(1)}%)',
-                    style: AppTypography.caption.copyWith(color: inkFaint),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${formatInr(c.amount)} (${c.percent.toStringAsFixed(1)}%)',
+                        style: AppTypography.caption.copyWith(color: inkFaint),
+                      ),
+                      if (c.deltaPercent != null)
+                        _CategoryDelta(percent: c.deltaPercent!, increaseIsGood: increaseIsGood),
+                    ],
                   ),
                 ],
               ),
             );
           }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _CategoryDelta extends StatelessWidget {
+  const _CategoryDelta({required this.percent, required this.increaseIsGood});
+
+  final double percent;
+  final bool increaseIsGood;
+
+  @override
+  Widget build(BuildContext context) {
+    if (percent.abs() < 0.05) {
+      return const SizedBox.shrink();
+    }
+
+    final isIncrease = percent > 0;
+    final isGood = isIncrease == increaseIsGood;
+    final color = isGood ? AppColors.positive : AppColors.negative;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          isIncrease ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+          size: 10,
+          color: color,
+        ),
+        Text(
+          '${percent.abs().toStringAsFixed(1)}%',
+          style: AppTypography.caption.copyWith(color: color),
         ),
       ],
     );

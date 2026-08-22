@@ -5,12 +5,17 @@ class CategoryBreakdown {
   final double amount;
   final double percent;
 
+  /// Percent change vs this same category in the compare period — null if no
+  /// comparison was requested, or the category had a zero total last period.
+  final double? deltaPercent;
+
   CategoryBreakdown({
     required this.categoryId,
     required this.categoryName,
     this.categoryColor,
     required this.amount,
     required this.percent,
+    this.deltaPercent,
   });
 
   factory CategoryBreakdown.fromJson(Map<String, dynamic> json) {
@@ -20,6 +25,7 @@ class CategoryBreakdown {
       categoryColor: json['category_color'],
       amount: (json['amount'] ?? 0).toDouble(),
       percent: (json['percent'] ?? 0).toDouble(),
+      deltaPercent: (json['delta_percent'] as num?)?.toDouble(),
     );
   }
 }
@@ -29,7 +35,17 @@ class AnalysisSide {
   final int count;
   final List<CategoryBreakdown> byCategory;
 
-  AnalysisSide({required this.total, required this.count, required this.byCategory});
+  /// Percent change vs the compare period, when the request asked for one —
+  /// null if no comparison was requested, or if the compare period had a
+  /// zero total (nothing meaningful to divide by).
+  final double? deltaPercent;
+
+  AnalysisSide({
+    required this.total,
+    required this.count,
+    required this.byCategory,
+    this.deltaPercent,
+  });
 
   factory AnalysisSide.fromJson(Map<String, dynamic> json) {
     return AnalysisSide(
@@ -38,6 +54,7 @@ class AnalysisSide {
       byCategory: (json['by_category'] as List<dynamic>? ?? [])
           .map((e) => CategoryBreakdown.fromJson(e))
           .toList(),
+      deltaPercent: (json['delta_percent'] as num?)?.toDouble(),
     );
   }
 }

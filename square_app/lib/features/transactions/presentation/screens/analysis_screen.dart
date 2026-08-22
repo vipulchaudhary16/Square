@@ -23,7 +23,10 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   PeriodSelection _period = PeriodSelection.initial();
   bool _showSpendingCategories = true;
 
-  String get _rangeKey => '${_period.apiStartDate}|${_period.apiEndDate}';
+  String get _rangeKey {
+    final previous = _period.comparisonLabel != null ? _period.previous() : null;
+    return '${_period.apiStartDate}|${_period.apiEndDate}|${previous?.apiStartDate ?? ''}|${previous?.apiEndDate ?? ''}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,15 +77,20 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
         color: AppColors.negative,
         amount: summary.spending.total,
         onTap: () => _openDrilldown(isSpending: true),
+        deltaPercent: summary.spending.deltaPercent,
+        comparisonLabel: _period.comparisonLabel,
       ),
       secondaryTile: AnalysisStatTile(
         label: 'INCOME',
         color: AppColors.positive,
         amount: summary.income.total,
         onTap: () => _openDrilldown(isSpending: false),
+        deltaPercent: summary.income.deltaPercent,
+        comparisonLabel: _period.comparisonLabel,
+        increaseIsGood: true,
       ),
       firstSide: AnalysisCategorySide(label: 'Spending', side: summary.spending),
-      secondSide: AnalysisCategorySide(label: 'Income', side: summary.income),
+      secondSide: AnalysisCategorySide(label: 'Income', side: summary.income, increaseIsGood: true),
       showFirstSide: _showSpendingCategories,
       onSideChanged: (v) => setState(() => _showSpendingCategories = v),
       extra: Container(

@@ -125,11 +125,18 @@ class GroupRepository {
     String groupId, {
     required String startDate,
     required String endDate,
+    String? compareStartDate,
+    String? compareEndDate,
   }) async {
     try {
       final response = await _dio.get(
         '/groups/$groupId/analysis',
-        queryParameters: {'start_date': startDate, 'end_date': endDate},
+        queryParameters: {
+          'start_date': startDate,
+          'end_date': endDate,
+          if (compareStartDate != null) 'compare_start_date': compareStartDate,
+          if (compareEndDate != null) 'compare_end_date': compareEndDate,
+        },
       );
       return GroupAnalysisSummary.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {

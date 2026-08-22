@@ -643,7 +643,9 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
 
   Widget _buildReportsTab(BuildContext context, GroupDetails details) {
     final groupId = details.group.id;
-    final rangeKey = '$groupId|${_reportPeriod.apiStartDate}|${_reportPeriod.apiEndDate}';
+    final previousPeriod = _reportPeriod.comparisonLabel != null ? _reportPeriod.previous() : null;
+    final rangeKey =
+        '$groupId|${_reportPeriod.apiStartDate}|${_reportPeriod.apiEndDate}|${previousPeriod?.apiStartDate ?? ''}|${previousPeriod?.apiEndDate ?? ''}';
     final analysisAsync = ref.watch(groupAnalysisProvider(rangeKey));
 
     return RefreshIndicator(
@@ -686,6 +688,8 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
                     'allGroupExpenses': true,
                   },
                 ),
+                deltaPercent: summary.totalExpense.deltaPercent,
+                comparisonLabel: _reportPeriod.comparisonLabel,
               ),
               secondaryTile: AnalysisStatTile(
                 label: 'YOUR SHARE',
@@ -695,6 +699,8 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
                   '/transactions/analysis-detail',
                   extra: {'isSpending': true, 'period': _reportPeriod, 'groupId': groupId},
                 ),
+                deltaPercent: summary.yourShare.deltaPercent,
+                comparisonLabel: _reportPeriod.comparisonLabel,
               ),
               firstSide: AnalysisCategorySide(label: 'Group total', side: summary.totalExpense),
               secondSide: AnalysisCategorySide(label: 'Your share', side: summary.yourShare),

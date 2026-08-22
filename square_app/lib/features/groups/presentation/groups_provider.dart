@@ -17,14 +17,24 @@ final groupExpensesProvider = FutureProvider.autoDispose.family<List<GroupFeedIt
   return repository.getGroupExpenses(groupId, searchQuery: search);
 });
 
-/// Key shape: "groupId|startDate|endDate".
+/// Key shape: "groupId|startDate|endDate|compareStartDate|compareEndDate" —
+/// the compare dates may be empty (no period-over-period comparison, e.g.
+/// for a custom range).
 final groupAnalysisProvider = FutureProvider.autoDispose.family<GroupAnalysisSummary, String>((ref, key) async {
   final parts = key.split('|');
   final groupId = parts[0];
   final startDate = parts[1];
   final endDate = parts[2];
+  final compareStartDate = parts.length > 3 && parts[3].isNotEmpty ? parts[3] : null;
+  final compareEndDate = parts.length > 4 && parts[4].isNotEmpty ? parts[4] : null;
   final repository = ref.watch(groupRepositoryProvider);
-  return repository.getGroupAnalysis(groupId, startDate: startDate, endDate: endDate);
+  return repository.getGroupAnalysis(
+    groupId,
+    startDate: startDate,
+    endDate: endDate,
+    compareStartDate: compareStartDate,
+    compareEndDate: compareEndDate,
+  );
 });
 
 /// Key shape: "groupId|startDate|endDate|categoryId|search" — categoryId/search may be

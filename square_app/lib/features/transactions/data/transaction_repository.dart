@@ -68,11 +68,18 @@ class TransactionRepository {
   Future<Map<String, dynamic>> getAnalysis({
     required String startDate,
     required String endDate,
+    String? compareStartDate,
+    String? compareEndDate,
   }) async {
     try {
       final response = await _dio.get(
         '/analysis',
-        queryParameters: {'start_date': startDate, 'end_date': endDate},
+        queryParameters: {
+          'start_date': startDate,
+          'end_date': endDate,
+          if (compareStartDate != null) 'compare_start_date': compareStartDate,
+          if (compareEndDate != null) 'compare_end_date': compareEndDate,
+        },
       );
       return response.data as Map<String, dynamic>;
     } catch (e) {

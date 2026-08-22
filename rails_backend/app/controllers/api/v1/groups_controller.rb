@@ -67,9 +67,28 @@ module Api
       def group_analysis
         expenses      = @group.expenses.with_filters(params).includes(:category, :expense_splits, :expense_participants)
         your_expenses = expenses.merge(Expense.accessible_to(current_user))
+
+        previous_expenses      = nil
+        previous_your_expenses = nil
+        if params[:compare_start_date].present? && params[:compare_end_date].present?
+          compare_filters = {
+            category_id: params[:category_id],
+            search:      params[:search],
+            start_date:  params[:compare_start_date],
+            end_date:    params[:compare_end_date]
+          }
+          previous_expenses = @group.expenses.with_filters(compare_filters)
+            .includes(:category, :expense_splits, :expense_participants)
+          previous_your_expenses = previous_expenses.merge(Expense.accessible_to(current_user))
+        end
+
         render json: {
-          total_expense: AnalysisService.summarize(expenses),
-          your_share:    AnalysisService.summarize(your_expenses, value: ->(e) { e.split_for(current_user.id) })
+          total_expense: AnalysisService.summarize(expenses, previous_scope: previous_expenses),
+          your_share:    AnalysisService.summarize(
+            your_expenses,
+            value: ->(e) { e.split_for(current_user.id) },
+            previous_scope: previous_your_expenses
+          )
         }
       end
 
