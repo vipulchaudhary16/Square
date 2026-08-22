@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../data/dashboard_model.dart';
 import '../../auth/presentation/auth_provider.dart';
 import '../../feature_flags/presentation/feature_flags_provider.dart';
 import '../../../../shared/widgets/amount_text.dart';
@@ -259,81 +260,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Expense trends',
-                            style: AppTypography.sectionHeading.copyWith(
-                              color: ink,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Expense trends',
+                                style: AppTypography.sectionHeading.copyWith(
+                                  color: ink,
+                                ),
+                              ),
+                              _buildTrendLegend(isDark),
+                            ],
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           Expanded(
-                            child: LineChart(
-                              LineChartData(
-                                gridData: FlGridData(show: false),
-                                titlesData: FlTitlesData(
-                                  leftTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  rightTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  topTitles: AxisTitles(
-                                    sideTitles: SideTitles(showTitles: false),
-                                  ),
-                                  bottomTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      getTitlesWidget: (value, meta) => Text(
-                                        value.toInt().toString(),
-                                        style: AppTypography.caption.copyWith(
-                                          color: isDark
-                                              ? AppColors.inkFaintDark
-                                              : AppColors.inkFaint,
-                                        ),
-                                      ),
-                                      interval: 5,
-                                    ),
-                                  ),
-                                ),
-                                borderData: FlBorderData(show: false),
-                                lineBarsData: [
-                                  LineChartBarData(
-                                    spots: data.expenseGraph
-                                        .map(
-                                          (e) => FlSpot(
-                                            e.day.toDouble(),
-                                            e.currentMonth,
-                                          ),
-                                        )
-                                        .toList(),
-                                    isCurved: true,
-                                    color: ink,
-                                    barWidth: 2.5,
-                                    dotData: FlDotData(show: false),
-                                    belowBarData: BarAreaData(
-                                      show: true,
-                                      color: ink.withValues(alpha: 0.08),
-                                    ),
-                                  ),
-                                  LineChartBarData(
-                                    spots: data.expenseGraph
-                                        .map(
-                                          (e) => FlSpot(
-                                            e.day.toDouble(),
-                                            e.lastMonth,
-                                          ),
-                                        )
-                                        .toList(),
-                                    isCurved: true,
-                                    color: isDark
-                                        ? AppColors.inkFaintDark
-                                        : AppColors.inkFaint,
-                                    barWidth: 2,
-                                    dotData: FlDotData(show: false),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            child: _buildExpenseTrendsChart(data, ink, isDark),
                           ),
                         ],
                       ),
@@ -443,6 +384,197 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTrendLegend(bool isDark) {
+    final ink = isDark ? AppColors.inkDark : AppColors.ink;
+    final muted = isDark ? AppColors.inkMutedDark : AppColors.inkMuted;
+    final labelColor = isDark ? AppColors.inkMutedDark : AppColors.inkMuted;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _legendItem(
+          swatchColor: ink,
+          dashed: false,
+          label: 'This month',
+          labelColor: labelColor,
+        ),
+        const SizedBox(width: AppSpacing.md),
+        _legendItem(
+          swatchColor: muted,
+          dashed: true,
+          label: 'Last month',
+          labelColor: labelColor,
+        ),
+      ],
+    );
+  }
+
+  Widget _legendItem({
+    required Color swatchColor,
+    required bool dashed,
+    required String label,
+    required Color labelColor,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 14,
+          height: 2,
+          child: dashed
+              ? Row(
+                  children: List.generate(
+                    3,
+                    (i) => Expanded(
+                      child: Container(
+                        margin: EdgeInsets.only(right: i < 2 ? 2 : 0),
+                        color: swatchColor,
+                      ),
+                    ),
+                  ),
+                )
+              : DecoratedBox(decoration: BoxDecoration(color: swatchColor)),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: AppTypography.caption.copyWith(color: labelColor)),
+      ],
+    );
+  }
+
+  Widget _buildExpenseTrendsChart(DashboardData data, Color ink, bool isDark) {
+    final muted = isDark ? AppColors.inkMutedDark : AppColors.inkMuted;
+    final faint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+    final line = isDark ? AppColors.lineDark : AppColors.line;
+    final cardSurface = isDark ? AppColors.surfaceDark : AppColors.surface;
+    final onTooltip = isDark ? AppColors.surfaceSunkenDark : AppColors.surface;
+
+    final currentSpots = data.expenseGraph
+        .where((e) => e.currentMonth != null)
+        .map((e) => FlSpot(e.day.toDouble(), e.currentMonth!))
+        .toList();
+    final lastSpots = data.expenseGraph
+        .map((e) => FlSpot(e.day.toDouble(), e.lastMonth))
+        .toList();
+    final maxDay = data.expenseGraph.isEmpty
+        ? 31.0
+        : data.expenseGraph.last.day.toDouble();
+
+    return LineChart(
+      LineChartData(
+        minX: 1,
+        maxX: maxDay,
+        minY: 0,
+        gridData: const FlGridData(show: false),
+        titlesData: FlTitlesData(
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 5,
+              reservedSize: 24,
+              getTitlesWidget: (value, meta) {
+                final day = value.toInt();
+                if (day != 1 && day % 5 != 0) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: Text(
+                    '$day',
+                    style: AppTypography.caption.copyWith(color: faint),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            tooltipBorderRadius: BorderRadius.circular(AppRadius.sm),
+            tooltipPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            getTooltipColor: (_) => ink,
+            getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
+              final label = spot.barIndex == 0 ? 'This month' : 'Last month';
+              return LineTooltipItem(
+                '$label\n${formatInr(spot.y)}',
+                AppTypography.caption.copyWith(
+                  color: onTooltip,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              );
+            }).toList(),
+          ),
+          getTouchedSpotIndicator: (barData, spotIndexes) =>
+              spotIndexes.map((_) {
+                return TouchedSpotIndicatorData(
+                  FlLine(color: line, strokeWidth: 1),
+                  FlDotData(
+                    show: true,
+                    getDotPainter: (spot, percent, bar, index) =>
+                        FlDotCirclePainter(
+                          radius: 4,
+                          color: bar.color ?? ink,
+                          strokeWidth: 2,
+                          strokeColor: cardSurface,
+                        ),
+                  ),
+                );
+              }).toList(),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: currentSpots,
+            isCurved: true,
+            curveSmoothness: 0.2,
+            preventCurveOverShooting: true,
+            isStrokeCapRound: true,
+            isStrokeJoinRound: true,
+            color: ink,
+            barWidth: 2,
+            dotData: FlDotData(
+              show: true,
+              checkToShowDot: (spot, barData) =>
+                  barData.spots.isNotEmpty && spot == barData.spots.last,
+              getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+                radius: 4,
+                color: ink,
+                strokeWidth: 2,
+                strokeColor: cardSurface,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: ink.withValues(alpha: 0.1),
+            ),
+          ),
+          LineChartBarData(
+            spots: lastSpots,
+            isCurved: true,
+            curveSmoothness: 0.2,
+            preventCurveOverShooting: true,
+            isStrokeCapRound: true,
+            isStrokeJoinRound: true,
+            color: muted,
+            barWidth: 2,
+            dashArray: const [6, 4],
+            dotData: const FlDotData(show: false),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../dashboard/data/dashboard_cache.dart';
 import '../data/auth_repository.dart';
 import '../data/user_model.dart';
 
@@ -77,6 +78,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('user');
+    await DashboardCache.clear();
     state = const AsyncValue.data(null);
   }
 }

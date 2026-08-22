@@ -97,8 +97,12 @@ module Dashboard
         .group("EXTRACT(DAY FROM date)::int")
         .sum(:amount)
 
-      (1..31).map do |day|
-        { day: day, current_month: curr[day]&.to_f || 0.0, last_month: last_month[day]&.to_f || 0.0 }
+      (1..end_curr.prev_day.day).map do |day|
+        {
+          day: day,
+          current_month: day <= now.day ? (curr[day]&.to_f || 0.0) : nil,
+          last_month: last_month[day]&.to_f || 0.0
+        }
       end
     end
   end

@@ -38,11 +38,23 @@ class DashboardData {
           [],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'total_expenses': totalExpenses,
+      'total_income': totalIncome,
+      'total_invested': totalInvested,
+      'recent_expenses': recentExpenses.map((e) => e.toJson()).toList(),
+      'lent_amount': lentAmount,
+      'borrowed_amount': borrowedAmount,
+      'expense_graph': expenseGraph.map((e) => e.toJson()).toList(),
+    };
+  }
 }
 
 class GraphPoint {
   final int day;
-  final double currentMonth;
+  final double? currentMonth;
   final double lastMonth;
 
   GraphPoint({
@@ -54,8 +66,12 @@ class GraphPoint {
   factory GraphPoint.fromJson(Map<String, dynamic> json) {
     return GraphPoint(
       day: json['day'] ?? 0,
-      currentMonth: (json['current_month'] ?? 0).toDouble(),
+      currentMonth: (json['current_month'] as num?)?.toDouble(),
       lastMonth: (json['last_month'] ?? 0).toDouble(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'day': day, 'current_month': currentMonth, 'last_month': lastMonth};
   }
 }

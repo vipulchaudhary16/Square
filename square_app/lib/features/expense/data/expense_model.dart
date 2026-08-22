@@ -55,6 +55,7 @@ class Expense {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'description': description,
       'amount': amount,
       'category_id': categoryId,
