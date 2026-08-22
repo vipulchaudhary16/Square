@@ -43,6 +43,25 @@ class Api::V1::GroupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0.0, body["your_share"]["total"]
   end
 
+  test "group_analysis only counts expenses within the given date range" do
+    in_range = create(:expense, payer: @alice, category: @category, group: @group, amount: 50.0, date: Date.today)
+    create(:expense_participant, expense: in_range, user: @bob)
+    create(:expense_split, expense: in_range, user: @bob, amount: 50.0)
+
+    out_of_range = create(:expense, payer: @alice, category: @category, group: @group, amount: 999.0, date: 30.days.ago)
+    create(:expense_participant, expense: out_of_range, user: @bob)
+    create(:expense_split, expense: out_of_range, user: @bob, amount: 999.0)
+
+    get "/api/groups/#{@group.id}/analysis",
+        params: { start_date: Date.today.iso8601, end_date: Date.today.iso8601 },
+        headers: auth_header(@bob)
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_equal 50.0, body["total_expense"]["total"]
+    assert_equal 50.0, body["your_share"]["total"]
+  end
+
   test "group_analysis 404s for a non-member" do
     outsider = create(:user)
     get "/api/groups/#{@group.id}/analysis", headers: auth_header(outsider)

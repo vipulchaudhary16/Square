@@ -102,8 +102,9 @@ class Expense < ApplicationRecord
   def split_for(user_id)
     split = expense_splits.find { |s| s.user_id == user_id }
     return split.amount.to_f if split
+    return 0.0 if expense_splits.any?
     return 0.0 unless expense_participants.any? { |p| p.user_id == user_id }
-    amount / expense_participants.size.to_f
+    (amount / expense_participants.size.to_f).to_f
   end
 
   # Matches the shape GroupsController#group_expenses has always returned.

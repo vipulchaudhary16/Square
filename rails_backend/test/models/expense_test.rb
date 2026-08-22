@@ -33,6 +33,22 @@ class ExpenseTest < ActiveSupport::TestCase
     assert_equal 0.0, expense.split_for(@outsider.id)
   end
 
+  test "split_for returns 0 for a participant with no split when other participants have splits" do
+    expense = create(:expense, payer: @payer, category: @category, amount: 100.0, split_type: "EXACT")
+    create(:expense_participant, expense: expense, user: @payer)
+    create(:expense_participant, expense: expense, user: @participant)
+    create(:expense_participant, expense: expense, user: @outsider)
+    create(:expense_split, expense: expense, user: @payer, amount: 60.0)
+    create(:expense_split, expense: expense, user: @participant, amount: 40.0)
+    # @outsider is a participant but has no split row
+
+    assert_equal 60.0, expense.split_for(@payer.id)
+    assert_equal 40.0, expense.split_for(@participant.id)
+    assert_equal 0.0, expense.split_for(@outsider.id)
+    total_attributed = expense.split_for(@payer.id) + expense.split_for(@participant.id) + expense.split_for(@outsider.id)
+    assert_equal expense.amount.to_f, total_attributed
+  end
+
   test "with_filters scopes to a specific group when group_id is given" do
     group1 = create(:group, created_by: @payer)
     group2 = create(:group, created_by: @payer)

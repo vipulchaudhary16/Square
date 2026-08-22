@@ -65,7 +65,7 @@ module Api
       end
 
       def group_analysis
-        expenses      = @group.expenses.with_filters(params)
+        expenses      = @group.expenses.with_filters(params).includes(:category, :expense_splits, :expense_participants)
         your_expenses = expenses.merge(Expense.accessible_to(current_user))
         render json: {
           total_expense: AnalysisService.summarize(expenses),
