@@ -1,7 +1,7 @@
 module Api
   module V1
     class GroupsController < ApplicationController
-      before_action :set_group, only: [:show, :invite, :members, :group_expenses, :settle]
+      before_action :set_group, only: [:show, :invite, :members, :group_expenses, :group_analysis, :settle]
 
       def index
         groups = current_user.groups.includes(:created_by, :members)
@@ -62,6 +62,15 @@ module Api
         items.sort_by! { |i| i[:date] }
         items.reverse! unless params[:sort_order] == "asc"
         render json: items
+      end
+
+      def group_analysis
+        expenses      = @group.expenses.with_filters(params)
+        your_expenses = expenses.merge(Expense.accessible_to(current_user))
+        render json: {
+          total_expense: AnalysisService.summarize(expenses),
+          your_share:    AnalysisService.summarize(your_expenses, value: ->(e) { e.split_for(current_user.id) })
+        }
       end
 
       def settle
