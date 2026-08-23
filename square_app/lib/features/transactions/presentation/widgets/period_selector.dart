@@ -65,16 +65,22 @@ class PeriodSelector extends StatelessWidget {
             Icon(Icons.calendar_month_outlined, size: 16, color: inkFaint),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: Text(
-                selection.label,
-                style: AppTypography.bodyEmphasis.copyWith(color: ink),
-                overflow: TextOverflow.ellipsis,
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      selection.label,
+                      style: AppTypography.bodyEmphasis.copyWith(color: ink),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: inkFaint),
+                ],
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Text('$transactionCount transactions', style: AppTypography.caption.copyWith(color: inkFaint)),
-            const SizedBox(width: AppSpacing.xs),
-            Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: inkFaint),
           ],
         ),
       ),
