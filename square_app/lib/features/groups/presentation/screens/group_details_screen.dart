@@ -14,15 +14,12 @@ import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../shared/widgets/app_error_state.dart';
 import '../../../../shared/widgets/app_icon_button.dart';
 import '../../../../shared/widgets/app_skeleton.dart';
-import '../../../../shared/widgets/amount_text.dart';
+import '../../../../shared/widgets/pinned_header_delegate.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../auth/data/user_repository.dart';
 import '../../../auth/data/user_model.dart';
 import '../../../expense/presentation/widgets/expense_card.dart';
 import '../../../auth/presentation/auth_provider.dart';
-import '../../../../shared/widgets/analysis_report_view.dart';
-import '../../../transactions/presentation/widgets/period_selection.dart';
-import '../../../transactions/presentation/widgets/period_selector.dart';
 import '../groups_provider.dart';
 import '../widgets/settlement_log_row.dart';
 
@@ -35,24 +32,13 @@ class GroupDetailsScreen extends ConsumerStatefulWidget {
   ConsumerState<GroupDetailsScreen> createState() => _GroupDetailsScreenState();
 }
 
-class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  PeriodSelection _reportPeriod = PeriodSelection.initial();
-  bool _showGroupTotalCategories = true;
+class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _debounce;
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-  }
-
-  @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
@@ -71,6 +57,9 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+    final line = isDark ? AppColors.lineDark : AppColors.line;
+    final currentUserId = ref.watch(authProvider).value?.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -82,33 +71,70 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
           ),
           const SizedBox(width: AppSpacing.sm),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: ink,
-          unselectedLabelColor: inkFaint,
-          indicatorColor: ink,
-          labelStyle: AppTypography.bodyEmphasis,
-          unselectedLabelStyle: AppTypography.body,
-          tabs: const [
-            Tab(text: 'Expenses'),
-            Tab(text: 'Balances'),
-            Tab(text: 'Members'),
-            Tab(text: 'Reports'),
-          ],
-        ),
       ),
       body: detailsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => AppErrorState(message: err.toString()),
         data: (details) {
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildExpensesTab(context, details),
-              _buildBalancesTab(context, details),
-              _buildMembersTab(context, details),
-              _buildReportsTab(context, details),
-            ],
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(groupExpensesProvider("${details.group.id}|$_searchQuery"));
+              ref.invalidate(groupDetailsProvider(details.group.id));
+              try {
+                await ref.read(groupExpensesProvider("${details.group.id}|$_searchQuery").future);
+              } catch (_) {}
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
+                    child: _GroupHubHeader(details: details, currentUserId: currentUserId),
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: PinnedHeaderDelegate(
+                    extent: 80,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: sunken,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(color: line),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: _onSearchChanged,
+                          style: AppTypography.body.copyWith(color: ink),
+                          decoration: InputDecoration(
+                            hintText: 'Search expenses...',
+                            hintStyle: AppTypography.body.copyWith(color: inkFaint),
+                            prefixIcon: Icon(Icons.search, size: 18, color: inkFaint),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(Icons.close, size: 16, color: inkFaint),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      _onSearchChanged('');
+                                    },
+                                  )
+                                : null,
+                            filled: false,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                _ExpenseListSliver(groupId: details.group.id, searchQuery: _searchQuery),
+              ],
+            ),
           );
         },
       ),
@@ -119,80 +145,6 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
         backgroundColor: ink,
         elevation: 0,
         child: Icon(Icons.add, color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface),
-      ),
-    );
-  }
-
-  Widget _buildExpensesTab(BuildContext context, GroupDetails details) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? AppColors.inkDark : AppColors.ink;
-    final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
-    final line = isDark ? AppColors.lineDark : AppColors.line;
-    final currentUserId = ref.watch(authProvider).value?.id;
-
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(groupExpensesProvider("${details.group.id}|$_searchQuery"));
-        ref.invalidate(groupDetailsProvider(details.group.id));
-        try {
-          await ref.read(groupExpensesProvider("${details.group.id}|$_searchQuery").future);
-        } catch (_) {}
-      },
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
-              child: _GroupSummaryCard(
-                details: details,
-                currentUserId: currentUserId,
-                onShowMore: () => _tabController.animateTo(1),
-              ),
-            ),
-          ),
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _PinnedHeaderDelegate(
-              extent: 80,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: sunken,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(color: line),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _onSearchChanged,
-                    style: AppTypography.body.copyWith(color: ink),
-                    decoration: InputDecoration(
-                      hintText: 'Search expenses...',
-                      hintStyle: AppTypography.body.copyWith(color: inkFaint),
-                      prefixIcon: Icon(Icons.search, size: 18, color: inkFaint),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Icons.close, size: 16, color: inkFaint),
-                              onPressed: () {
-                                _searchController.clear();
-                                _onSearchChanged('');
-                              },
-                            )
-                          : null,
-                      filled: false,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          _ExpenseListSliver(groupId: details.group.id, searchQuery: _searchQuery),
-        ],
       ),
     );
   }
@@ -378,525 +330,143 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen>
       },
     );
   }
-
-  Widget _buildBalancesTab(BuildContext context, GroupDetails details) {
-    final currentUserId = ref.watch(authProvider).value?.id;
-    final sortedDebts = _sortDebtsInvolvingUserFirst(details.debts, currentUserId);
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(groupExpensesProvider("${details.group.id}|$_searchQuery"));
-        ref.invalidate(groupDetailsProvider(details.group.id));
-        try {
-          await ref.read(groupDetailsProvider(details.group.id).future);
-        } catch (_) {}
-      },
-      child: details.debts.isEmpty
-          ? ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.5,
-                  child: Center(
-                    child: AppEmptyState(icon: Icons.check_circle, title: 'Everyone is settled up'),
-                  ),
-                ),
-              ],
-            )
-          : ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
-              itemCount: sortedDebts.length,
-              itemBuilder: (context, index) {
-                final debt = sortedDebts[index];
-                final fromUser = details.members.firstWhere(
-                  (m) => m.id == debt.from,
-                  orElse: () => GroupMember(id: '', username: 'Unknown', email: ''),
-                );
-                final toUser = details.members.firstWhere(
-                  (m) => m.id == debt.to,
-                  orElse: () => GroupMember(id: '', username: 'Unknown', email: ''),
-                );
-                final isDark = Theme.of(context).brightness == Brightness.dark;
-                final ink = isDark ? AppColors.inkDark : AppColors.ink;
-                final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-                final line = debtLineText(debt, currentUserId, fromUser, toUser);
-                final canSettle = debt.from == currentUserId;
-
-                return AppCard(
-                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          _Avatar(name: fromUser.displayName),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text(
-                              line.text,
-                              style: AppTypography.body.copyWith(color: ink),
-                            ),
-                          ),
-                          AmountText(
-                            amount: debt.amount,
-                            sign: line.sign,
-                            showSignPrefix: false,
-                            style: AppTypography.amountInline,
-                          ),
-                        ],
-                      ),
-                      if (canSettle) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: InkWell(
-                            onTap: () => _showSettleSheet(context, details.group.id, toUser, debt.amount),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.sync_alt, size: 14, color: inkFaint),
-                                const SizedBox(width: 4),
-                                Text('Settle', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            ),
-    );
-  }
-
-  void _showSettleSheet(BuildContext context, String groupId, GroupMember toUser, double maxAmount) {
-    final amountController = TextEditingController(text: maxAmount.toStringAsFixed(2));
-    bool isSubmitting = false;
-    String? errorText;
-
-    AppBottomSheet.show(
-      context,
-      title: 'Settle up',
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-            final ink = isDark ? AppColors.inkDark : AppColors.ink;
-            final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-            final line = isDark ? AppColors.lineDark : AppColors.line;
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _Avatar(name: toUser.displayName),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          'Pay ${toUser.displayName}',
-                          style: AppTypography.cardHeading.copyWith(color: ink),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text('Amount', style: AppTypography.label.copyWith(color: inkFaint)),
-                  const SizedBox(height: AppSpacing.sm),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: line),
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                    child: TextField(
-                      controller: amountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: AppTypography.body.copyWith(color: ink),
-                      decoration: InputDecoration(
-                        prefixText: '₹ ',
-                        prefixStyle: AppTypography.body.copyWith(color: ink),
-                        filled: false,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                      ),
-                      onChanged: (_) => setState(() => errorText = null),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'You owe ${toUser.displayName} up to ₹${maxAmount.toStringAsFixed(2)}',
-                    style: AppTypography.caption.copyWith(color: inkFaint),
-                  ),
-                  if (errorText != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(errorText!, style: AppTypography.errorText.copyWith(color: AppColors.negative)),
-                  ],
-                  const SizedBox(height: AppSpacing.lg),
-                  PrimaryButton(
-                    text: 'Settle',
-                    isLoading: isSubmitting,
-                    onPressed: () async {
-                      final parsed = double.tryParse(amountController.text.trim());
-                      if (parsed == null || parsed <= 0) {
-                        setState(() => errorText = 'Enter a valid amount');
-                        return;
-                      }
-                      if (parsed > maxAmount + 0.01) {
-                        setState(() => errorText = 'Cannot be more than ₹${maxAmount.toStringAsFixed(2)}');
-                        return;
-                      }
-                      setState(() => isSubmitting = true);
-                      try {
-                        await ref.read(groupRepositoryProvider).settle(groupId, toUser.id, parsed);
-                        ref.invalidate(groupDetailsProvider(groupId));
-                        ref.invalidate(groupExpensesProvider("$groupId|$_searchQuery"));
-                        if (context.mounted) {
-                          context.pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Settled ₹${parsed.toStringAsFixed(2)} with ${toUser.displayName}')),
-                          );
-                        }
-                      } catch (e) {
-                        setState(() {
-                          isSubmitting = false;
-                          errorText = '$e';
-                        });
-                      }
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildMembersTab(BuildContext context, GroupDetails details) {
-    final currentUserId = ref.watch(authProvider).value?.id;
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(groupExpensesProvider("${details.group.id}|$_searchQuery"));
-        ref.invalidate(groupDetailsProvider(details.group.id));
-        try {
-          await ref.read(groupDetailsProvider(details.group.id).future);
-        } catch (_) {}
-      },
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
-        itemCount: details.members.length,
-        itemBuilder: (context, index) {
-          final member = details.members[index];
-          final isDark = Theme.of(context).brightness == Brightness.dark;
-          final ink = isDark ? AppColors.inkDark : AppColors.ink;
-          final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-          final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
-          final isYou = member.id == currentUserId;
-
-          return AppCard(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                _Avatar(name: member.displayName),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(member.displayName, style: AppTypography.cardHeading.copyWith(color: ink)),
-                      const SizedBox(height: 2),
-                      Text(
-                        member.email,
-                        style: AppTypography.bodyMuted.copyWith(color: inkFaint),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                if (isYou) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
-                    decoration: BoxDecoration(color: sunken, borderRadius: BorderRadius.circular(AppRadius.sm)),
-                    child: Text(
-                      'You',
-                      style: AppTypography.caption.copyWith(color: inkFaint, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildReportsTab(BuildContext context, GroupDetails details) {
-    final groupId = details.group.id;
-    final previousPeriod = _reportPeriod.comparisonLabel != null ? _reportPeriod.previous() : null;
-    final rangeKey =
-        '$groupId|${_reportPeriod.apiStartDate}|${_reportPeriod.apiEndDate}|${previousPeriod?.apiStartDate ?? ''}|${previousPeriod?.apiEndDate ?? ''}';
-    final analysisAsync = ref.watch(groupAnalysisProvider(rangeKey));
-
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(groupAnalysisProvider(rangeKey));
-        try {
-          await ref.read(groupAnalysisProvider(rangeKey).future);
-        } catch (_) {}
-      },
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _PinnedHeaderDelegate(
-              extent: 96,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.lg),
-                child: PeriodSelector(
-                  selection: _reportPeriod,
-                  onChanged: (p) => setState(() => _reportPeriod = p),
-                  transactionCount: analysisAsync.value?.totalExpense.count ?? 0,
-                ),
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 100),
-            sliver: SliverToBoxAdapter(
-              child: analysisAsync.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (err, _) => AppErrorState(
-                  message: err.toString(),
-                  onRetry: () => ref.invalidate(groupAnalysisProvider(rangeKey)),
-                ),
-                data: (summary) => AnalysisReportView(
-                  primaryTile: AnalysisStatTile(
-                    label: 'TOTAL EXPENSE',
-                    color: AppColors.negative,
-                    amount: summary.totalExpense.total,
-                    onTap: () => context.push(
-                      '/transactions/analysis-detail',
-                      extra: {
-                        'isSpending': true,
-                        'period': _reportPeriod,
-                        'groupId': groupId,
-                        'allGroupExpenses': true,
-                      },
-                    ),
-                    deltaPercent: summary.totalExpense.deltaPercent,
-                    comparisonLabel: _reportPeriod.comparisonLabel,
-                  ),
-                  secondaryTile: AnalysisStatTile(
-                    label: 'YOUR SHARE',
-                    color: AppColors.negative,
-                    amount: summary.yourShare.total,
-                    onTap: () => context.push(
-                      '/transactions/analysis-detail',
-                      extra: {'isSpending': true, 'period': _reportPeriod, 'groupId': groupId},
-                    ),
-                    deltaPercent: summary.yourShare.deltaPercent,
-                    comparisonLabel: _reportPeriod.comparisonLabel,
-                  ),
-                  firstSide: AnalysisCategorySide(label: 'Group total', side: summary.totalExpense),
-                  secondSide: AnalysisCategorySide(label: 'Your share', side: summary.yourShare),
-                  showFirstSide: _showGroupTotalCategories,
-                  onSideChanged: (v) => setState(() => _showGroupTotalCategories = v),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Debt> _sortDebtsInvolvingUserFirst(List<Debt> debts, String? currentUserId) =>
-      sortDebtsInvolvingUserFirst(debts, currentUserId);
 }
 
-({String text, AmountSign sign}) debtLineText(
-  Debt debt,
-  String? currentUserId,
-  GroupMember fromUser,
-  GroupMember toUser,
-) {
-  if (debt.from == currentUserId) {
-    return (text: 'You owe ${toUser.displayName}', sign: AmountSign.negative);
-  } else if (debt.to == currentUserId) {
-    return (text: '${fromUser.displayName} owes you', sign: AmountSign.positive);
-  } else {
-    return (text: '${fromUser.displayName} owes ${toUser.displayName}', sign: AmountSign.neutral);
-  }
-}
-
-List<Debt> sortDebtsInvolvingUserFirst(List<Debt> debts, String? currentUserId) {
-  if (currentUserId == null) return debts;
-  final mine = <Debt>[];
-  final others = <Debt>[];
-  for (final debt in debts) {
-    if (debt.from == currentUserId || debt.to == currentUserId) {
-      mine.add(debt);
-    } else {
-      others.add(debt);
-    }
-  }
-  return [...mine, ...others];
-}
-
-class _GroupSummaryCard extends StatelessWidget {
-  const _GroupSummaryCard({
-    required this.details,
-    required this.currentUserId,
-    required this.onShowMore,
-  });
+/// Hub header shown above the search bar and expense feed: a single merged
+/// net-balance card (tapping it opens the Balances screen — there is no
+/// separate "Balances" tile) plus a row of Members/Reports tiles that each
+/// push their own full screen.
+class _GroupHubHeader extends StatelessWidget {
+  const _GroupHubHeader({required this.details, required this.currentUserId});
 
   final GroupDetails details;
   final String? currentUserId;
-  final VoidCallback onShowMore;
 
-  GroupMember _memberFor(String id) => details.members.firstWhere(
-        (m) => m.id == id,
-        orElse: () => GroupMember(id: '', username: 'Unknown', email: ''),
-      );
+  double get _netBalance {
+    double net = 0;
+    for (final debt in details.debts) {
+      if (debt.to == currentUserId) net += debt.amount;
+      if (debt.from == currentUserId) net -= debt.amount;
+    }
+    return net;
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
+    final net = _netBalance;
+    final isSettled = net.abs() < 0.01;
+    final isOwedToYou = net > 0;
+    final balanceColor = isSettled ? inkFaint : (isOwedToYou ? AppColors.positive : AppColors.negative);
+    final label = isSettled ? 'All settled up' : (isOwedToYou ? 'you are owed' : 'you owe');
+    final formatted = NumberFormat.currency(symbol: '₹', decimalDigits: 2).format(net.abs());
 
-    if (details.debts.isEmpty) {
-      return AppCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            Icon(Icons.check_circle_outline, size: 18, color: inkFaint),
-            const SizedBox(width: AppSpacing.sm),
-            Text('Everyone is settled up', style: AppTypography.bodyMuted.copyWith(color: inkFaint)),
-          ],
-        ),
-      );
-    }
-
-    final sortedDebts = sortDebtsInvolvingUserFirst(details.debts, currentUserId);
-    final shown = sortedDebts.take(3).toList();
-
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final debt in shown) ...[
-            _buildDebtLine(debt, ink),
-            if (debt != shown.last) const SizedBox(height: AppSpacing.sm),
-          ],
-          const SizedBox(height: AppSpacing.md),
-          InkWell(
-            onTap: onShowMore,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Show more', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
-                const SizedBox(width: 2),
-                Icon(Icons.arrow_forward, size: 14, color: ink),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDebtLine(Debt debt, Color ink) {
-    final fromUser = _memberFor(debt.from);
-    final toUser = _memberFor(debt.to);
-    final line = debtLineText(debt, currentUserId, fromUser, toUser);
-
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Text(line.text, style: AppTypography.body.copyWith(color: ink), overflow: TextOverflow.ellipsis),
+        _HubCard(
+          onTap: () => context.push('/groups/${details.group.id}/balances'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label.toUpperCase(),
+                      style: AppTypography.label.copyWith(color: inkFaint),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: 20, color: inkFaint),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                isSettled ? '' : formatted,
+                style: AppTypography.amountLarge.copyWith(color: balanceColor),
+              ),
+            ],
+          ),
         ),
-        AmountText(
-          amount: debt.amount,
-          sign: line.sign,
-          showSignPrefix: false,
-          style: AppTypography.amountInline,
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _HubCard(
+                onTap: () => context.push('/groups/${details.group.id}/members'),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.people_outline, size: 20, color: ink),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Members', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${details.members.length} people',
+                            style: AppTypography.caption.copyWith(color: inkFaint),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _HubCard(
+                onTap: () => context.push('/groups/${details.group.id}/reports'),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.pie_chart_outline, size: 20, color: ink),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Reports', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
+                          const SizedBox(height: 2),
+                          Text('This month', style: AppTypography.caption.copyWith(color: inkFaint)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.name});
-  final String name;
+class _HubCard extends StatelessWidget {
+  const _HubCard({required this.child, required this.onTap});
+
+  final Widget child;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = AppColors.categoryAccent(name);
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(color: accent.withValues(alpha: isDark ? 0.22 : 0.12), shape: BoxShape.circle),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : '?',
-          style: AppTypography.bodyEmphasis.copyWith(color: accent),
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: child,
         ),
       ),
     );
-  }
-}
-
-/// A pinned sliver header of fixed [extent] — used both for the Expenses
-/// tab's search bar and the Reports tab's period selector, which pins so it
-/// stays reachable (and the current month/week/year stays visible) while
-/// scrolling through a long list below it.
-class _PinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _PinnedHeaderDelegate({required this.child, required this.backgroundColor, required this.extent});
-
-  final Widget child;
-  final Color backgroundColor;
-  final double extent;
-
-  @override
-  double get minExtent => extent;
-
-  @override
-  double get maxExtent => extent;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // A pinned header's paintExtent comes from the CHILD's own measured
-    // height, while its layoutExtent/scrollExtent come from minExtent/
-    // maxExtent above — if the child doesn't fill exactly `extent`, those
-    // two disagree and the sliver layout throws. Force the child to fill
-    // the declared extent so they always match.
-    return SizedBox(height: extent, child: ColoredBox(color: backgroundColor, child: child));
-  }
-
-  @override
-  bool shouldRebuild(covariant _PinnedHeaderDelegate oldDelegate) {
-    return oldDelegate.child != child || oldDelegate.backgroundColor != backgroundColor || oldDelegate.extent != extent;
   }
 }
 

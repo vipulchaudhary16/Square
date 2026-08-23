@@ -22,6 +22,9 @@ import '../../features/categories/presentation/categories_settings_screen.dart';
 import '../../features/groups/presentation/screens/groups_screen.dart';
 import '../../features/groups/presentation/screens/create_group_screen.dart';
 import '../../features/groups/presentation/screens/group_details_screen.dart';
+import '../../features/groups/presentation/screens/group_balances_screen.dart';
+import '../../features/groups/presentation/screens/group_members_screen.dart';
+import '../../features/groups/presentation/screens/group_reports_screen.dart';
 import '../../features/contacts/presentation/screens/contacts_screen.dart';
 import '../../features/contacts/presentation/screens/add_contact_screen.dart';
 import '../../features/contacts/presentation/screens/contact_detail_screen.dart';
@@ -178,6 +181,29 @@ final routerProvider = Provider<GoRouter>((ref) {
                   final id = state.pathParameters['id']!;
                   return GroupDetailsScreen(groupId: id);
                 },
+                routes: [
+                  GoRoute(
+                    path: 'balances',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return GroupBalancesScreen(groupId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'members',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return GroupMembersScreen(groupId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'reports',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return GroupReportsScreen(groupId: id);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
