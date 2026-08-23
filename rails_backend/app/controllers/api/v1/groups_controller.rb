@@ -1,7 +1,8 @@
 module Api
   module V1
     class GroupsController < ApplicationController
-      before_action :set_group, only: [:show, :invite, :members, :group_expenses, :group_analysis, :settle]
+      before_action :set_group, only: [:show, :invite, :group_invites, :group_expenses, :group_analysis, :settle]
+      before_action :require_owner!, only: [:invite, :group_invites]
 
       def index
         groups = current_user.groups.includes(:created_by, :members)
@@ -26,10 +27,16 @@ module Api
       end
 
       def invite
-        @group.invite!(params[:email])
-        render json: { message: "Invitation sent to #{params[:email]}" }
+        invite = @group.invite!(params[:email])
+        render json: invite.api_json, status: :created
       rescue ActiveRecord::RecordInvalid => e
         render json: { error: e.message }, status: :bad_request
+      rescue Group::AlreadyMemberError => e
+        render json: { error: e.message }, status: :unprocessable_entity
+      end
+
+      def group_invites
+        render json: @group.group_invites.order(created_at: :desc).map(&:api_json)
       end
 
       def join
@@ -38,14 +45,6 @@ module Api
           return render json: { error: "Invalid or expired invitation token" }, status: :bad_request
         end
         render json: { message: "Joined group successfully", group_id: invite.group_id.to_s }
-      end
-
-      def members
-        user = User.find(params[:user_id])
-        @group.add_member!(user)
-        render json: { message: "Member added", user: user.member_json }
-      rescue ActiveRecord::RecordNotFound
-        render json: { error: "User not found" }, status: :not_found
       end
 
       def group_expenses
@@ -110,6 +109,12 @@ module Api
         @group = current_user.groups.find(params[:id])
       rescue ActiveRecord::RecordNotFound
         render json: { error: "Group not found" }, status: :not_found
+      end
+
+      def require_owner!
+        return if @group && @group.created_by_id == current_user.id
+
+        render json: { error: "Only the group admin can manage invitations" }, status: :forbidden
       end
     end
   end

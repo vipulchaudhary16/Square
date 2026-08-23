@@ -57,22 +57,35 @@ class GroupRepository {
     }
   }
 
-  // Helper method for generic calls if needed
-  Future<void> inviteUser(String groupId, String email) async {
+  Future<GroupInvite> createInvite(String groupId, String email) async {
     try {
-      await _dio.post('/groups/$groupId/invite', data: {'email': email});
-    } catch (e) {
-      throw Exception('Failed to invite user: $e');
+      final response = await _dio.post(
+        '/groups/$groupId/invite',
+        data: {'email': email},
+      );
+      return GroupInvite.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw e.response?.data['error'] ?? 'Failed to send invite';
     }
   }
 
-  Future<void> addMember(String groupId, String userId) async {
+  Future<List<GroupInvite>> getInvites(String groupId) async {
     try {
-      await _dio.post('/groups/$groupId/members', data: {'user_id': userId});
+      final response = await _dio.get('/groups/$groupId/invites');
+      return (response.data as List)
+          .map((e) => GroupInvite.fromJson(e as Map<String, dynamic>))
+          .toList();
     } on DioException catch (e) {
-      throw e.response?.data['error'] ?? 'Failed to add member';
-    } catch (e) {
-      throw Exception('Failed to add member: $e');
+      throw e.response?.data['error'] ?? 'Failed to fetch invites';
+    }
+  }
+
+  Future<GroupInvite> revokeInvite(String inviteId) async {
+    try {
+      final response = await _dio.post('/group_invites/$inviteId/revoke');
+      return GroupInvite.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw e.response?.data['error'] ?? 'Failed to revoke invite';
     }
   }
 
@@ -138,7 +151,9 @@ class GroupRepository {
           if (compareEndDate != null) 'compare_end_date': compareEndDate,
         },
       );
-      return GroupAnalysisSummary.fromJson(response.data as Map<String, dynamic>);
+      return GroupAnalysisSummary.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw e.response?.data['error'] ?? 'Failed to fetch group analysis';
     }

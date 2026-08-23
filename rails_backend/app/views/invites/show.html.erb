@@ -1,0 +1,42 @@
+<% case @state %>
+<% when :not_found %>
+  <h1>Invite not found</h1>
+  <p class="muted">This link doesn't match an invitation. Double-check the link, or ask the group admin to send a new one.</p>
+
+<% when :revoked %>
+  <span class="badge bad">Revoked</span>
+  <h1>This invite was revoked</h1>
+  <p class="muted">The group admin cancelled this invitation. Ask them for a new one if you still want to join.</p>
+
+<% when :accepted %>
+  <span class="badge good">Already used</span>
+  <h1>This invite has already been used</h1>
+  <p class="muted">If that was you, open Square and look for <strong><%= @invite.group.name %></strong> in your groups.</p>
+
+<% when :expired %>
+  <h1>This invite has expired</h1>
+  <p class="muted">Invites are only valid for 48 hours. Ask the group admin to send you a new one.</p>
+
+<% when :no_account %>
+  <h1>Create a Square account first</h1>
+  <p>You've been invited to join <strong><%= @invite.group.name %></strong>, but <strong><%= @invite.email %></strong> doesn't have a Square account yet.</p>
+  <p class="muted">Download the app and sign up with this email, then open this link again to join.</p>
+
+<% when :ready, :success %>
+  <% if @state == :success %>
+    <span class="badge good">Joined</span>
+    <h1>You're in!</h1>
+    <p class="muted">You've joined <strong><%= @invite.group.name %></strong>. Open Square to see it.</p>
+  <% else %>
+    <h1>Join <%= @invite.group.name %></h1>
+    <p>Confirm it's you — enter the password for <strong><%= @invite.email %></strong> to join.</p>
+    <% if @error %>
+      <div class="error"><%= @error %></div>
+    <% end %>
+    <form method="post" action="<%= accept_invite_path(token: @invite.token) %>">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autofocus required>
+      <button type="submit">Join group</button>
+    </form>
+  <% end %>
+<% end %>

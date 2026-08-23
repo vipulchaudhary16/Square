@@ -9,6 +9,7 @@ import {
     ArrowLeftRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import logo from '../../../assets/square.png';
 
 export default function Landing() {
     return (
@@ -22,11 +23,9 @@ export default function Landing() {
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <nav className="flex justify-between items-center py-6 backdrop-blur-md sticky top-0 z-50">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-lg">
-                            <Wallet className="w-6 h-6 text-white" />
-                        </div>
+                        <img src={logo} alt="Square" className="w-9 h-9 rounded-lg" />
                         <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                            ExpenseTracker
+                            Square
                         </span>
                     </div>
                     <div className="flex items-center gap-4">
@@ -188,7 +187,7 @@ export default function Landing() {
                             Twitter
                         </a>
                     </div>
-                    <p>© 2024 ExpenseTracker. All rights reserved.</p>
+                    <p>© 2024 Square. All rights reserved.</p>
                 </footer>
             </div>
         </div>

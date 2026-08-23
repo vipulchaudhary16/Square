@@ -15,6 +15,10 @@ class Rack::Attack
   throttle("auth/refresh/ip", limit: 30, period: 1.minute) do |req|
     req.ip if req.path == "/api/auth/refresh" && req.post?
   end
+
+  throttle("invites/accept/ip", limit: 10, period: 1.minute) do |req|
+    req.ip if req.path.match?(%r{\A/invites/[^/]+/accept\z}) && req.post?
+  end
 end
 
 ActiveSupport::Notifications.subscribe("throttle.rack_attack") do |_name, _start, _finish, _id, payload|

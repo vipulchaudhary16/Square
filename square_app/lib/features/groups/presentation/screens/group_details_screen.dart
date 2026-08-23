@@ -7,17 +7,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/group_model.dart';
-import '../../data/group_repository.dart';
-import '../../../../shared/widgets/app_bottom_sheet.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../shared/widgets/app_error_state.dart';
-import '../../../../shared/widgets/app_icon_button.dart';
 import '../../../../shared/widgets/app_skeleton.dart';
 import '../../../../shared/widgets/pinned_header_delegate.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../auth/data/user_repository.dart';
-import '../../../auth/data/user_model.dart';
 import '../../../expense/presentation/widgets/expense_card.dart';
 import '../../../auth/presentation/auth_provider.dart';
 import '../groups_provider.dart';
@@ -57,18 +51,48 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ink = isDark ? AppColors.inkDark : AppColors.ink;
     final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-    final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+    final sunken = isDark
+        ? AppColors.surfaceRaisedDark
+        : AppColors.surfaceSunken;
     final line = isDark ? AppColors.lineDark : AppColors.line;
     final currentUserId = ref.watch(authProvider).value?.id;
+
+    final isOwner =
+        currentUserId != null &&
+        currentUserId == detailsAsync.value?.group.createdBy;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(detailsAsync.value?.group.name ?? 'Group Details'),
         actions: [
-          AppIconButton(
-            icon: Icons.person_add_outlined,
-            onPressed: () => _showAddMemberModal(context, widget.groupId),
-          ),
+          if (isOwner)
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: ink),
+              color: isDark ? AppColors.surfaceDark : AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              onSelected: (value) {
+                if (value == 'invite') {
+                  context.push('/groups/${widget.groupId}/invitations');
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'invite',
+                  child: Row(
+                    children: [
+                      Icon(Icons.person_add_outlined, size: 18, color: ink),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'Invite people',
+                        style: AppTypography.body.copyWith(color: ink),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           const SizedBox(width: AppSpacing.sm),
         ],
       ),
@@ -78,10 +102,16 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
         data: (details) {
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(groupExpensesProvider("${details.group.id}|$_searchQuery"));
+              ref.invalidate(
+                groupExpensesProvider("${details.group.id}|$_searchQuery"),
+              );
               ref.invalidate(groupDetailsProvider(details.group.id));
               try {
-                await ref.read(groupExpensesProvider("${details.group.id}|$_searchQuery").future);
+                await ref.read(
+                  groupExpensesProvider(
+                    "${details.group.id}|$_searchQuery",
+                  ).future,
+                );
               } catch (_) {}
             },
             child: CustomScrollView(
@@ -89,8 +119,16 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 0),
-                    child: _GroupHubHeader(details: details, currentUserId: currentUserId),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                      0,
+                    ),
+                    child: _GroupHubHeader(
+                      details: details,
+                      currentUserId: currentUserId,
+                    ),
                   ),
                 ),
                 SliverPersistentHeader(
@@ -112,11 +150,21 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
                           style: AppTypography.body.copyWith(color: ink),
                           decoration: InputDecoration(
                             hintText: 'Search expenses...',
-                            hintStyle: AppTypography.body.copyWith(color: inkFaint),
-                            prefixIcon: Icon(Icons.search, size: 18, color: inkFaint),
+                            hintStyle: AppTypography.body.copyWith(
+                              color: inkFaint,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              size: 18,
+                              color: inkFaint,
+                            ),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
-                                    icon: Icon(Icons.close, size: 16, color: inkFaint),
+                                    icon: Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color: inkFaint,
+                                    ),
                                     onPressed: () {
                                       _searchController.clear();
                                       _onSearchChanged('');
@@ -125,14 +173,19 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
                                 : null,
                             filled: false,
                             border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.md,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                _ExpenseListSliver(groupId: details.group.id, searchQuery: _searchQuery),
+                _ExpenseListSliver(
+                  groupId: details.group.id,
+                  searchQuery: _searchQuery,
+                ),
               ],
             ),
           );
@@ -140,194 +193,18 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          context.push('/transactions/add-expense', extra: {'groupId': widget.groupId});
+          context.push(
+            '/transactions/add-expense',
+            extra: {'groupId': widget.groupId},
+          );
         },
         backgroundColor: ink,
         elevation: 0,
-        child: Icon(Icons.add, color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface),
+        child: Icon(
+          Icons.add,
+          color: isDark ? AppColors.surfaceSunkenDark : AppColors.surface,
+        ),
       ),
-    );
-  }
-
-  void _showAddMemberModal(BuildContext context, String groupId) {
-    final searchController = TextEditingController();
-    final emailController = TextEditingController();
-    bool isSearching = false;
-    bool isInviting = false;
-    List<User> searchResults = [];
-
-    AppBottomSheet.show(
-      context,
-      title: 'Add Member',
-      isScrollControlled: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-            final ink = isDark ? AppColors.inkDark : AppColors.ink;
-            final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-            final line = isDark ? AppColors.lineDark : AppColors.line;
-            final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Search by name or email', style: AppTypography.label.copyWith(color: inkFaint)),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: line),
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
-                          child: TextField(
-                            controller: searchController,
-                            style: AppTypography.body.copyWith(color: ink),
-                            decoration: InputDecoration(
-                              hintText: 'Search...',
-                              hintStyle: AppTypography.body.copyWith(color: inkFaint),
-                              filled: false,
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      AppIconButton(
-                        icon: Icons.search,
-                        filled: true,
-                        onPressed: () async {
-                          if (searchController.text.trim().isEmpty) return;
-                          setState(() => isSearching = true);
-                          try {
-                            final results = await ref
-                                .read(userRepositoryProvider)
-                                .searchUsers(searchController.text.trim());
-                            setState(() => searchResults = results);
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Search failed: $e')));
-                            }
-                          } finally {
-                            setState(() => isSearching = false);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  if (isSearching) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
-                  ],
-                  if (searchResults.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.lg),
-                    Container(
-                      constraints: const BoxConstraints(maxHeight: 200),
-                      decoration: BoxDecoration(color: sunken, borderRadius: BorderRadius.circular(AppRadius.md)),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: searchResults.length,
-                        separatorBuilder: (_, __) => Divider(color: line, height: 1),
-                        itemBuilder: (context, index) {
-                          final user = searchResults[index];
-                          final displayName = user.firstName.isEmpty
-                              ? user.email.split('@').first
-                              : '${user.firstName} ${user.lastName}';
-                          return ListTile(
-                            title: Text(displayName, style: AppTypography.body.copyWith(color: ink)),
-                            subtitle: Text(user.email, style: AppTypography.caption.copyWith(color: inkFaint)),
-                            trailing: AppIconButton(
-                              icon: Icons.add,
-                              size: 32,
-                              iconSize: 16,
-                              onPressed: () async {
-                                try {
-                                  await ref.read(groupRepositoryProvider).addMember(groupId, user.id);
-                                  if (context.mounted) {
-                                    ref.invalidate(groupDetailsProvider(groupId));
-                                    context.pop();
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Member added!')));
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add: $e')));
-                                  }
-                                }
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.xl),
-                  Divider(color: line),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text('Or invite by email', style: AppTypography.label.copyWith(color: inkFaint)),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: line),
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
-                          child: TextField(
-                            controller: emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            style: AppTypography.body.copyWith(color: ink),
-                            decoration: InputDecoration(
-                              hintText: 'friend@example.com',
-                              hintStyle: AppTypography.body.copyWith(color: inkFaint),
-                              filled: false,
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: PrimaryButton(
-                          text: '',
-                          icon: Icons.mail_outline,
-                          isLoading: isInviting,
-                          onPressed: () async {
-                            if (emailController.text.trim().isEmpty) return;
-                            setState(() => isInviting = true);
-                            try {
-                              await ref.read(groupRepositoryProvider).inviteUser(groupId, emailController.text.trim());
-                              if (context.mounted) {
-                                context.pop();
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invitation sent!')));
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
-                              }
-                            } finally {
-                              setState(() => isInviting = false);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }
@@ -359,9 +236,16 @@ class _GroupHubHeader extends StatelessWidget {
     final net = _netBalance;
     final isSettled = net.abs() < 0.01;
     final isOwedToYou = net > 0;
-    final balanceColor = isSettled ? inkFaint : (isOwedToYou ? AppColors.positive : AppColors.negative);
-    final label = isSettled ? 'All settled up' : (isOwedToYou ? 'you are owed' : 'you owe');
-    final formatted = NumberFormat.currency(symbol: '₹', decimalDigits: 2).format(net.abs());
+    final balanceColor = isSettled
+        ? inkFaint
+        : (isOwedToYou ? AppColors.positive : AppColors.negative);
+    final label = isSettled
+        ? 'All settled up'
+        : (isOwedToYou ? 'you are owed' : 'you owe');
+    final formatted = NumberFormat.currency(
+      symbol: '₹',
+      decimalDigits: 2,
+    ).format(net.abs());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +279,8 @@ class _GroupHubHeader extends StatelessWidget {
           children: [
             Expanded(
               child: _HubCard(
-                onTap: () => context.push('/groups/${details.group.id}/members'),
+                onTap: () =>
+                    context.push('/groups/${details.group.id}/members'),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -405,11 +290,18 @@ class _GroupHubHeader extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Members', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
+                          Text(
+                            'Members',
+                            style: AppTypography.bodyEmphasis.copyWith(
+                              color: ink,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             '${details.members.length} people',
-                            style: AppTypography.caption.copyWith(color: inkFaint),
+                            style: AppTypography.caption.copyWith(
+                              color: inkFaint,
+                            ),
                           ),
                         ],
                       ),
@@ -421,7 +313,8 @@ class _GroupHubHeader extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _HubCard(
-                onTap: () => context.push('/groups/${details.group.id}/reports'),
+                onTap: () =>
+                    context.push('/groups/${details.group.id}/reports'),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -431,9 +324,19 @@ class _GroupHubHeader extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Reports', style: AppTypography.bodyEmphasis.copyWith(color: ink)),
+                          Text(
+                            'Reports',
+                            style: AppTypography.bodyEmphasis.copyWith(
+                              color: ink,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text('This month', style: AppTypography.caption.copyWith(color: inkFaint)),
+                          Text(
+                            'This month',
+                            style: AppTypography.caption.copyWith(
+                              color: inkFaint,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -478,7 +381,9 @@ class _ExpenseListSliver extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final expensesAsync = ref.watch(groupExpensesProvider("$groupId|$searchQuery"));
+    final expensesAsync = ref.watch(
+      groupExpensesProvider("$groupId|$searchQuery"),
+    );
     final currentUser = ref.watch(authProvider).value;
 
     return expensesAsync.when(
@@ -495,7 +400,8 @@ class _ExpenseListSliver extends ConsumerWidget {
         hasScrollBody: false,
         child: AppErrorState(
           message: err.toString(),
-          onRetry: () => ref.invalidate(groupExpensesProvider("$groupId|$searchQuery")),
+          onRetry: () =>
+              ref.invalidate(groupExpensesProvider("$groupId|$searchQuery")),
         ),
       ),
       data: (items) {
@@ -522,39 +428,54 @@ class _ExpenseListSliver extends ConsumerWidget {
         }
 
         return SliverPadding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 100),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            100,
+          ),
           sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final item = flatList[index];
-                if (item is String) return _buildDateHeader(context, item, isFirst: index == 0);
-                return switch (item as GroupFeedItem) {
-                  ExpenseFeedItem(:final expense) => ExpenseCard(
-                      expense: expense,
-                      currentUserId: currentUser?.id ?? '',
-                      onTap: () => context.push('/transactions/expenses/${expense.id}'),
-                    ),
-                  SettlementFeedItem(:final settlement) => SettlementLogRow(
-                      settlement: settlement,
-                      currentUserId: currentUser?.id ?? '',
-                    ),
-                };
-              },
-              childCount: flatList.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final item = flatList[index];
+              if (item is String)
+                return _buildDateHeader(context, item, isFirst: index == 0);
+              return switch (item as GroupFeedItem) {
+                ExpenseFeedItem(:final expense) => ExpenseCard(
+                  expense: expense,
+                  currentUserId: currentUser?.id ?? '',
+                  onTap: () =>
+                      context.push('/transactions/expenses/${expense.id}'),
+                ),
+                SettlementFeedItem(:final settlement) => SettlementLogRow(
+                  settlement: settlement,
+                  currentUserId: currentUser?.id ?? '',
+                ),
+              };
+            }, childCount: flatList.length),
           ),
         );
       },
     );
   }
 
-  Widget _buildDateHeader(BuildContext context, String label, {bool isFirst = false}) {
+  Widget _buildDateHeader(
+    BuildContext context,
+    String label, {
+    bool isFirst = false,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: EdgeInsets.fromLTRB(4, isFirst ? 0 : AppSpacing.lg, 4, AppSpacing.sm),
+      padding: EdgeInsets.fromLTRB(
+        4,
+        isFirst ? 0 : AppSpacing.lg,
+        4,
+        AppSpacing.sm,
+      ),
       child: Text(
         label.toUpperCase(),
-        style: AppTypography.label.copyWith(color: isDark ? AppColors.inkFaintDark : AppColors.inkFaint),
+        style: AppTypography.label.copyWith(
+          color: isDark ? AppColors.inkFaintDark : AppColors.inkFaint,
+        ),
       ),
     );
   }

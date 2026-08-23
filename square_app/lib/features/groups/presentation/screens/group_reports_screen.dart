@@ -46,10 +46,10 @@ class _GroupReportsScreenState extends ConsumerState<GroupReportsScreen> {
             SliverPersistentHeader(
               pinned: true,
               delegate: PinnedHeaderDelegate(
-                extent: 96,
+                extent: 52,
                 backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.lg),
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xs),
                   child: PeriodSelector(
                     selection: _reportPeriod,
                     onChanged: (p) => setState(() => _reportPeriod = p),

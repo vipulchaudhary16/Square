@@ -1,13 +1,65 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-      /* Email styles need to be inline */
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 32px 16px;
+        background: #f5f5f5;
+        color: #111111;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { background: #0a0a0a; color: #f5f5f5; }
+        .card { background: #141414 !important; border-color: #262626 !important; }
+        .muted { color: #a0a0a0 !important; }
+      }
+      .wrap { max-width: 420px; margin: 0 auto; }
+      .brand { margin-bottom: 24px; }
+      .brand td { vertical-align: middle; }
+      .mark { width: 28px; height: 28px; display: block; }
+      .wordmark { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; padding-left: 10px; }
+      .card {
+        background: #ffffff;
+        border: 1px solid #e4e4e4;
+        border-radius: 16px;
+        padding: 28px 24px;
+      }
+      h1 { font-size: 18px; font-weight: 700; margin: 0 0 12px; }
+      p { font-size: 14.5px; line-height: 1.6; margin: 0 0 12px; }
+      .muted { color: #6e6e6e; font-size: 13px; }
+      .button {
+        display: inline-block;
+        margin: 8px 0 4px;
+        padding: 12px 20px;
+        border-radius: 10px;
+        background: #111111;
+        color: #ffffff !important;
+        font-size: 14.5px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      @media (prefers-color-scheme: dark) { .button { background: #f5f5f5; color: #0a0a0a !important; } }
+      .link-fallback { word-break: break-all; font-size: 12.5px; color: #6e6e6e; margin: 0; }
+      .footer { margin-top: 28px; text-align: center; }
     </style>
   </head>
-
   <body>
-    <%= yield %>
+    <div class="wrap">
+      <table class="brand" role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><img src="<%= attachments['square_logo.png'].url %>" width="28" height="28" alt="Square" class="mark"></td>
+          <td class="wordmark">Square</td>
+        </tr>
+      </table>
+      <div class="card">
+        <%= yield %>
+      </div>
+      <p class="muted footer">This email was sent by Square. If you weren't expecting it, you can safely ignore it.</p>
+    </div>
   </body>
 </html>

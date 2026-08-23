@@ -17,14 +17,15 @@ class Group < ApplicationRecord
     group
   end
 
-  def invite!(email)
-    invite = group_invites.create!(email: email, token: SecureRandom.hex(32), expires_at: 48.hours.from_now)
-    UserMailer.group_invite(email, self, invite.token).deliver_later
-    invite
-  end
+  class AlreadyMemberError < StandardError; end
 
-  def add_member!(user)
-    GroupMembership.find_or_create_by!(group: self, user: user)
+  def invite!(email)
+    already_member = members.exists?(["lower(email) = ?", email.downcase])
+    raise AlreadyMemberError, "#{email} is already a member of this group" if already_member
+
+    invite = group_invites.create!(email: email, token: SecureRandom.hex(32), expires_at: 48.hours.from_now)
+    UserMailer.group_invite(email, self, invite.token, created_by).deliver_later
+    invite
   end
 
   class DebtExceededError < StandardError; end

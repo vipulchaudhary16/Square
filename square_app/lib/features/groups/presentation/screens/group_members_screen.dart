@@ -33,15 +33,25 @@ class GroupMembersScreen extends ConsumerWidget {
           },
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, 100),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              100,
+            ),
             itemCount: details.members.length,
             itemBuilder: (context, index) {
               final member = details.members[index];
               final isDark = Theme.of(context).brightness == Brightness.dark;
               final ink = isDark ? AppColors.inkDark : AppColors.ink;
-              final inkFaint = isDark ? AppColors.inkFaintDark : AppColors.inkFaint;
-              final sunken = isDark ? AppColors.surfaceRaisedDark : AppColors.surfaceSunken;
+              final inkFaint = isDark
+                  ? AppColors.inkFaintDark
+                  : AppColors.inkFaint;
+              final sunken = isDark
+                  ? AppColors.surfaceRaisedDark
+                  : AppColors.surfaceSunken;
               final isYou = member.id == currentUserId;
+              final isAdmin = member.id == details.group.createdBy;
 
               return AppCard(
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -54,25 +64,61 @@ class GroupMembersScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(member.displayName, style: AppTypography.cardHeading.copyWith(color: ink)),
+                          Text(
+                            member.displayName,
+                            style: AppTypography.cardHeading.copyWith(
+                              color: ink,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             member.email,
-                            style: AppTypography.bodyMuted.copyWith(color: inkFaint),
+                            style: AppTypography.bodyMuted.copyWith(
+                              color: inkFaint,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
+                    if (isAdmin) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: sunken,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        child: Text(
+                          'Admin',
+                          style: AppTypography.caption.copyWith(
+                            color: ink,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                     if (isYou) ...[
                       const SizedBox(width: AppSpacing.sm),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
-                        decoration: BoxDecoration(color: sunken, borderRadius: BorderRadius.circular(AppRadius.sm)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: sunken,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
                         child: Text(
                           'You',
-                          style: AppTypography.caption.copyWith(color: inkFaint, fontWeight: FontWeight.w600),
+                          style: AppTypography.caption.copyWith(
+                            color: inkFaint,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],

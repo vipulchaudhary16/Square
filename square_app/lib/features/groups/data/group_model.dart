@@ -4,6 +4,7 @@ class Group {
   final String id;
   final String name;
   final String description;
+  final String createdBy;
   final DateTime createdAt;
   final List<GroupMember> members;
 
@@ -11,6 +12,7 @@ class Group {
     required this.id,
     required this.name,
     required this.description,
+    required this.createdBy,
     required this.createdAt,
     required this.members,
   });
@@ -20,6 +22,7 @@ class Group {
       id: json['_id'] ?? json['id'] ?? '',
       name: json['name'] ?? '',
       description: json['description'] ?? '',
+      createdBy: json['created_by'] ?? '',
       createdAt: DateTime.parse(
         json['created_at'] ?? DateTime.now().toIso8601String(),
       ),
@@ -142,8 +145,45 @@ class SettlementFeedItem extends GroupFeedItem {
 }
 
 GroupFeedItem groupFeedItemFromJson(Map<String, dynamic> json) {
-  if (json['type'] == 'settlement') return SettlementFeedItem(Settlement.fromJson(json));
+  if (json['type'] == 'settlement')
+    return SettlementFeedItem(Settlement.fromJson(json));
   return ExpenseFeedItem(Expense.fromJson(json));
+}
+
+/// An expiring, email-targeted link a group admin can share so someone joins
+/// on their own — never a direct add. `status` is one of pending / accepted
+/// / revoked / expired (the last one is computed server-side, not stored).
+class GroupInvite {
+  final String id;
+  final String email;
+  final String status;
+  final String link;
+  final DateTime createdAt;
+  final DateTime expiresAt;
+
+  GroupInvite({
+    required this.id,
+    required this.email,
+    required this.status,
+    required this.link,
+    required this.createdAt,
+    required this.expiresAt,
+  });
+
+  factory GroupInvite.fromJson(Map<String, dynamic> json) {
+    return GroupInvite(
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      status: json['status'] ?? 'pending',
+      link: json['link'] ?? '',
+      createdAt: DateTime.parse(
+        json['created_at'] ?? DateTime.now().toIso8601String(),
+      ),
+      expiresAt: DateTime.parse(
+        json['expires_at'] ?? DateTime.now().toIso8601String(),
+      ),
+    );
+  }
 }
 
 class GroupDetails {

@@ -111,23 +111,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   // Brand mark + wordmark
                   Column(
                     children: [
-                      Container(
+                      Image.asset(
+                            'assets/images/square_logo.png',
                             width: 64,
                             height: 64,
-                            decoration: BoxDecoration(
-                              color: ink,
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              'S',
-                              style: AppTypography.screenTitle.copyWith(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w800,
-                                color: onInk,
-                                height: 1,
-                              ),
-                            ),
                           )
                           .animate()
                           .scale(

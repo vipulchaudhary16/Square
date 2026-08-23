@@ -54,7 +54,7 @@ class PeriodSelector extends StatelessWidget {
       onTap: () => _showPeriodSheet(context),
       borderRadius: AppRadius.md,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         decoration: BoxDecoration(
           color: sunken,
           borderRadius: BorderRadius.circular(AppRadius.md),

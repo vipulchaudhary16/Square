@@ -3,6 +3,11 @@ Rails.application.routes.draw do
 
   mount Dashboard::Engine, at: "/api/dashboard"
 
+  # Server-rendered — opened directly in a browser from an invite email/link,
+  # no app or JSON client involved.
+  get  "invites/:token",         to: "invites#show",   as: :invite
+  post "invites/:token/accept",  to: "invites#accept", as: :accept_invite
+
   scope module: "api/v1", path: "/api", defaults: { format: :json } do
     # Auth
     post   "auth/signup",          to: "auth#signup"
@@ -26,13 +31,14 @@ Rails.application.routes.draw do
     resources :groups, only: [:create, :index, :show] do
       member do
         post :invite
-        post :members
+        get  :invites, action: :group_invites
         get  :expenses, action: :group_expenses
         get  :analysis, action: :group_analysis
         post :settle
       end
       collection { post :join }
     end
+    post "group_invites/:id/revoke", to: "group_invites#revoke"
 
     # Users
     scope :users do

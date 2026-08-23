@@ -137,9 +137,9 @@ class AnalysisReportView extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.sm),
         Text('Categories', style: AppTypography.sectionHeading.copyWith(color: ink)),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
         AppCard(
           child: Column(
             children: [

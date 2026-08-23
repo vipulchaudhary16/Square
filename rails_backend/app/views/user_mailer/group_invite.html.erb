@@ -1,0 +1,5 @@
+<h1>You're invited to <%= @group.name %></h1>
+<p><strong><%= @inviter.display_name %></strong> has invited you to join <strong><%= @group.name %></strong> on Square.</p>
+<a href="<%= @invite_link %>" class="button">Accept invite</a>
+<p class="muted">This invite expires in 48 hours.</p>
+<p class="link-fallback">Or copy this link: <%= @invite_link %></p>

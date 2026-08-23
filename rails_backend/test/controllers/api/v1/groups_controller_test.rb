@@ -112,4 +112,44 @@ class Api::V1::GroupsControllerTest < ActionDispatch::IntegrationTest
     get "/api/groups/#{@group.id}/analysis", headers: auth_header(outsider)
     assert_response :not_found
   end
+
+  # --- invite / group_invites (owner-only) ---
+
+  test "the group creator can send an invite" do
+    post "/api/groups/#{@group.id}/invite",
+         params: { email: "friend@example.com" }.to_json,
+         headers: auth_header(@alice)
+    assert_response :created
+    body = JSON.parse(response.body)
+    assert_equal "friend@example.com", body["email"]
+    assert_equal "pending", body["status"]
+    assert_includes body["link"], "/invites/"
+  end
+
+  test "a non-creator member cannot send an invite" do
+    post "/api/groups/#{@group.id}/invite",
+         params: { email: "friend@example.com" }.to_json,
+         headers: auth_header(@bob)
+    assert_response :forbidden
+  end
+
+  test "cannot invite an email that already belongs to a group member" do
+    post "/api/groups/#{@group.id}/invite",
+         params: { email: @bob.email }.to_json,
+         headers: auth_header(@alice)
+    assert_response :unprocessable_entity
+    body = JSON.parse(response.body)
+    assert_match(/already a member/, body["error"])
+  end
+
+  test "the group creator can list invites, a non-creator member cannot" do
+    @group.invite!("friend@example.com")
+
+    get "/api/groups/#{@group.id}/invites", headers: auth_header(@alice)
+    assert_response :ok
+    assert_equal 1, JSON.parse(response.body).length
+
+    get "/api/groups/#{@group.id}/invites", headers: auth_header(@bob)
+    assert_response :forbidden
+  end
 end

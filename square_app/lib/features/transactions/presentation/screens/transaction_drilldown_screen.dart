@@ -118,7 +118,7 @@ class _TransactionDrilldownScreenState extends ConsumerState<TransactionDrilldow
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
             child: Row(
               children: [
                 _FilterChip(label: widget.period.label),

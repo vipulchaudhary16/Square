@@ -24,6 +24,7 @@ import '../../features/groups/presentation/screens/create_group_screen.dart';
 import '../../features/groups/presentation/screens/group_details_screen.dart';
 import '../../features/groups/presentation/screens/group_balances_screen.dart';
 import '../../features/groups/presentation/screens/group_members_screen.dart';
+import '../../features/groups/presentation/screens/group_invitations_screen.dart';
 import '../../features/groups/presentation/screens/group_reports_screen.dart';
 import '../../features/contacts/presentation/screens/contacts_screen.dart';
 import '../../features/contacts/presentation/screens/add_contact_screen.dart';
@@ -159,7 +160,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                     isSpending: extra['isSpending'] as bool,
                     period: extra['period'] as PeriodSelection,
                     groupId: extra['groupId'] as String?,
-                    allGroupExpenses: extra['allGroupExpenses'] as bool? ?? false,
+                    allGroupExpenses:
+                        extra['allGroupExpenses'] as bool? ?? false,
                   );
                 },
               ),
@@ -194,6 +196,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     builder: (context, state) {
                       final id = state.pathParameters['id']!;
                       return GroupMembersScreen(groupId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'invitations',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return GroupInvitationsScreen(groupId: id);
                     },
                   ),
                   GoRoute(

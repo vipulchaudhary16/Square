@@ -4,60 +4,81 @@ import '../../groups/data/group_model.dart';
 import '../../groups/data/group_repository.dart';
 import '../data/group_analysis_model.dart';
 
-final groupDetailsProvider = FutureProvider.autoDispose.family<GroupDetails, String>((ref, id) async {
-  final repository = ref.watch(groupRepositoryProvider);
-  return repository.getGroupDetails(id);
-});
+final groupDetailsProvider = FutureProvider.autoDispose
+    .family<GroupDetails, String>((ref, id) async {
+      final repository = ref.watch(groupRepositoryProvider);
+      return repository.getGroupDetails(id);
+    });
 
-final groupExpensesProvider = FutureProvider.autoDispose.family<List<GroupFeedItem>, String>((ref, arg) async {
-  final parts = arg.split('|');
-  final groupId = parts[0];
-  final search = parts.length > 1 ? (parts[1].isEmpty ? null : parts[1]) : null;
-  final repository = ref.watch(groupRepositoryProvider);
-  return repository.getGroupExpenses(groupId, searchQuery: search);
-});
+final groupInvitesProvider = FutureProvider.autoDispose
+    .family<List<GroupInvite>, String>((ref, groupId) async {
+      final repository = ref.watch(groupRepositoryProvider);
+      return repository.getInvites(groupId);
+    });
+
+final groupExpensesProvider = FutureProvider.autoDispose
+    .family<List<GroupFeedItem>, String>((ref, arg) async {
+      final parts = arg.split('|');
+      final groupId = parts[0];
+      final search = parts.length > 1
+          ? (parts[1].isEmpty ? null : parts[1])
+          : null;
+      final repository = ref.watch(groupRepositoryProvider);
+      return repository.getGroupExpenses(groupId, searchQuery: search);
+    });
 
 /// Key shape: "groupId|startDate|endDate|compareStartDate|compareEndDate" —
 /// the compare dates may be empty (no period-over-period comparison, e.g.
 /// for a custom range).
-final groupAnalysisProvider = FutureProvider.autoDispose.family<GroupAnalysisSummary, String>((ref, key) async {
-  final parts = key.split('|');
-  final groupId = parts[0];
-  final startDate = parts[1];
-  final endDate = parts[2];
-  final compareStartDate = parts.length > 3 && parts[3].isNotEmpty ? parts[3] : null;
-  final compareEndDate = parts.length > 4 && parts[4].isNotEmpty ? parts[4] : null;
-  final repository = ref.watch(groupRepositoryProvider);
-  return repository.getGroupAnalysis(
-    groupId,
-    startDate: startDate,
-    endDate: endDate,
-    compareStartDate: compareStartDate,
-    compareEndDate: compareEndDate,
-  );
-});
+final groupAnalysisProvider = FutureProvider.autoDispose
+    .family<GroupAnalysisSummary, String>((ref, key) async {
+      final parts = key.split('|');
+      final groupId = parts[0];
+      final startDate = parts[1];
+      final endDate = parts[2];
+      final compareStartDate = parts.length > 3 && parts[3].isNotEmpty
+          ? parts[3]
+          : null;
+      final compareEndDate = parts.length > 4 && parts[4].isNotEmpty
+          ? parts[4]
+          : null;
+      final repository = ref.watch(groupRepositoryProvider);
+      return repository.getGroupAnalysis(
+        groupId,
+        startDate: startDate,
+        endDate: endDate,
+        compareStartDate: compareStartDate,
+        compareEndDate: compareEndDate,
+      );
+    });
 
 /// Key shape: "groupId|startDate|endDate|categoryId|search" — categoryId/search may be
 /// empty. Every expense in the group matching the filters, regardless of who's involved
 /// — settlements dropped. Backs the "Total expense" tap on the group Reports tab, which
 /// (unlike "Your share") isn't scoped to the current user.
-final groupTotalExpensesProvider = FutureProvider.autoDispose.family<List<Expense>, String>((ref, key) async {
-  final parts = key.split('|');
-  final groupId = parts[0];
-  final startDate = parts[1];
-  final endDate = parts[2];
-  final categoryId = parts.length > 3 && parts[3].isNotEmpty ? parts[3] : null;
-  final search = parts.length > 4 ? parts[4] : '';
-  final repository = ref.watch(groupRepositoryProvider);
-  final items = await repository.getGroupExpenses(
-    groupId,
-    searchQuery: search,
-    categoryId: categoryId,
-    startDate: startDate,
-    endDate: endDate,
-  );
-  return items.whereType<ExpenseFeedItem>().map((item) => item.expense).toList();
-});
+final groupTotalExpensesProvider = FutureProvider.autoDispose
+    .family<List<Expense>, String>((ref, key) async {
+      final parts = key.split('|');
+      final groupId = parts[0];
+      final startDate = parts[1];
+      final endDate = parts[2];
+      final categoryId = parts.length > 3 && parts[3].isNotEmpty
+          ? parts[3]
+          : null;
+      final search = parts.length > 4 ? parts[4] : '';
+      final repository = ref.watch(groupRepositoryProvider);
+      final items = await repository.getGroupExpenses(
+        groupId,
+        searchQuery: search,
+        categoryId: categoryId,
+        startDate: startDate,
+        endDate: endDate,
+      );
+      return items
+          .whereType<ExpenseFeedItem>()
+          .map((item) => item.expense)
+          .toList();
+    });
 
 final groupsProvider = AsyncNotifierProvider<GroupsNotifier, List<Group>>(
   GroupsNotifier.new,
