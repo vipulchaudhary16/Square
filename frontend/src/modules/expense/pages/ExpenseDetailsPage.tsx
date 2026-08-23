@@ -177,7 +177,7 @@ const ExpenseDetailsPage: React.FC = () => {
                                 <div>
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50 uppercase tracking-wide">
-                                            {expense.category}
+                                            {expense.category_name}
                                         </span>
                                         {expense.group_id && (
                                             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-800/50 uppercase tracking-wide">

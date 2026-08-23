@@ -8,11 +8,10 @@ interface Expense {
     description: string;
     amount: number;
     date: string;
-    category: string;
+    category_name: string;
     payer_id: string;
     group_id?: string;
     group_name?: string;
-    _id?: string;
 }
 
 interface ExpenseCardProps {
@@ -31,7 +30,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ expense, currentUserId
 
     return (
         <div
-            onClick={() => navigate(`/expenses/${expense._id}`)}
+            onClick={() => navigate(`/expenses/${expense.id}`)}
             className="group bg-white dark:bg-slate-800 rounded-2xl p-4 mb-3 flex justify-between items-center border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 hover:border-primary-100 dark:hover:border-primary-900 cursor-pointer"
         >
             <div className="flex items-center gap-4">
@@ -57,7 +56,7 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ expense, currentUserId
                             })}
                         </span>
                         <span>•</span>
-                        <span className="font-medium">{expense.category}</span>
+                        <span className="font-medium">{expense.category_name}</span>
                         {!isPersonal && (
                             <>
                                 <span>•</span>

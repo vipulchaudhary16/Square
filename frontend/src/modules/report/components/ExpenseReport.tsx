@@ -122,7 +122,7 @@ export const ExpenseReport: React.FC<ExpenseReportProps> = ({
     const categoryData = useMemo(() => {
         const data: Record<string, number> = {};
         filteredExpenses.forEach((e) => {
-            data[e.category] = (data[e.category] || 0) + e.amount;
+            data[e.category_name] = (data[e.category_name] || 0) + e.amount;
         });
         return Object.entries(data).map(([name, value]) => ({ name, value }));
     }, [filteredExpenses]);
@@ -601,7 +601,7 @@ export const ExpenseReport: React.FC<ExpenseReportProps> = ({
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                                                     <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                                                        {expense.category}
+                                                        {expense.category_name}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white text-right font-bold">

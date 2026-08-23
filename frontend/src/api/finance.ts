@@ -66,7 +66,8 @@ export interface LoanDetails extends Loan {
 
 export interface Budget {
     id: string;
-    category: string;
+    category_id: string;
+    category_name: string;
     amount: number;
     month: string;
     user_id: string;
@@ -99,7 +100,7 @@ export const getIncomes = async (
     return response.data;
 };
 
-export const createIncome = async (data: Omit<Income, 'id'>) => {
+export const createIncome = async (data: Omit<Income, 'id' | 'category_name'>) => {
     const response = await api.post('/incomes', data);
     return response.data;
 };
@@ -219,12 +220,12 @@ export const getBudgets = async (month: string) => {
     return response.data;
 };
 
-export const createBudget = async (data: Omit<Budget, 'id'>) => {
+export const createBudget = async (data: Pick<Budget, 'category_id' | 'amount' | 'month'>) => {
     const response = await api.post('/budgets', data);
     return response.data;
 };
 
-export const updateBudget = async (id: string, data: Partial<Budget>) => {
+export const updateBudget = async (id: string, data: Pick<Budget, 'amount'>) => {
     const response = await api.put(`/budgets/${id}`, data);
     return response.data;
 };

@@ -24,9 +24,10 @@ import { CategoriesPage } from './modules/settings/pages/CategoriesPage';
 import './index.css';
 
 import { ThemeProvider } from './context/ThemeContext';
+import { tokenStorage } from './api/tokenStorage';
 
 function App() {
-    const isAuthenticated = !!localStorage.getItem('token');
+    const isAuthenticated = tokenStorage.hasSession();
 
     return (
         <ThemeProvider>

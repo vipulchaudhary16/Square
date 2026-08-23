@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getMe } from '../api/auth';
+import { getMe, logout as apiLogout } from '../api/auth';
+import { tokenStorage } from '../api/tokenStorage';
 
 interface User {
     id: string;
@@ -14,14 +15,13 @@ export const useSession = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
+        if (tokenStorage.hasSession()) {
             getMe()
                 .then((userData) => {
                     setUser(userData);
                 })
                 .catch(() => {
-                    localStorage.removeItem('token');
+                    tokenStorage.clear();
                     setUser(null);
                 })
                 .finally(() => {
@@ -32,13 +32,14 @@ export const useSession = () => {
         }
     }, []);
 
-    const login = (userData: User, token: string) => {
-        localStorage.setItem('token', token);
+    const login = (userData: User, accessToken: string, refreshToken: string) => {
+        tokenStorage.setTokens(accessToken, refreshToken);
         setUser(userData);
     };
 
     const logout = () => {
-        localStorage.removeItem('token');
+        apiLogout(tokenStorage.getRefreshToken()).catch(() => {});
+        tokenStorage.clear();
         setUser(null);
     };
 

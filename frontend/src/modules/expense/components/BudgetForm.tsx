@@ -50,18 +50,12 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
                     disabled={!!initialData}
                 >
-                    {initialData?.category_id === 'OVERALL' ? (
-                        <option value="OVERALL">Overall Monthly Budget</option>
-                    ) : (
-                        <>
-                            <option value="">Select category</option>
-                            {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>
-                                    {cat.name}
-                                </option>
-                            ))}
-                        </>
-                    )}
+                    <option value="">Select category</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                        </option>
+                    ))}
                 </select>
             </div>
 

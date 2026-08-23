@@ -51,21 +51,11 @@ export const BudgetPage: React.FC = () => {
         }
     };
 
-    const getSpendingForCategory = (category: string) => {
+    const getSpendingForCategory = (categoryId: string) => {
         return expenses
-            .filter((e) => e.category === category && e.date.startsWith(selectedMonth))
+            .filter((e) => e.category_id === categoryId && e.date.startsWith(selectedMonth))
             .reduce((sum, e) => sum + e.amount, 0);
     };
-
-    const getTotalSpending = () => {
-        return expenses
-            .filter((e) => e.date.startsWith(selectedMonth))
-            .reduce((sum, e) => sum + e.amount, 0);
-    };
-
-    const overallBudget = budgets.find((b) => b.category === 'OVERALL');
-    const categoryBudgets = budgets.filter((b) => b.category !== 'OVERALL');
-    const totalSpent = getTotalSpending();
 
     return (
         <div className="space-y-6">
@@ -83,21 +73,6 @@ export const BudgetPage: React.FC = () => {
                         onChange={(e) => setSelectedMonth(e.target.value)}
                         className="rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-white dark:bg-slate-800 text-gray-900 dark:text-white w-full sm:w-auto"
                     />
-                    {!overallBudget && (
-                        <button
-                            onClick={() => {
-                                setEditingBudget({
-                                    category: 'OVERALL',
-                                    amount: 0,
-                                    month: selectedMonth,
-                                } as any);
-                                setIsModalOpen(true);
-                            }}
-                            className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors w-full sm:w-auto"
-                        >
-                            <Plus className="w-4 h-4" /> Set Total Budget
-                        </button>
-                    )}
                     <button
                         onClick={() => {
                             setEditingBudget(null);
@@ -116,85 +91,9 @@ export const BudgetPage: React.FC = () => {
                 </div>
             ) : (
                 <div className="space-y-8">
-                    {}
-                    {overallBudget && (
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 text-white shadow-xl">
-                            <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <h2 className="text-xl font-bold">Overall Monthly Budget</h2>
-                                    <p className="text-slate-400 text-sm">
-                                        {format(parseISO(selectedMonth + '-01'), 'MMMM yyyy')}
-                                    </p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => {
-                                            setEditingBudget(overallBudget);
-                                            setIsModalOpen(true);
-                                        }}
-                                        className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-                                    >
-                                        <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(overallBudget.id)}
-                                        className="p-2 bg-white/10 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-                                <div>
-                                    <p className="text-slate-400 text-sm mb-1">Total Budget</p>
-                                    <p className="text-3xl font-bold">
-                                        ₹{overallBudget.amount.toLocaleString()}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-slate-400 text-sm mb-1">Total Spent</p>
-                                    <p className="text-3xl font-bold">
-                                        ₹{totalSpent.toLocaleString()}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-slate-400 text-sm mb-1">Remaining</p>
-                                    <p
-                                        className={`text-3xl font-bold ${overallBudget.amount - totalSpent < 0 ? 'text-red-400' : 'text-emerald-400'}`}
-                                    >
-                                        ₹{(overallBudget.amount - totalSpent).toLocaleString()}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="relative pt-1">
-                                <div className="flex mb-2 items-center justify-between">
-                                    <div>
-                                        <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
-                                            {Math.min(
-                                                (totalSpent / overallBudget.amount) * 100,
-                                                100,
-                                            ).toFixed(0)}
-                                            % Used
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-slate-700">
-                                    <div
-                                        style={{
-                                            width: `${Math.min((totalSpent / overallBudget.amount) * 100, 100)}%`,
-                                        }}
-                                        className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${totalSpent > overallBudget.amount ? 'bg-red-500' : 'bg-blue-500'}`}
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {categoryBudgets.map((budget) => {
-                            const spent = getSpendingForCategory(budget.category);
+                        {budgets.map((budget) => {
+                            const spent = getSpendingForCategory(budget.category_id);
                             const percentage = Math.min((spent / budget.amount) * 100, 100);
                             const isOverBudget = spent > budget.amount;
 
@@ -206,7 +105,7 @@ export const BudgetPage: React.FC = () => {
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <h3 className="font-semibold text-gray-900 dark:text-white">
-                                                {budget.category}
+                                                {budget.category_name}
                                             </h3>
                                             <p className="text-sm text-gray-500 dark:text-slate-400">
                                                 {format(
@@ -291,7 +190,7 @@ export const BudgetPage: React.FC = () => {
                             initialData={
                                 editingBudget
                                     ? {
-                                          category: editingBudget.category,
+                                          category_id: editingBudget.category_id,
                                           amount: editingBudget.amount,
                                           month: editingBudget.month,
                                       }

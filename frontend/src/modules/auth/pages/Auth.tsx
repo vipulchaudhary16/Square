@@ -53,7 +53,7 @@ export default function Auth() {
             } else {
                 res = await executeLogin(email, password);
             }
-            login(res.user, res.token);
+            login(res.user, res.access_token, res.refresh_token);
             navigate('/dashboard');
         } catch (err) {}
     };
